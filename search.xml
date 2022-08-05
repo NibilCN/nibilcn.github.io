@@ -16,6 +16,84 @@
       </tags>
   </entry>
   <entry>
+    <title>嵌入式Linux开发概述</title>
+    <url>/2022/08/04/%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BC%80%E5%8F%91%E6%A6%82%E8%BF%B0/</url>
+    <content><![CDATA[<p>《嵌入式Linux应用完全开发手册》第1篇第1章总结归纳</p>
+<span id="more"></span>
+<h1 id="嵌入式系统介绍"><a href="#嵌入式系统介绍" class="headerlink" title="嵌入式系统介绍"></a>嵌入式系统介绍</h1><h2 id="嵌入式系统的定义和特点"><a href="#嵌入式系统的定义和特点" class="headerlink" title="嵌入式系统的定义和特点"></a>嵌入式系统的定义和特点</h2><h3 id="嵌入式系统的定义"><a href="#嵌入式系统的定义" class="headerlink" title="嵌入式系统的定义"></a>嵌入式系统的定义</h3><p>嵌入式系统的定义为：以应用为中心，以计算机技术为基础、软硬件可裁剪、适用于应用系统，对功能、可靠性、成本、体积、功耗严格要求的专用计算机系统。它的主要特点是嵌入，专用。<br>含有嵌入式系统的设备成为嵌入式设备，这在生活中随处可见：电子表、手机、MP3播放器、遥控器等。涵盖了生产、工业控制、通信、网络、消费电子、汽车电子、军工等领域。从通俗，广义的角度来说，除电脑，超级计算机等具备比较强大计算能力及系统资源（比如内存，存储器等）的电子系统之外，凡具备计算能力的设备都可称为嵌入式设备。</p>
+<h3 id="嵌入式设备的特点"><a href="#嵌入式设备的特点" class="headerlink" title="嵌入式设备的特点"></a>嵌入式设备的特点</h3><ol>
+<li>软硬件可裁剪</li>
+<li>对功能、可靠性、成本、体积、功耗严格要求</li>
+</ol>
+<h2 id="嵌入式技术的发展史"><a href="#嵌入式技术的发展史" class="headerlink" title="嵌入式技术的发展史"></a>嵌入式技术的发展史</h2><p>通用计算机和嵌入式计算机是两条不同的道路。通用计算机系统的技术要求是高速海量的数值计算；技术发展方向是总线速度的无限提升，存储容量的无限扩大。而嵌入式计算机系统的技术要求是对象的智能化控制能力；技术发展方向则是与对象系统密切相关的嵌入性能、控制能力与控制的可靠性。<br>嵌入式技术发展日新月异，经历了单片机（SCM）、微控制器（MCU）、系统级芯片（SOC）3个阶段。</p>
+<h3 id="SCM（Single-Chip-Microcomputer）"><a href="#SCM（Single-Chip-Microcomputer）" class="headerlink" title="SCM（Single Chip Microcomputer）"></a>SCM（Single Chip Microcomputer）</h3><p>又称单片微型计算机，简称单片机，随着大规模集成电路的出现以及发展，计算机的CPU、RAM、ROM、定时计数器和多种I&#x2F;O接口集成在一片芯片上，形成芯片级计算机。<br>这个阶段主要寻求单片形态嵌入式系统的最佳体系结构。</p>
+<h3 id="MCU（Micro-Controller-Unit）"><a href="#MCU（Micro-Controller-Unit）" class="headerlink" title="MCU（Micro Controller Unit）"></a>MCU（Micro Controller Unit）</h3><p>MCU即微型控制器的特征是：满足各类嵌入式应用，根据对象系统扩展各类外围电路和接口电路，突显其对象的智能化控制能力。它所涉及的领域都与对象系统有关。<br>实际上，SCM和MCU在日常工作中并不严格区分，很多时候一概以单片机称呼。随着能够运行更复杂软件（操作系统）的SOC的出现，单片机通常是指不允许操作系统，功能相对单一的嵌入式系统。但这也不是绝对的，比如8051上就可以运行RTX51实时操作系统，它的大小只有6KB，相比于嵌入式Linux，Windows CE等操作系统而言比较简单。</p>
+<h3 id="SoC（System-on-a-Chip）"><a href="#SoC（System-on-a-Chip）" class="headerlink" title="SoC（System on a Chip）"></a>SoC（System on a Chip）</h3><p>随着设计与制造技术的发展，集成电路设计从晶体管的集成发展到逻辑门的集成，现在又发展到IP的集成，即SOC设计技术。Soc可以有效降低电子&#x2F;信息系统产品的开发成本，缩短开发周期，提高产品的竞争力，是未来工业界将采用的最主要的产品开发方式。<br>Soc的特征：</p>
+<ol>
+<li>实现复杂系统功能的VLSI；</li>
+<li>采用超深亚微米工艺技术；</li>
+<li>使用一个以上嵌入式CPU&#x2F;数字信号处理器DSP；</li>
+<li>外部可以对芯片进行编程；</li>
+<li>主要采用第三方IP进行设计。<br>从上述SoC特征来看，SoC中包含了微处理器、微控制器、存储器以及其他专用功能逻辑，但是并不包含微处理器、微控制器、存储器以及其他专用功能的芯片就是SoC。8051就集成了微处理器、存储器等部件，它不属于SoC。SoC的主要价值在于—缩短了产品的上市周期。<br>因此SoC更合理的定义：SoC是在一个芯片上由于广泛使用预定制模块IP（Intellectual Property）而得以快速开发的集成电路。<br>本书介绍的S3C2410&#x2F;S3C2440就属于SoC，它们集成了处理器、MMU、NAND Flash控制器等部件，而处理器的IP是基于ARM公司的。<br>以前写的单片机软件，通常是在main函数当中定义一个无限循环，然后在里面查询各类输入事件，并做相应处理，它直接操作硬件；而基于SoC的软件多是在操作系统上面运行，通过驱动程序操作硬件。</li>
+</ol>
+<h1 id="基于ARM处理器的嵌入式Linux系统"><a href="#基于ARM处理器的嵌入式Linux系统" class="headerlink" title="基于ARM处理器的嵌入式Linux系统"></a>基于ARM处理器的嵌入式Linux系统</h1><h2 id="ARM处理器介绍"><a href="#ARM处理器介绍" class="headerlink" title="ARM处理器介绍"></a>ARM处理器介绍</h2><h3 id="ARM处理器的概念"><a href="#ARM处理器的概念" class="headerlink" title="ARM处理器的概念"></a>ARM处理器的概念</h3><p>嵌入式处理器的种类繁多，又ARM、MIPS、PPC等多种架构。ARM的文档丰富，各类嵌入式软件大多选择ARM。在掌握ARM架构之后，上手其他处理器架构也会很快。<br>ARM(Advanced RISC Machine),既是一家公司的名字，也可以是一类处理器的统称，还可以认为是一种技术的名字。<br>ARM公司并不生产芯片，而是出售芯片授权。基于ARM的处理器以其高速度、低功耗、价格低等优点得到非常广泛的应用，它可以应用于以下领域：</p>
+<ol>
+<li>为无线通信、消费电子、成像设备等产品提供可运行复杂操作系统的开放应用平台；</li>
+<li>在海量存储、汽车电子、工业控制和网络应用等领域提供实时嵌入式应用；</li>
+<li>安全系统，比如SIM卡、信用卡等。</li>
+</ol>
+<h3 id="ARM体系架构的版本"><a href="#ARM体系架构的版本" class="headerlink" title="ARM体系架构的版本"></a>ARM体系架构的版本</h3><p>ARM体系架构的版本就是它所使用的指令集的版本。ARM公司支持32位的ARM指令集和16位的Thumb指令集，后者使得代码的存储空间大大减小。<br>还在使用的ARM指令集（ISA，Instruction Set Architecture）有以下版本：</p>
+<ol>
+<li>ARMv4<br>这是当前市场上最老的版本，ARMv4只支持32位的指令集，支持32位的地址空间。一些ARM7系列的处理器和Intel公司的StrongARM处理器采用ARMv4指令集。</li>
+<li>ARMv4T<br>增加了16位的Thumb指令集，它可以产生更紧凑的代码，与相同功能的ARM代码相比，可以节省超过35%的存储空间，同时具备32位代码的所有优点。</li>
+<li>ARMv5TE<br>1999年，ARMv5TE版本改进了Thumb指令集，增加了一些“增强型DSP指令”，简称E指令集。<br>这些指令用于增强处理器对于一些典型的DSP算法的处理性能，是的音频DSP应用可以提升70%的性能。许多系统在使用微控制器来进行各类控制的时候，还要具备数据处理能力，传统的做法要么是使用更高级的处理器，这会使得成本增加，要么是使用多个处理器，这会使得系统复杂度增高。通过E指令集可以在一个普通CPU中增加DSP的功能，这在成本、性能、简化设计等方面都有优势。</li>
+<li>ARMv5TEJ<br>增加Jazelle技术用于提供Java加速功能。</li>
+<li>ARMv6<br>2001年，ARMv6问世。它在很多方面都有改进：存储系统、异常处理，最重要的是增加了对多媒体功能的支持。ARMv6包含了一些媒体指令以支持SIMD媒体功能扩展。SIMD媒体功能扩展为音视频的处理提供了优化功能，可以使得音视频的处理性能提高4倍。<br>ARMv6中还引入了Thumb-2和TrustZone技术，这是两个可选的技术。之前的版本中，ARM指令和Thumb分别运行于不同的处理器状态下，执行不同的指令集的指令前需要进行切换。Thumb-2技术增加了混合模式的功能，定义了新的32位指令集，可以运行32位指令和16位指令的混合代码。这能够提供”ARM指令级别的性能“和”Thumb指令级别的代码密度“。TrustZone技术在硬件上提供了两个隔离的地址空间：安全域和非安全域，给系统提供了一个安全机制。</li>
+<li>ARMv7<br>ARMv7架构使用Thumb-2技术，还使用了NEON技术，将DSP和媒体处理能力提高了近4倍，并支持改良的浮点运算，满足下一代3D图形、游戏物理应用以及传统嵌入式控制应用的需求。</li>
+</ol>
+<h3 id="ARM处理器系列"><a href="#ARM处理器系列" class="headerlink" title="ARM处理器系列"></a>ARM处理器系列</h3><p>在相同的指令集下，搭配不同的部件就可以组装出具有不同功能的处理器，比如有无内存管理单元，有无调试功能等。它们可以分为8个系列，系列名有7个后缀，这些后缀可以组合：<br>T：表示支持Thumb指令集。<br>D：表示支持片上调试（Debug）。<br>M：表示内嵌乘法器（Multiplier）。<br>I：支持片上断点和调试点。<br>E：表示支持增强型DSP功能。<br>J：表示支持Jazelle技术，即Java加速器。<br>S：表示全合成式（full synthesizable）。</p>
+<ol>
+<li>ARM7<br>ARM7系列处理器是低功耗32位RISC微处理器，它主要用于对成本、功耗特别敏感的产品。最高可达到130MIPS（Million Instructions Percent Second），支持Thumb16位指令集和ARM32位指令集。ARM7系列微处理器包括如下几种类型的核：ARM7TDMI、ARM7TDMI-S、ARM720T、ARM7EJ-S。其中。ARM7TMDI是目前使用最广泛的32位嵌入式RISC处理器，属于低端ARM处理器核。ARM7不带MMU。</li>
+<li>ARM9<br>与ARM7相比，ARM9最大的差别在于：有MMU和Cach。它的指令执行效率较ARM7有较大提高，最高可达300MIPS。ARM9系列微处理器有ARM920T和ARM922T两种类型。</li>
+<li>ARM9E<br>ARM9E系列微处理器在单一的处理器内核上提供了微控制器、DSP、Java应用系统的解决方案，极大的减少了芯片的面积和系统的复杂度。ARM9E系列微处理器提供了增强的DSP处理能力，适合于那些需要同时使用DSP和微控制器的应用场合。<br>ARM9E系列微处理器有ARM926EJ-S、ARM946E-S、ARM966E-S、ARM968E-S和ARM996HS共五种类型。</li>
+<li>ARM10E<br>ARM10E微处理器具有更加杰出的高性能、低功耗特点，由于使用了新的体系结构，它拥有ARM系列中最高的主频。ARM10E系列微处理器采用了一种新的省电模式，支持”64 bit load-store micro-architecture“，含浮点运算协处理器。<br>ARM10E系列微处理器有ARM1020E、ARM1022E和ARM1026EJ-S三种类型。</li>
+<li>ARM11<br>ARM11系列微处理器是ARM公司近年来推出的新一代RISC处理器，它是ARM新指令架构—ARMv6的第一代设计实现。ARM11的媒体处理能力和低功耗特点特别适用于无线和消费类电子产品，其高数据吞吐量和高性能的结合非常适合网络处理应用。另外在实时性能和浮点处理等方面ARM11可以满足汽车电子的应用需求。<br>ARM11系列微处理器有这4种类型：ARM11 MPCore、ARM1136J(F)-S、ARM1156T2(F)-S和ARM1176JZ(F)-S。</li>
+<li>Cortex<br>Cortex基于ARMv7架构，分为Cortex-A、Cortex-R、Cortex-M三类。Cortex-A为传统的、基于虚拟内存的操作系统和应用程序而设计，支持ARM、Thumb、和Thumb-2指令集；Cortex-R针对实时系统设计，支持ARM、Thumb、和Thumb-2指令集；Cortex-M为对价格敏感的产品设计，只支持Thumb-2指令集。</li>
+<li>SecureCore<br>SecureCore系列微处理器专为安全需要设计，提供了完善的32位RISC技术的安全解决方案，因此，SecureCore系列微处理器除了具有ARM体系结构的低功耗、高性能特点外，还具有其独特的优势，即提供了对安全解决方案的支持。<br>SecureCore系列微处理器有如下类型：SecureCoreSC100、SecureCoreSC200。</li>
+<li>OptimoDE Data Engines<br>这是一个新的IP核，针对高性能的嵌入式信号处理应用而设计。<br>另外，Intel公司的StrongARM、Xscale系列处理器也属于ARM架构。Intel StrongARM处理器是便携式通信产品和消费电子产品的理想选择，已成功应用于多家公司的掌上电脑系列产品。Xscale处理器是基于ARMv5TE体系结构的解决方案，是一款全性能、高性价比、低功耗的处理器。它支持16位的Thumb指令和DSP指令集。</li>
+</ol>
+<h2 id="选择嵌入式Linux的理由"><a href="#选择嵌入式Linux的理由" class="headerlink" title="选择嵌入式Linux的理由"></a>选择嵌入式Linux的理由</h2><p>在嵌入式领域可以选择的操作系统有很多，比如：嵌入式Linux、VxWorks、Windows CE、μC&#x2F;OS-Ⅱ等。<br>VxWorks是美国WindRiver公司开发的嵌入式实时操作系统。但就性能而言，它是非常优秀的操作系统，具有可裁剪的微内核结构、高效的任务管理、灵活的任务间通信、微秒级的中断处理，支持POSIX 1003.1b实时扩展标准，支持多种物理介质及标准、完整的TCP&#x2F;IP网络协议等。缺点是它支持的硬件相对较少，源代码不开放，需要专门的技术人员进行维护，授权费用高。<br>Windows CE是微软公司针对嵌入式设备开发的32位、多任务、多线程的操作系统。它支持x86、ARM、MIPS、SH等架构的CPU，硬件驱动丰富，支持WiFi、USB2.0等新型设备，并且具有强大的多媒体功能；可以灵活裁剪以减少系统体积；与PC上的Windows操作系统相通，开发、调试工具使用方便。应用程序的开发流程与PC上的Windows程序开发流程类似。就开发的便利性而言，Windows CE是最好的。但是，它的源代码没有开放，开发人员难以进行更细致的定制，占用内存较多，整个相同相对庞大，版权许可费也比较高。<br>μC&#x2F;OS-Ⅱ是Micrium公司开发的操作系统，可用于8位、16位、32位处理器。可裁剪，对硬件要求低；可运行最多64个任务；任务调度方式位抢占式调度，总是运行最高优先级的就绪任务。用户可以获取μC&#x2F;OS-Ⅱ的全部代码，但是它不是完全免费的。用于商业目的，需要购买商业授权。μC&#x2F;OS-Ⅱ采用一次性收费的方式，价格低廉。μC&#x2F;OS-Ⅱ仅是一个实时内核，用户需要完成其他更多的工作，比如编写硬件驱动程序，实现文件操作等。<br>Linux是遵循GPL协议的开放源代码的操作系统，使用时无需缴纳许可费。内核可以任意裁剪，几乎支持所有的32位、62位CPU；内核中支持的硬件种类繁多，几乎可以从网络上找到所有的硬件驱动程序；支持几乎所有的网络协议；有大量的应用程序可以使用，从编译工具，调试工具到GUI程序，几乎都遵循GPL协议的相关版本；有庞大的开发人员群体，有数量众多的技术论坛，大多数问题可以得到快速而且免费的解答。<br>Linux的缺点在于实时性，虽然在2.6版本的Linux在实时性上有了较大的改进，但是仍然无法称作实时操作系统。不过正是因为Linux开放源代码、易于移植、资源丰富、免费等优点，使得它在嵌入式领域越来越流行。更重要的一点，由于嵌入式Linux与PC Linux基于同样的内核代码，只是裁剪的程度不一样，这使得很多为PC开发的软件再次编译后，可以直接在嵌入式设备上面运行，这使得软件资源极大丰富，比如各类使用的函数库等。</p>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>嵌入式Linux应用完全开发手册</category>
+        <category>第1篇第1章 嵌入式Linux开发概述</category>
+      </categories>
+      <tags>
+        <tag>Linux 应用开发</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>何谓硬解码和软解码</title>
+    <url>/2022/08/05/%E4%BD%95%E8%B0%93%E7%A1%AC%E8%A7%A3%E7%A0%81%E5%92%8C%E8%BD%AF%E8%A7%A3%E7%A0%81/</url>
+    <content><![CDATA[<p>关于“硬解码”与“软解码”。</p>
+<span id="more"></span>
+<p>软解码和硬解码的区别：</p>
+<ol>
+<li>软解码使用CPU进行解码。</li>
+<li>硬解码使用非CPU进行解码，如GPU、专用的DSP、FPGA、ASIC等芯片。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>何谓硬解码和软解码</category>
+      </categories>
+      <tags>
+        <tag>多媒体编解码</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>设备与模块</title>
     <url>/2022/08/02/%E8%AE%BE%E5%A4%87%E4%B8%8E%E6%A8%A1%E5%9D%97/</url>
     <content><![CDATA[<p>《Linux内核设计与实现》第17章总结归纳</p>
