@@ -148,6 +148,288 @@
       </tags>
   </entry>
   <entry>
+    <title>存储控制器</title>
+    <url>/2022/08/11/%E5%AD%98%E5%82%A8%E6%8E%A7%E5%88%B6%E5%99%A8/</url>
+    <content><![CDATA[<p>《嵌入式Linux应用完全开发手册》第1篇第6章总结归纳<br>总线的使用是嵌入式底层开发的基础，了解它之后，再根据外设的具体特性，就可以驱动该外设了。</p>
+<span id="more"></span>
+<h1 id="本章目标"><a href="#本章目标" class="headerlink" title="本章目标"></a>本章目标</h1><ol>
+<li>了解S3C2410&#x2F;S3C2440地址空间的布局</li>
+<li>掌握如何通过总线形式访问扩展的外设，比如内存、NOR Flash、网卡等。</li>
+</ol>
+<h1 id="使用存储控制器访问外设的原理"><a href="#使用存储控制器访问外设的原理" class="headerlink" title="使用存储控制器访问外设的原理"></a>使用存储控制器访问外设的原理</h1><h2 id="S3C2410-x2F-S3C2440的地址空间"><a href="#S3C2410-x2F-S3C2440的地址空间" class="headerlink" title="S3C2410&#x2F;S3C2440的地址空间"></a>S3C2410&#x2F;S3C2440的地址空间</h2><p>S3C2410&#x2F;S3C2440的”存储控制器“提供了访问外部设备所需的信号，它有如下特性：</p>
+<ol>
+<li>支持小字节序、大字节序（通过软件选择）；</li>
+<li>每个BANK的地址空间为128MB，共1GB（8BANKs）；</li>
+<li>可编程控制的范围总线位宽（8&#x2F;16&#x2F;32bit），不过BANK0只能选择两种位宽（16&#x2F;32bit）；</li>
+<li>总共8个BANK，BANK0-BANK5可以支持外接ROM、SRAM等。BANK6-BANK7除了可以支持ROM、SRAM外，还支持SDRAM等；</li>
+<li>BANK0-BANK7共7个BANK的起始地址是固定的；</li>
+<li>BANK7的起始地址可编程选择；</li>
+<li>BANK6、BANK7的地址空间大小是可编程控制的；</li>
+<li>每个BANK的访问周期均可编程控制；</li>
+<li>可以通过外部的”wait“信号延长总线的访问周期；</li>
+<li>在外接SDRAM时，支持自刷新（self-refresh）和省电模式（power down mode）<br>S3C2410&#x2F;S3C2440对外引出的27根地址线ADDR0-ADDR26的访问范围只有128MB，那么如何达到上面所说的1GB的访问空间呢？CPU对外引出了8根片选信号nGCS0-nGCS7，对应于BANK0-BANK7，当访问BANKx的地址空间时，nGCSx的引脚输出低电平，用来选中外接的设备。这样，每个nGCSx对应的128MB空间，8个nGCSx信号总共就对应了1GB的地址空间。这8个BANK的地址空间如图所示：<br><img src="/2022/08/11/%E5%AD%98%E5%82%A8%E6%8E%A7%E5%88%B6%E5%99%A8/1.jpeg" alt="img not found"><br>如图所示，左边对应不使用NAND Flash作为启动设备（单板上不接NAND BOOT跳线）时的地址空间布局，右边对应使用NAND Flash作为启动设备（单板上接NAND BOOT跳线）时的地址空间布局。<br>S3C2410&#x2F;S3C2440作为32位的CPU，可以使用的地址范围理论上达到4GB。除去上述用于连接外设的1GB地址空间外，还有一部分是CPU内部寄存器的地址，剩下的地址空间没有使用。<br>S3C2410&#x2F;S3C2440的寄存器地址范围都处于0x4800000-0x5fffffff，各功能部件的寄存器大体相同。（”-表示相同。”无“表示不含该功能部件。）<table>
+<thead>
+<tr>
+<th>功能部件</th>
+<th>S3C2410起始地址</th>
+<th>S3C2410结束地址</th>
+<th>S3C2440起始地址</th>
+<th>S3C2440结束地址</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>存储控制器</td>
+<td>0x48000000</td>
+<td>0x48000030</td>
+<td>0x48000000</td>
+<td>0x48000030</td>
+</tr>
+<tr>
+<td>USB Host控制器</td>
+<td>0x49000000</td>
+<td>0x49000058</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>中断控制器</td>
+<td>0x4A000000</td>
+<td>0x4A00001C</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>DMA</td>
+<td>0x4B000000</td>
+<td>0x4B0000E0</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>时钟和电源管理</td>
+<td>0x4C000000</td>
+<td>0x4C000014</td>
+<td>-</td>
+<td>0x4C000018</td>
+</tr>
+<tr>
+<td>LCD控制器</td>
+<td>0x4D000000</td>
+<td>0x4D000060</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>NAND Flash控制器</td>
+<td>0x4E000000</td>
+<td>0x4E000014</td>
+<td>-</td>
+<td>0x4E00003C</td>
+</tr>
+<tr>
+<td>摄像头接口</td>
+<td>无</td>
+<td>无</td>
+<td>0x4F000000</td>
+<td>0x4F0000A0</td>
+</tr>
+<tr>
+<td>UART</td>
+<td>0x50000000</td>
+<td>0x50008028</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>脉宽调制计时器</td>
+<td>0x51000000</td>
+<td>0x51000040</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>USB设备</td>
+<td>0x52000140</td>
+<td>0x5200026F</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>看门狗计时器</td>
+<td>0x53000000</td>
+<td>0x53000008</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>IIC控制器</td>
+<td>0x54000000</td>
+<td>0x5400000C</td>
+<td>-</td>
+<td>0x54000010</td>
+</tr>
+<tr>
+<td>IIS控制器</td>
+<td>0x55000000</td>
+<td>0x55000012</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>I&#x2F;O端口</td>
+<td>0x56000000</td>
+<td>0x560000B0</td>
+<td>-</td>
+<td>0x560000CC</td>
+</tr>
+<tr>
+<td>RTC</td>
+<td>0x57000000</td>
+<td>0x5700008B</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>A&#x2F;D转换器</td>
+<td>0x58000000</td>
+<td>0x58000010</td>
+<td>-</td>
+<td>0x58000014</td>
+</tr>
+<tr>
+<td>SPI</td>
+<td>0x59000000</td>
+<td>0x59000034</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>SD接口</td>
+<td>0x5A000000</td>
+<td>0x5A000040</td>
+<td>-</td>
+<td>0x5A000043</td>
+</tr>
+<tr>
+<td>AC97音频编码接口</td>
+<td>无</td>
+<td>无</td>
+<td>0x5B000000</td>
+<td>0x5B00001C</td>
+</tr>
+</tbody></table>
+</li>
+</ol>
+<h2 id="存储控制器与外设的关系"><a href="#存储控制器与外设的关系" class="headerlink" title="存储控制器与外设的关系"></a>存储控制器与外设的关系</h2><p>本书所用的开发板使用了存储控制器的BANK0-BANK6，分别接如下设备：NOR Flash、IDE接口、10M网卡 CS8900A、100M网卡DM9000、扩展串口芯片16C2550、SDRAM。连线方式如下图所示：<br><img src="/2022/08/11/%E5%AD%98%E5%82%A8%E6%8E%A7%E5%88%B6%E5%99%A8/2.jpeg" alt="img not found"><br>根据图6.1可以知道各个BANK的起始地址，但是还需要结合图6.2中用到的地址线才能确定相关外设的访问地址。这些地址线所确定的地址值，再加上这个BANK的起始地址，就是这个外设的访问地址。<br>选择一个复杂的BANK—扩展串口作为例子。</p>
+<ol>
+<li>它使用nGCS5，起始地址作为0x28000000；</li>
+<li>nCSA&#x3D;ADDR24 || nGCS5，nCSB&#x3D;!ADDR24 || nGCS5。当ADDR24和nGCS5均为低电平时选中扩展串口A；当ADDR24为高电平、nGCS5为低电平时选中扩展串口B。</li>
+<li>CPU的ADDR0-ADDR2连接到扩展串口的A0-A2。所以访问空间有8字节。<br>综上所述，扩展串口A的访问空间为：0x28000000-0x28000007；扩展串口B的访问空间为：0x29000000-0x29000007。</li>
+</ol>
+<p>BANK0-BANK5的连接方式都是相似的，BANK6连接SDRAM时复杂一点，CPU提供了一组用于SDRAM的信号。</p>
+<ol>
+<li>SDRAM时钟有效信号SCKE；</li>
+<li>SDRAM时钟信号SCLK0&#x2F;SCLK1；</li>
+<li>数据掩码信号DQM0、DQM1、DQM2、DQM3；</li>
+<li>SDRAM片选信号nSCS0（它与nGCS6是同一个引脚的两个功能）；</li>
+<li>SDRAM行地址选通脉冲信号nSRAS；</li>
+<li>SDRAM列地址选通脉冲信号nSCAS；</li>
+<li>写允许信号mWE（它不是专用于SDRAM的）。<br>SDRAM的内部是一个存储阵列，阵列就如同表格一样，把数据填进去，和表格的检索原理一样，先指定一个行（Row），再指定一个列（Column），就可以找到所需的单元格，这就是SDRAM的寻址的基本原理。这个单元格称为存储单元，这个表格就是逻辑BANK（L-BANK），SDRAM一般含有4个L-BANK。<br>对SDRAM的访问可以分为如下4个步骤：</li>
+<li>CPU发出片选信号，nSCS0有效，它选中SDRAM芯片。</li>
+<li>SDRAM中有4个L-BANK,需要两个地址线来选择其中一个，从图6.2可知使用ADDR24、ADDR25作为L-BANK的选择信号。</li>
+<li>对被选中的芯片进行统一的行&#x2F;列（存储单元）寻址。<br>根据SDRAM芯片的列地址线数目选择CPU的相关寄存器后，CPU就会从32位的地址中自动分出L-BANK选择信号，行地址信号，列地址信号，然后发出行地址信号、列地址信号。L-BANK选择信号在发出行地址信号的同时发出，并维持到列地址信号结束。<br>在图6.2中，行地址、列地址公用地址线ADDR2-ADDR14（BANK6位宽位32，ADDR0&#x2F;1没有使用），使用nSRAS、nSCAS两个信号来区分它们。比如本开发板中，使用两根地址线ADDR24、ADDR25作为L-BANK的选择信号；SDRAM芯片K4S561632的行地址数位13，列地址数为9，所以当nSRAS信号有效时，ADDR2-ADDR14上发出的是行地址信号，它对应32位地址空间的bit[23::11]；当nSCAs信号有效时，ADDR2-ADDR10上发出的是列地址信号，它对应32位地址空间的bit[10:2]；由于图6.2中BANK6以32位的宽度外接SDRAM，ADDR0、ADDR1恒为0，不参与译码。</li>
+<li>找到存储单元后，被选中的芯片就要进行统一的数据传输了。<br>开发板中使用两片16位的SDRAM芯片并联组成32位的位宽，与CPU的32根数据线（DATA0-DATA31）相连。<br>BANK6的起始地址为0x30000000，所以SDRAM的访问地址为0x30000000-0x33ffffff，共64M。<br>对6.2图中连接的外设，它们的访问地址（物理地址）如下表所示：<table>
+<thead>
+<tr>
+<th>BANKx</th>
+<th>外设名称</th>
+<th>起始地址</th>
+<th>结束地址</th>
+<th>大小（字节）</th>
+<th>位宽</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BANK0</td>
+<td>NOR Flash</td>
+<td>0x00000000</td>
+<td>0x001FFFFF</td>
+<td>2M</td>
+<td>16</td>
+</tr>
+<tr>
+<td>BANK1</td>
+<td>IDE 接口命令块寄存器</td>
+<td>0x08000000</td>
+<td>0x0800000F</td>
+<td>16</td>
+<td>16</td>
+</tr>
+<tr>
+<td>BANK2</td>
+<td>IDE 接口控制块寄存器</td>
+<td>0x10000000</td>
+<td>0x1000000F</td>
+<td>16</td>
+<td>16</td>
+</tr>
+<tr>
+<td>BANK3</td>
+<td>10M网卡CS8900A</td>
+<td>0x19000000</td>
+<td>0x190FFFFF</td>
+<td>1M</td>
+<td>16</td>
+</tr>
+<tr>
+<td>BANK4</td>
+<td>10&#x2F;100M网卡DM9000</td>
+<td>只有两个地址 0x20000000 和 0x20000004</td>
+<td></td>
+<td>2M</td>
+<td>16</td>
+</tr>
+<tr>
+<td>BANK5</td>
+<td>扩展串口A</td>
+<td>0x28000000</td>
+<td>0x28000007</td>
+<td>8</td>
+<td>8</td>
+</tr>
+<tr>
+<td>BANK6</td>
+<td>扩展串口B</td>
+<td>0x29000000</td>
+<td>0x29000007</td>
+<td>8</td>
+<td>8</td>
+</tr>
+<tr>
+<td>BANK7</td>
+<td>SDRAM</td>
+<td>0x30000000</td>
+<td>0x33FFFFFF</td>
+<td>64M</td>
+<td>32</td>
+</tr>
+</tbody></table>
+</li>
+</ol>
+<p>注：10M网卡CS8900A使用nIOR、nIOW作为读&#x2F;写使能信号时，ADDR24必须为1。</p>
+<h2 id="存储控制器的寄存器使用方法"><a href="#存储控制器的寄存器使用方法" class="headerlink" title="存储控制器的寄存器使用方法"></a>存储控制器的寄存器使用方法</h2><p>爷爷泡的茶，有一种味道叫做家~</p>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>嵌入式Linux应用完全开发手册</category>
+        <category>第1篇第6章 存储控制器</category>
+      </categories>
+      <tags>
+        <tag>Linux 应用开发</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>设备与模块</title>
     <url>/2022/08/02/%E8%AE%BE%E5%A4%87%E4%B8%8E%E6%A8%A1%E5%9D%97/</url>
     <content><![CDATA[<p>《Linux内核设计与实现》第17章总结归纳</p>
