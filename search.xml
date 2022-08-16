@@ -148,79 +148,6 @@
       </tags>
   </entry>
   <entry>
-    <title>MMU</title>
-    <url>/2022/08/15/MMU/</url>
-    <content><![CDATA[<p>《嵌入式Linux应用完全开发手册》第1篇第7章总结归纳</p>
-<span id="more"></span>
-<h1 id="本章要点"><a href="#本章要点" class="headerlink" title="本章要点"></a>本章要点</h1><ol>
-<li>了解虚拟地址和物理地址的关系</li>
-<li>掌握如何通过设置MMU来控制虚拟地址到物理地址的转化</li>
-<li>了解MMU的内存访问权限机制</li>
-<li>了解TLB、Cache、Write Buffer的原理，使用时的注意事项</li>
-<li>实例</li>
-</ol>
-<h1 id="内存管理单元MMU介绍"><a href="#内存管理单元MMU介绍" class="headerlink" title="内存管理单元MMU介绍"></a>内存管理单元MMU介绍</h1><h2 id="S3C2410-x2F-S3C2440-MMU特性"><a href="#S3C2410-x2F-S3C2440-MMU特性" class="headerlink" title="S3C2410&#x2F;S3C2440 MMU特性"></a>S3C2410&#x2F;S3C2440 MMU特性</h2><p>内存管理单元（Memory Management Unit）简称MMU，它负责虚拟地址收到物理地址的映射，并提供硬件机制的内存访问权限检查。现代的多用户多进程操作系统通过MMU使得各个用户进程都拥有自己独立的地址空间：地址映射功能使得各进程拥有看起来一样的地址空间，而内存访问权限的检查可以保护每个进程所用的内存不会被其他破坏。</p>
-<ol>
-<li>与ARM V4兼容的映射长度、域、访问权限检查机制。</li>
-<li>4种映射长度：段（1MB）、大页（64KB）、小页（4KB）、极小页（1KB）。</li>
-<li>对每段都可以设置访问权限。</li>
-<li>大页、小页的每个子页（sub-page，被映射页的1&#x2F;4）都可以设置单独的访问权限。</li>
-<li>硬件实现的16个域。</li>
-<li>指令TLB（含64个条目）、数据TLB（含64个条目）。</li>
-<li>硬件访问页表（地址映射、权限检查有硬件自动进行）。</li>
-<li>TLB条目中替换采用round-robin算法（也称cyclic算法）。</li>
-<li>可以使无效整个TLB。</li>
-<li>可以单独使无效某个TLB。</li>
-<li>可以在TLB中锁定某个条目，指令TLB、数据TLB相互独立。<br>重点在于页表的结构与建立、映射的过程。</li>
-</ol>
-<h2 id="S3C2410-x2F-S3C2440-MMU地址变换过程"><a href="#S3C2410-x2F-S3C2440-MMU地址变换过程" class="headerlink" title="S3C2410&#x2F;S3C2440 MMU地址变换过程"></a>S3C2410&#x2F;S3C2440 MMU地址变换过程</h2><h3 id="地址的分类"><a href="#地址的分类" class="headerlink" title="地址的分类"></a>地址的分类</h3><p>以前的程序是非常小的，可以全部装入内存。随着技术的发展，出现了以下两种情况：</p>
-<ol>
-<li>有的程序很大，它所要求的内存，超过了内存总容量，不能一次性装入内存。</li>
-<li>多道系统中有很多程序需要同时执行，它们要求的内存超过了内存总容量，不能把所有程序都装入内存。<br>实际上，一个程序在运行前，没有必要全部装入内存，而仅需要将那些当前需要运行的部分先装入内存，其余部分在用到时再从磁盘调入，而当内存耗光时再将暂时不用的部分调出到磁盘。这使得一个大程序可以在较小的内存空间中运行，这也使得内存中可以同时装入更多的程序并发执行，从用户的角度看，该系统所具有的内存容量将比实际内存容量大得多，人们把这样的存储器称为虚拟存储器。<br>虚拟存储器从逻辑上对内存容量进行了扩充，用户看到的大容量只是一种感觉，是虚的，在32位的CPU系统中，这个虚拟内存地址范围为0-0xFFFFFFFF，我们把这个地址范围称为虚拟地址空间，其中某个地址称为虚拟地址。与虚拟地址空间、虚拟地址对应的是物理地址空间、物理地址，它们对应实际的内存。<br>虚拟地址空间最终需要转化为物理地址才能读写实际的数据，这通过将虚拟地址空间、物理地址空间划分为同样大小的一块块小空间（段或页），然后为这两类小空间建立映射关系。由于虚拟地址空间远大于物理空间，有可能多块虚拟地址空间映射到同一块物理地址空间，或者有些虚拟地址空间没有映射到具体的物理地址空间上去（可以使用到时再映射）。<br><img src="/2022/08/15/MMU/1.jpeg" alt="img not found"></li>
-</ol>
-<p>ARM CPU上的地址转换涉及3个概念：虚拟地址（Virtual Address）、变换后的虚拟地址（Modified Virtual Address）、物理地址（Physical Address）。<br>没启动MMU时，CPU核、cache、MMU、外设等所有部件使用的都是物理地址。<br>启动MMU后，CPU核对外发出虚拟地址VA；VA被转换为MVA供cache、MMU使用，再这里MVA被转换为PA；最后使用PA读写实际设备（S3C2410&#x2F;S3C2440内部寄存器或外界的设备）：</p>
-<ol>
-<li>CPU看到的、用到的只是虚拟地址VA，至于VA如何最终落实到物理地址PA上，CPU核是不理会的。</li>
-<li>而caches核MMU也是看不到VA的，它们利用有MVA转换得到PA。</li>
-<li>而实际设备看不到VA，MVA，它们读写时使用的是物理地址PA。<br>MVA是除CPU核外的其他部分看见的虚拟地址，VA与MVA之间的变化关系如图所示：<br><img src="/2022/08/15/MMU/2.jpeg" alt="img not found"><br>如果VA&lt;32M，需要使用进程标识号（PID）通过读CP15的c13获得来转换MVA。VA与MVA的转换方式如下（这是硬件自动完成的）：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> (VA &lt; <span class="number">32</span>M) then</span><br><span class="line">    MVA = VA | (PID &lt;&lt; <span class="number">25</span>)</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">    MVA = VA</span><br></pre></td></tr></table></figure>
-利用PID生成MVA的目的是为了减少切换进程时的代价；不使用MVA而直接使用VA的话，当两个进程使用的虚拟地址空间VA有重叠时，在切换进程时为了把重叠的VA映射到不同的PA上去，需要重建页表、使无效caches和TLBS等，代价很大。使用MVA后，进程切换就省事多了：假设两个进程1、2运行时的VA都是0-32M，但是它们的MVA并不重叠，分别是0x02000000-0x03FFFFFF、0x04000000-0x05FFFFFF，这样就不必进行重建页表工作了。</li>
-</ol>
-<h3 id="虚拟地址到物理地址的转换过程"><a href="#虚拟地址到物理地址的转换过程" class="headerlink" title="虚拟地址到物理地址的转换过程"></a>虚拟地址到物理地址的转换过程</h3><p>将一个虚拟地址转换为物理地址，一般有两个办法：用一个确定的数学公式进行转换或用表格存储虚拟地址对应的物理地址。这类表格称为页表（Page Table），页表由一个个条目（Entry）组成；每个条目存储了一段虚拟地址对应的物理地址及其访问权限，或者下一级页表地址。<br>在AMR CPU中使用的第二种方法。S3C2410&#x2F;S3C2440最多会用到两级页表：以段（1MB）的方式进行转换时只用到一级页表，以页（Page）的方式进行转换时用到两级页表。页的大小由3种：大页（64KB）、小页（4KB）、极小页（1KB）。条目也称为”描述符“（Descriptor），有段描述符、大页描述符、小页描述符、极小页描述符–它们保存段、大页、小页或极小页的起始物理地址：粗页表描述符、细页表描述符–它们保存二级页表的物理地址。<br>大概的转换过程如下：</p>
-<ol>
-<li>根据给定的虚拟地址找到一级页表中的条目。</li>
-<li>如果此条目是段描述符，则返回物理地址，转换结束。</li>
-<li>否则如果此条目是二级页表描述符，继续利用虚拟地址在此二级页表找到下一个条目。</li>
-<li>如果第二个条目是页描述符，则返回物理地址，转换结束。</li>
-<li>其他情况出错。</li>
-</ol>
-<p><img src="/2022/08/15/MMU/3.jpeg" alt="img not found"><br>图中的“TTB base”代表一级页表的地址，将它写入协处理器CP15的寄存器C2（页表基址寄存器）即可。一级页表的地址必须是16K对应的（[14:0]为0）。<br><img src="/2022/08/15/MMU/4.jpeg" alt="img not found"><br>先介绍一级页表，32位的CPU的虚拟地址空间达到4GB，一级页表使用4096个描述符来表示这4GB空间—每个描述符对应1MB的虚拟地址，要么存储了它对应的1MB物理空间的起始地址，要么存储了下一级页表的地址。使用MVA[31:20]来索引一级页表，得到一个描述符，每个描述符占用4字节，如下图所示：<br><img src="/2022/08/15/MMU/5.jpeg" alt="img not found"><br>根据一级页表描述符的最低两位，可分为以下4种：</p>
-<ol>
-<li>0b00：无效。</li>
-<li>0b01：粗页表（Coarse page table）<br>位[31:10]称为粗页表基址（Coarse page table base address），此描述符的低10位填充0后就是一个二级页表的物理地址。此二级页表含256个条目（所以大小为1KB），称为粗页表。其中每个条目表示大小为4KB的物理地址空间，所以一个粗页表表示1MB的物理地址空间。</li>
-<li>0b10：段（Section）<br>位[31:20]称为段基址（Section Base），此描述符的低20位填充0后就是一块1MB的物理地址空间的起始地址。MVA[19:0]用来在这1MB的空间中寻址。所以，描述符的位[31:20]和MVA[19:0]就构成了这个虚拟地址MVA对应的物理地址。<br>以段的方式进行映射时，虚拟地址MVA到物理地址PA的转换过程如下：<br><img src="/2022/08/15/MMU/6.jpeg" alt="img not found"><br>①页表基址寄存器位[31:14]和MVA[31:20]组成一个低两位为0的32位地址，MMU利用这个地址找到段描述符。<br>②取出段描述符的位[31:20]—段基址，它和MVA[19:0]组成一个32位的物理地址–这就是MVA对应的PA。</li>
-<li>0b11：细页表（Fine page table）<br>位[32：12]称为细页表基址（Fine page table base address），此描述符的低12位填充0后就是一个二级页表的物理地址。此二级页表含1024个条目（所以大小为4KB），称为细页表。其中每个条目表示大小为1KB的物理地址空间，所以一个细页表表示1MB的物理地址空间。<br>以大页（64KB）、小页（4KB）或极小页（1KB）进行地址映射时，需要用到两级页表。二级页表有粗页表、细页表两种，二级页表中描述符的格式如下：<br><img src="/2022/08/15/MMU/7.jpeg" alt="img not found"><br>根据二级描述符的最低两位，可分为以下4种情况：<br>①0b00：无效。<br>②0b01：大页描述符。<br>位[31:16]称为大页基址（Large page base address），此描述符的低16位填充0后就是一块64KB物理地址空间的起始地址。粗页表每个条目只能表示4KB的物理空间，如果大页描述符保存在粗页表中，则连续16个条目都保存同一个大页描述符。类似的，细页表中每个条目只能表示1KB的物理空间，如果大页描述符保存在细页表中，则连续64个条目都保存同一个大页描述符。<br>下面以保存在粗页表中的大页描述符为例，说明地址转换的过程：<br><img src="/2022/08/15/MMU/8.jpeg" alt="img not found"><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1. 页表基址寄存器位[31:14]和MVA[31:20]组成一个低两位为0的32位地址，MMU利用这个地址找到粗页表描述符。</span><br><span class="line">2. 取出粗页表描述符的位[31:10]--即粗页表基址，它和MVA[19:12]组成一个低两位为0的32位物理地址---据此即可找到大页描述符。</span><br><span class="line">3. 取出大页描述符的位[31:16]--即大页基址，它和MVA[15:0]组成一个32位的物理地址---这就是MVA对应的PA。</span><br><span class="line"></span><br><span class="line">上面的步骤2和3中，用于在粗页表中索引的MVA[19:12]、用于在大页内寻址的MVA[15:0]有重合的位：位[15:12]。当位[15:12]从0b0000变化到0b1111时，步骤2返回的大页描述符相同，所以粗页表中连续16个条目都保存同一个大页描述符。</span><br></pre></td></tr></table></figure>
-③0b10：小页描述符<br>位[31:12]称为小页基址，此描述符的低12位填充0后就是一块4KB物理地址空间的起始地址。粗页表中每个条目表示4KB的物理空间，如果小页描述符保存在粗页表中，则只需要用一个条目来保存一个小页描述符。类似的，细页表中每个条目只能表示1KB的物理空间，如果小页表描述符保存在细页表中，则连续4个条目都保存同一个小页描述符。<br><img src="/2022/08/15/MMU/9.jpeg" alt="img not found"><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1. 页表基址寄存器位[31:14]和MVA[31:20]组成一个低两位为0的32位地址，MMU利用这个地址找到粗页表描述符。</span><br><span class="line">2. 取出粗页表描述符的位[31:10]--即粗页表基址，它和MVA[19:12]组成一个低两位为0的32位物理地址---据此即可找到小页描述符。</span><br><span class="line">3. 取出小页描述符的位[31:12]--即小页基址，它和MVA[11:0]组成一个32位的物理地址---这就是MVA对应的PA。</span><br><span class="line"></span><br><span class="line">小页描述符保存在细页表中，地址转换过程与上面类似，不在赘述。</span><br></pre></td></tr></table></figure>
-④0b11：极小页描述符<br>位[31:10]被称为极小页基址，此描述符的低10位填充0后就是一块1KB的物理地址空间的起始地址。极小页描述符只能保存在细页表中，用一个条目来保存一个极小页描述符。<br><img src="/2022/08/15/MMU/10.jpeg" alt="img not found"><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1. 页表基址寄存器位[31:14]和MVA[31:20]组成一个低两位为0的32位地址，MMU利用这个地址找到细页表描述符。</span><br><span class="line">2. 取出细页表描述符的位[31:12]---即细页表基址。它和MVA[19:10]组成一个低两位为0的32位物理地址--据此即可找到极小页描述符。</span><br><span class="line">3. 取出极小页描述符的位[31:10]---即极小页基址，它和MVA[9:0]组成一个32位的物理地址---这是MVA对应的PA。</span><br></pre></td></tr></table></figure></li>
-</ol>
-<p>从段、大页、小页、极小页的地址转换过程可知。</p>
-<ol>
-<li>以段进行映射时，通过MVA[31:20]结合页表得到一段（1MB）的起始物理地址，MVA[19:0]用来在段中寻址。</li>
-<li>以大页进行映射时，通过MVA[31:16]结合页表得到一个大页（64KB）的起始物理地址，MVA[15:0]用来在大页中寻址。</li>
-<li>以小页进行映射时，通过MVA[31:12]结合页表得到一个小页（4KB）的起始物理地址，MVA[11:0]用来在大页中寻址。</li>
-<li>以极小页进行映射时，通过MVA[31:10]结合页表得到一个极小页（1KB）的起始物理地址，MVA[9:0]用来在极小页中寻址。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>学习</category>
-        <category>书籍</category>
-        <category>嵌入式Linux应用完全开发手册</category>
-        <category>第1篇第7章 MMU</category>
-      </categories>
-      <tags>
-        <tag>Linux 应用开发</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>设备与模块</title>
     <url>/2022/08/02/%E8%AE%BE%E5%A4%87%E4%B8%8E%E6%A8%A1%E5%9D%97/</url>
     <content><![CDATA[<p>《Linux内核设计与实现》第17章总结归纳</p>
@@ -677,6 +604,262 @@ SDRAM K4S561632不支持CL&#x3D;1的情况，所以位[6:4]取值为0b010(CL &#x
         <category>书籍</category>
         <category>嵌入式Linux应用完全开发手册</category>
         <category>第1篇第6章 存储控制器</category>
+      </categories>
+      <tags>
+        <tag>Linux 应用开发</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>MMU</title>
+    <url>/2022/08/15/MMU/</url>
+    <content><![CDATA[<p>《嵌入式Linux应用完全开发手册》第1篇第7章总结归纳</p>
+<span id="more"></span>
+<h1 id="本章要点"><a href="#本章要点" class="headerlink" title="本章要点"></a>本章要点</h1><ol>
+<li>了解虚拟地址和物理地址的关系</li>
+<li>掌握如何通过设置MMU来控制虚拟地址到物理地址的转化</li>
+<li>了解MMU的内存访问权限机制</li>
+<li>了解TLB、Cache、Write Buffer的原理，使用时的注意事项</li>
+<li>实例</li>
+</ol>
+<h1 id="内存管理单元MMU介绍"><a href="#内存管理单元MMU介绍" class="headerlink" title="内存管理单元MMU介绍"></a>内存管理单元MMU介绍</h1><h2 id="S3C2410-x2F-S3C2440-MMU特性"><a href="#S3C2410-x2F-S3C2440-MMU特性" class="headerlink" title="S3C2410&#x2F;S3C2440 MMU特性"></a>S3C2410&#x2F;S3C2440 MMU特性</h2><p>内存管理单元（Memory Management Unit）简称MMU，它负责虚拟地址收到物理地址的映射，并提供硬件机制的内存访问权限检查。现代的多用户多进程操作系统通过MMU使得各个用户进程都拥有自己独立的地址空间：地址映射功能使得各进程拥有看起来一样的地址空间，而内存访问权限的检查可以保护每个进程所用的内存不会被其他破坏。</p>
+<ol>
+<li>与ARM V4兼容的映射长度、域、访问权限检查机制。</li>
+<li>4种映射长度：段（1MB）、大页（64KB）、小页（4KB）、极小页（1KB）。</li>
+<li>对每段都可以设置访问权限。</li>
+<li>大页、小页的每个子页（sub-page，被映射页的1&#x2F;4）都可以设置单独的访问权限。</li>
+<li>硬件实现的16个域。</li>
+<li>指令TLB（含64个条目）、数据TLB（含64个条目）。</li>
+<li>硬件访问页表（地址映射、权限检查有硬件自动进行）。</li>
+<li>TLB条目中替换采用round-robin算法（也称cyclic算法）。</li>
+<li>可以使无效整个TLB。</li>
+<li>可以单独使无效某个TLB。</li>
+<li>可以在TLB中锁定某个条目，指令TLB、数据TLB相互独立。<br>重点在于页表的结构与建立、映射的过程。</li>
+</ol>
+<h2 id="S3C2410-x2F-S3C2440-MMU地址变换过程"><a href="#S3C2410-x2F-S3C2440-MMU地址变换过程" class="headerlink" title="S3C2410&#x2F;S3C2440 MMU地址变换过程"></a>S3C2410&#x2F;S3C2440 MMU地址变换过程</h2><h3 id="地址的分类"><a href="#地址的分类" class="headerlink" title="地址的分类"></a>地址的分类</h3><p>以前的程序是非常小的，可以全部装入内存。随着技术的发展，出现了以下两种情况：</p>
+<ol>
+<li>有的程序很大，它所要求的内存，超过了内存总容量，不能一次性装入内存。</li>
+<li>多道系统中有很多程序需要同时执行，它们要求的内存超过了内存总容量，不能把所有程序都装入内存。<br>实际上，一个程序在运行前，没有必要全部装入内存，而仅需要将那些当前需要运行的部分先装入内存，其余部分在用到时再从磁盘调入，而当内存耗光时再将暂时不用的部分调出到磁盘。这使得一个大程序可以在较小的内存空间中运行，这也使得内存中可以同时装入更多的程序并发执行，从用户的角度看，该系统所具有的内存容量将比实际内存容量大得多，人们把这样的存储器称为虚拟存储器。<br>虚拟存储器从逻辑上对内存容量进行了扩充，用户看到的大容量只是一种感觉，是虚的，在32位的CPU系统中，这个虚拟内存地址范围为0-0xFFFFFFFF，我们把这个地址范围称为虚拟地址空间，其中某个地址称为虚拟地址。与虚拟地址空间、虚拟地址对应的是物理地址空间、物理地址，它们对应实际的内存。<br>虚拟地址空间最终需要转化为物理地址才能读写实际的数据，这通过将虚拟地址空间、物理地址空间划分为同样大小的一块块小空间（段或页），然后为这两类小空间建立映射关系。由于虚拟地址空间远大于物理空间，有可能多块虚拟地址空间映射到同一块物理地址空间，或者有些虚拟地址空间没有映射到具体的物理地址空间上去（可以使用到时再映射）。<br><img src="/2022/08/15/MMU/1.jpeg" alt="img not found"></li>
+</ol>
+<p>ARM CPU上的地址转换涉及3个概念：虚拟地址（Virtual Address）、变换后的虚拟地址（Modified Virtual Address）、物理地址（Physical Address）。<br>没启动MMU时，CPU核、cache、MMU、外设等所有部件使用的都是物理地址。<br>启动MMU后，CPU核对外发出虚拟地址VA；VA被转换为MVA供cache、MMU使用，再这里MVA被转换为PA；最后使用PA读写实际设备（S3C2410&#x2F;S3C2440内部寄存器或外界的设备）：</p>
+<ol>
+<li>CPU看到的、用到的只是虚拟地址VA，至于VA如何最终落实到物理地址PA上，CPU核是不理会的。</li>
+<li>而caches和MMU也是看不到VA的，它们利用有MVA转换得到PA。</li>
+<li>而实际设备看不到VA，MVA，它们读写时使用的是物理地址PA。<br>MVA是除CPU核外的其他部分看见的虚拟地址，VA与MVA之间的变化关系如图所示：<br><img src="/2022/08/15/MMU/2.jpeg" alt="img not found"><br>如果VA&lt;32M，需要使用进程标识号（PID）通过读CP15的c13获得来转换MVA。VA与MVA的转换方式如下（这是硬件自动完成的）：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> (VA &lt; <span class="number">32</span>M) then</span><br><span class="line">    MVA = VA | (PID &lt;&lt; <span class="number">25</span>)</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">    MVA = VA</span><br></pre></td></tr></table></figure>
+利用PID生成MVA的目的是为了减少切换进程时的代价；不使用MVA而直接使用VA的话，当两个进程使用的虚拟地址空间VA有重叠时，在切换进程时为了把重叠的VA映射到不同的PA上去，需要重建页表、使无效caches和TLBS等，代价很大。使用MVA后，进程切换就省事多了：假设两个进程1、2运行时的VA都是0-32M，但是它们的MVA并不重叠，分别是0x02000000-0x03FFFFFF、0x04000000-0x05FFFFFF，这样就不必进行重建页表工作了。</li>
+</ol>
+<h3 id="虚拟地址到物理地址的转换过程"><a href="#虚拟地址到物理地址的转换过程" class="headerlink" title="虚拟地址到物理地址的转换过程"></a>虚拟地址到物理地址的转换过程</h3><p>将一个虚拟地址转换为物理地址，一般有两个办法：用一个确定的数学公式进行转换或用表格存储虚拟地址对应的物理地址。这类表格称为页表（Page Table），页表由一个个条目（Entry）组成；每个条目存储了一段虚拟地址对应的物理地址及其访问权限，或者下一级页表地址。<br>在AMR CPU中使用的第二种方法。S3C2410&#x2F;S3C2440最多会用到两级页表：以段（1MB）的方式进行转换时只用到一级页表，以页（Page）的方式进行转换时用到两级页表。页的大小由3种：大页（64KB）、小页（4KB）、极小页（1KB）。条目也称为”描述符“（Descriptor），有段描述符、大页描述符、小页描述符、极小页描述符–它们保存段、大页、小页或极小页的起始物理地址：粗页表描述符、细页表描述符–它们保存二级页表的物理地址。<br>大概的转换过程如下：</p>
+<ol>
+<li>根据给定的虚拟地址找到一级页表中的条目。</li>
+<li>如果此条目是段描述符，则返回物理地址，转换结束。</li>
+<li>否则如果此条目是二级页表描述符，继续利用虚拟地址在此二级页表找到下一个条目。</li>
+<li>如果第二个条目是页描述符，则返回物理地址，转换结束。</li>
+<li>其他情况出错。</li>
+</ol>
+<p><img src="/2022/08/15/MMU/3.jpeg" alt="img not found"><br>图中的“TTB base”代表一级页表的地址，将它写入协处理器CP15的寄存器C2（页表基址寄存器）即可。一级页表的地址必须是16K对应的（[14:0]为0）。<br><img src="/2022/08/15/MMU/4.jpeg" alt="img not found"><br>先介绍一级页表，32位的CPU的虚拟地址空间达到4GB，一级页表使用4096个描述符来表示这4GB空间—每个描述符对应1MB的虚拟地址，要么存储了它对应的1MB物理空间的起始地址，要么存储了下一级页表的地址。使用MVA[31:20]来索引一级页表，得到一个描述符，每个描述符占用4字节，如下图所示：<br><img src="/2022/08/15/MMU/5.jpeg" alt="img not found"><br>根据一级页表描述符的最低两位，可分为以下4种：</p>
+<ol>
+<li>0b00：无效。</li>
+<li>0b01：粗页表（Coarse page table）<br>位[31:10]称为粗页表基址（Coarse page table base address），此描述符的低10位填充0后就是一个二级页表的物理地址。此二级页表含256个条目（所以大小为1KB），称为粗页表。其中每个条目表示大小为4KB的物理地址空间，所以一个粗页表表示1MB的物理地址空间。</li>
+<li>0b10：段（Section）<br>位[31:20]称为段基址（Section Base），此描述符的低20位填充0后就是一块1MB的物理地址空间的起始地址。MVA[19:0]用来在这1MB的空间中寻址。所以，描述符的位[31:20]和MVA[19:0]就构成了这个虚拟地址MVA对应的物理地址。<br>以段的方式进行映射时，虚拟地址MVA到物理地址PA的转换过程如下：<br><img src="/2022/08/15/MMU/6.jpeg" alt="img not found"><br>①页表基址寄存器位[31:14]和MVA[31:20]组成一个低两位为0的32位地址，MMU利用这个地址找到段描述符。<br>②取出段描述符的位[31:20]—段基址，它和MVA[19:0]组成一个32位的物理地址–这就是MVA对应的PA。</li>
+<li>0b11：细页表（Fine page table）<br>位[32：12]称为细页表基址（Fine page table base address），此描述符的低12位填充0后就是一个二级页表的物理地址。此二级页表含1024个条目（所以大小为4KB），称为细页表。其中每个条目表示大小为1KB的物理地址空间，所以一个细页表表示1MB的物理地址空间。<br>以大页（64KB）、小页（4KB）或极小页（1KB）进行地址映射时，需要用到两级页表。二级页表有粗页表、细页表两种，二级页表中描述符的格式如下：<br><img src="/2022/08/15/MMU/7.jpeg" alt="img not found"><br>根据二级描述符的最低两位，可分为以下4种情况：<br>①0b00：无效。<br>②0b01：大页描述符。<br>位[31:16]称为大页基址（Large page base address），此描述符的低16位填充0后就是一块64KB物理地址空间的起始地址。粗页表每个条目只能表示4KB的物理空间，如果大页描述符保存在粗页表中，则连续16个条目都保存同一个大页描述符。类似的，细页表中每个条目只能表示1KB的物理空间，如果大页描述符保存在细页表中，则连续64个条目都保存同一个大页描述符。<br>下面以保存在粗页表中的大页描述符为例，说明地址转换的过程：<br><img src="/2022/08/15/MMU/8.jpeg" alt="img not found"><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1. 页表基址寄存器位[31:14]和MVA[31:20]组成一个低两位为0的32位地址，MMU利用这个地址找到粗页表描述符。</span><br><span class="line">2. 取出粗页表描述符的位[31:10]--即粗页表基址，它和MVA[19:12]组成一个低两位为0的32位物理地址---据此即可找到大页描述符。</span><br><span class="line">3. 取出大页描述符的位[31:16]--即大页基址，它和MVA[15:0]组成一个32位的物理地址---这就是MVA对应的PA。</span><br><span class="line"></span><br><span class="line">上面的步骤2和3中，用于在粗页表中索引的MVA[19:12]、用于在大页内寻址的MVA[15:0]有重合的位：位[15:12]。当位[15:12]从0b0000变化到0b1111时，步骤2返回的大页描述符相同，所以粗页表中连续16个条目都保存同一个大页描述符。</span><br></pre></td></tr></table></figure>
+③0b10：小页描述符<br>位[31:12]称为小页基址，此描述符的低12位填充0后就是一块4KB物理地址空间的起始地址。粗页表中每个条目表示4KB的物理空间，如果小页描述符保存在粗页表中，则只需要用一个条目来保存一个小页描述符。类似的，细页表中每个条目只能表示1KB的物理空间，如果小页表描述符保存在细页表中，则连续4个条目都保存同一个小页描述符。<br><img src="/2022/08/15/MMU/9.jpeg" alt="img not found"><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1. 页表基址寄存器位[31:14]和MVA[31:20]组成一个低两位为0的32位地址，MMU利用这个地址找到粗页表描述符。</span><br><span class="line">2. 取出粗页表描述符的位[31:10]--即粗页表基址，它和MVA[19:12]组成一个低两位为0的32位物理地址---据此即可找到小页描述符。</span><br><span class="line">3. 取出小页描述符的位[31:12]--即小页基址，它和MVA[11:0]组成一个32位的物理地址---这就是MVA对应的PA。</span><br><span class="line"></span><br><span class="line">小页描述符保存在细页表中，地址转换过程与上面类似，不在赘述。</span><br></pre></td></tr></table></figure>
+④0b11：极小页描述符<br>位[31:10]被称为极小页基址，此描述符的低10位填充0后就是一块1KB的物理地址空间的起始地址。极小页描述符只能保存在细页表中，用一个条目来保存一个极小页描述符。<br><img src="/2022/08/15/MMU/10.jpeg" alt="img not found"><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1. 页表基址寄存器位[31:14]和MVA[31:20]组成一个低两位为0的32位地址，MMU利用这个地址找到细页表描述符。</span><br><span class="line">2. 取出细页表描述符的位[31:12]---即细页表基址。它和MVA[19:10]组成一个低两位为0的32位物理地址--据此即可找到极小页描述符。</span><br><span class="line">3. 取出极小页描述符的位[31:10]---即极小页基址，它和MVA[9:0]组成一个32位的物理地址---这是MVA对应的PA。</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>从段、大页、小页、极小页的地址转换过程可知。</p>
+<ol>
+<li>以段进行映射时，通过MVA[31:20]结合页表得到一段（1MB）的起始物理地址，MVA[19:0]用来在段中寻址。</li>
+<li>以大页进行映射时，通过MVA[31:16]结合页表得到一个大页（64KB）的起始物理地址，MVA[15:0]用来在大页中寻址。</li>
+<li>以小页进行映射时，通过MVA[31:12]结合页表得到一个小页（4KB）的起始物理地址，MVA[11:0]用来在大页中寻址。</li>
+<li>以极小页进行映射时，通过MVA[31:10]结合页表得到一个极小页（1KB）的起始物理地址，MVA[9:0]用来在极小页中寻址。</li>
+</ol>
+<h2 id="内存的访问权限检查"><a href="#内存的访问权限检查" class="headerlink" title="内存的访问权限检查"></a>内存的访问权限检查</h2><p>内存的访问权限检查是MMU的主要功能之一，简单的说，它就是决定一块内存是否允许读、是否允许写。这由CP15寄存器C3（域访问控制）、描述符的域（Domain）、CP15寄存器C1的R&#x2F;S&#x2F;A位。描述符的AP位等联合作用。<br>CP15寄存器C1中的A位表示是否对地址进行对齐检查。所谓对齐检查就是，访问字（4字节的数据）时地址是否为4字节对齐。访问半字（2字节的数据）时地址是否2字节对齐，如果地址不对齐则产生”Alignment Fault“异常。无论MMU是否被开启，都可以进行对齐检查。CPU读取指令时不进行对齐检查，以字节为单位访问时也不进行对其检查。对其检查在MMU的权限检查，地址映射前进行。<br>内存的访问权限检查可以概括为一下两点：</p>
+<ol>
+<li>”域“决定是否对某块内存进行权限检查。</li>
+<li>”AP“决定如何对某块内存进行权限检查。</li>
+</ol>
+<p>如图所示，S3C2410&#x2F;S3C2440有16个域，CP15寄存器C3中每两位对应一个域，用来表示这个域是否进行权限检查。图中表示CP15寄存器C3中哪两位对应哪个域，表中给出了CP15寄存器C3中这些”两位数据“的含义。<br><img src="/2022/08/15/MMU/11.jpeg" alt="img not found"></p>
+<table>
+<thead>
+<tr>
+<th>值</th>
+<th>含义</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>00</td>
+<td>无访问权限</td>
+<td>任何访问都将导致”Domain Fault“ 异常</td>
+</tr>
+<tr>
+<td>01</td>
+<td>客户模式</td>
+<td>使用段描述符、页描述符进行权限检查</td>
+</tr>
+<tr>
+<td>10</td>
+<td>保留</td>
+<td>保留，目前相当于”无访问权限“</td>
+</tr>
+<tr>
+<td>11</td>
+<td>管理模式</td>
+<td>运行任何访问</td>
+</tr>
+</tbody></table>
+<p>下图中的”Domain“占4个字节，用来表示这块内存属于上面定义的16个域中哪一个。<br><img src="/2022/08/15/MMU/12.jpeg" alt="img not found"></p>
+<ol>
+<li>段描述符中的”Domain“为0b0000时，表示这1MB内存属于域0，如果域访问控制寄存器的位[1:0]等于0b00，则访问这1MB空间时都会产生”Domain fault“的异常，如果域访问控制器寄存器的位[1:0]等于0b11，则使用描述符中的”AP“位进行权限检查。</li>
+<li>粗页表中的”Domain“为0b1111时，表示这1MB内存属于域15，如果域访问控制寄存器的位[31:30]等于0b00，则访问这1MB空间时都会产生”Domain fault“的异常，如果域访问控制寄存器的位[31:30]等于0b11时，则使用二级页表中的大页&#x2F;小页描述符中的”ap3“、”ap2“、”ap1“、”ap0“进行位权限检查。</li>
+</ol>
+<p>图中的”AP“、”ap3“、”ap2“、”ap1“、”ap0”结合CP15寄存器C1的R&#x2F;S位，决定如何进行访问权限检查。首先说明，段描述符中的“AP”控制整个段（1MB）的访问权限；大页描述符中的每个“apx”（x为0-3）控制一个大页（64KB）中1&#x2F;4内存的访问权限，即“ap3”对应大页高端的16KB，“ap0”对应大页低端的16KB；小页描述符与大页描述符相似，每个“apx”控制一个小页（4KB）的1&#x2F;4内存的访问权限；极小页中的“ap”就控制着整个极小页（1KB）的访问权限。<br>如下表所示，AP位、S位和R位的组合，可以产生多种访问权限。需要指出的是，ARM CPU有7种工作模式，其中6种属于特权模式，一种属于用户模式。在特权模式的用户模式下，相同的AP位、S位和R位的组合，其访问权限也不相同。</p>
+<table>
+<thead>
+<tr>
+<th>AP</th>
+<th>S</th>
+<th>R</th>
+<th>特权模式</th>
+<th>用户模式</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>00</td>
+<td>0</td>
+<td>0</td>
+<td>无访问权限</td>
+<td>无访问权限</td>
+<td>任何访问都将产生“Permission fault”异常</td>
+</tr>
+<tr>
+<td>00</td>
+<td>1</td>
+<td>0</td>
+<td>只读</td>
+<td>无访问权限</td>
+<td>在超级权限下进行读操作</td>
+</tr>
+<tr>
+<td>00</td>
+<td>0</td>
+<td>1</td>
+<td>只读</td>
+<td>只读</td>
+<td>任何写操作都将产生“Permission fault”异常</td>
+</tr>
+<tr>
+<td>00</td>
+<td>1</td>
+<td>1</td>
+<td>保留</td>
+<td>–</td>
+<td>–</td>
+</tr>
+<tr>
+<td>01</td>
+<td>x</td>
+<td>x</td>
+<td>读&#x2F;写</td>
+<td>无访问权限</td>
+<td>只允许在超级模式下访问</td>
+</tr>
+<tr>
+<td>10</td>
+<td>x</td>
+<td>x</td>
+<td>读&#x2F;写</td>
+<td>只读</td>
+<td>在用户模式下进行写操作都将产生“Permission fault”异常</td>
+</tr>
+<tr>
+<td>11</td>
+<td>x</td>
+<td>x</td>
+<td>读&#x2F;写</td>
+<td>读&#x2F;写</td>
+<td>在任何模式下都允许访问</td>
+</tr>
+<tr>
+<td>xx</td>
+<td>1</td>
+<td>1</td>
+<td>保留</td>
+<td>–</td>
+<td>–</td>
+</tr>
+</tbody></table>
+<h2 id="TLB的作用"><a href="#TLB的作用" class="headerlink" title="TLB的作用"></a>TLB的作用</h2><p>从虚拟地址到物理地址的转换过程可得知：使用一级页表进行地址转换时，每次读写数据时需要访问两次内存。第一次访问一级页表获取物理地址，第二次才是真正的读写数据。使用两级页表时，每次读写数据需要访问三次内存，访问两次页表（一级页表和二级页表）获得物理地址，第三次才是真正的读写数据。<br>上述地址的转换过程大大降低了CPU的性能，有没有说明办法改进呢？程序执行过程中，所用到的指令、数据的地址往往集中在一个很小的范围内，其中的地址数据经常多次使用，这称为程序访问的局部性。由此，通过使用一个高速、容量相对较小的存储器来存储近期用过的页表条目（段、大页、小页、极小页描述符），以避免每次地址转换都需要到主存去查找，这样可以大幅度的提高性能。这个存储器用来帮助快速的进行地址转换，称为“转译查找缓存（Translation Lookaside Buffers，TLB）”。<br>当CPU发出一个虚拟地址时，MMU首先访问TLB。如果TLB中含有能转换这个虚拟地址的描述符，则直接利用此描述符进行地址转换和权限检查；否则MMU访问页表找到描述符后再进行地址转化和权限检查，并将这个描述符填入TLB中（如果TLB已满，则利用round-robin算法找到一个条目，然后覆盖他），下次再使用这个虚拟地址时就可以直接使用TLB中的描述符了。<br>使用TLB需要保证TLB的内容与页表一致，在启动MMU之前，在页表中的内容发生变化后，尤其要注意这点。S3C2410&#x2F;S3C2440可以使无效（Invalidate）整个TLB，或者通过某个虚拟地址使无效TLB中某个条目。一般的做法是：在启动MMU之前使无效整个TLB，改变页表时，使无效所涉及的虚拟地址对应的TLB中的条目。</p>
+<h2 id="Cache的作用"><a href="#Cache的作用" class="headerlink" title="Cache的作用"></a>Cache的作用</h2><p>同样基于程序访问的局部性，在主存和CPU通用寄存器之间设置一个高速的、容量相对较小的存储器，把正在执行的指令地址附近的一部分指令或数据从主存调入这个存储器，供CPU在一段时间内使用，这对提高程序的运行速度有很大的作用。这个介于主存和CPU之间的高速小容量存储器称作高速缓存存储器（Cache）。<br>启用Cache后，CPU读取数据时，如果Cache中有这个数据的复本则直接返回，否则从主存中读入数据，并存入Cache中，下次再使用（读&#x2F;写）这个数据时，可以直接使用Cache中的复本。<br>启用Cache后，CPU写数据时有写穿式和写回式两种方式：</p>
+<ol>
+<li>写穿式（Write Through）<br>任一从CPU发出的写信号送到Cache的同时，也写入主存，以保证主存的数据能同步更新。它的优点是操作简单，但是由于主存的慢速，降低了系统的写速度并占用总线时间。</li>
+<li>回写式<br>为了克服写穿式每次写数据时都要访问主存，从而导致系统写速度降低并占用总线时间，尽量减少对主存的访问次数，又有了回写式。<br>它的工作方式：数据一般只写到Cache，这样有可能出现Cache中的数据得到更新而主存数据不变（数据陈旧）的情况。但此时可在Cache中设一标志及数据陈旧的信息，只有当Cache中的数据被换出或强制进行“清空”操作时，才将原更新的数据写入主存相应的单元中。这样保证了Cache和主存的数据一致性。</li>
+</ol>
+<p>下面介绍Cache的两个操作：</p>
+<ol>
+<li>“清空”（clean）：把Cache或Write Buffer中已经脏的（修改过，但是还未写入主存）数据写入主存。</li>
+<li>“使无效”（Invalidate）：使之不能再使用，并不将脏的数据写入主存。</li>
+</ol>
+<p>S3C2410&#x2F;S3C2440内置了指令Cache（ICache）、数据Cache（DCache）、写缓存（Write Buffer）。下面的内容需要用到页表中描述符的C、B位，为了方便读者，先把这些描述符用下图表示出来。下文中，描述符的C位称为Ctt，B位称为Btt。<br><img src="/2022/08/15/MMU/13.jpeg" alt="img not found"></p>
+<h3 id="指令Cache（ICache）"><a href="#指令Cache（ICache）" class="headerlink" title="指令Cache（ICache）"></a>指令Cache（ICache）</h3><p>ICache的使用比较简单。系统刚上电或复位时，ICache中的内容是无效的，并且ICache功能是关闭着的。往Icr位（即CP15写处理器中寄存器1的第12位）写1可以启动ICache，写0可以停止ICache。<br>ICache一般在MMU开启之后被使用，此时页表中描述符的C位用来表示一段内存是否可以被Cache。若C&#x3D;1，则允许Cache，否则不允许被Cache。但是，即使MMU没有开启，ICache也是可以被使用的，这时CPU读取指令（取指）时所涉及的内存都被当作是允许Cache的。<br>ICache被关闭时，CPU每次取指都是需要读取主存，性能非常低，所以需要尽早启动ICache。<br>ICache被开启后，CPU每次取指都会在ICache中查看是否能找到所要的指令，而不管C&#x3D;0还是C&#x3D;1。如果找到了，称为Cache命中，如果找不到，称为Cache缺失。ICache被开启后，CPU的取指分为如下三种情况：</p>
+<ol>
+<li>Cache命中且C&#x3D;1时，从ICache取出指令，返回CPU。</li>
+<li>Cache缺失且C&#x3D;1时，CPU从主存读出指令。同时，一个称为“8-word linefill”的动作将发生，这个动作把该指令所处区域的8个word写进ICache的某个条目中。这有可能会覆盖某个条目。</li>
+<li>C&#x3D;0时，CPU从主存读取指令。</li>
+</ol>
+<h3 id="数据Cache（DCache）"><a href="#数据Cache（DCache）" class="headerlink" title="数据Cache（DCache）"></a>数据Cache（DCache）</h3><p>与ICache相似，系统刚复位或者上电时，DCache中的内容也是无效的，并且DCache功能也是关闭的，而Write Buffer中的内容也是被废弃不用的。往Ccr（Cp15协处理器中寄存器1的第2位）写1可以启动DCache，写0可以停止DCache。Write Buffer与DCache紧密结合，没有专门的控制位来开启、停止它。<br>与ICache不同的是，DCache功能必须在MMU开启之后才能被使用，因为开启MMU之后，才能使用页表的描述符来定义一块内存如何使用DCache和Write Buffer。<br>DCache被关闭时，CPU每次读写数据时都会先在DCache中查看是否能找到所要的数据，而不管C&#x3D;0还是C&#x3D;1。找到了，称为Cache命中，没找到，称为Cache缺失。<br>下表描述了DCache和Write Buffer在CCr、Ctt、Btt的各种取值下如何工作。表中“Ctt and Ccr”一项的值是Ctt与Ccr进行逻辑与之后的值（Ctt &amp;&amp; Ccr）。</p>
+<table>
+<thead>
+<tr>
+<th>Ctt and Ccr</th>
+<th>Btt</th>
+<th>DCache、Write Buffer和主存的访问方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>0</td>
+<td>Non-Cached、Non-buffered（NCNB）；读写数据都是直接操作内存，并且可以被外设中止；写数据时不使用Write Buffer，CPU会等待操作完成；不会出现Cache命中</td>
+</tr>
+<tr>
+<td>0</td>
+<td>1</td>
+<td>Non-Cached、buffered（NCB）；读写数据都是直接操作主存，不会出现Cache命中；写数据时，数据先存入Write Buffer，随后写入主存；数据存入WriteBuffer后，CPU立立即继续执行；读数据时，可以被外设中止；写数据时，无法被外设中止</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td>Cached，write-through（WT，写通）mode；读数据时，如果Cache命中则从Cache中返回数据，不读取主存；读数据时，如果Cache确实则从读主存中返回数据，并导致“linefill”的动作；写数据时，数据先存入Write Buffer，并在随后写入主存；数据存入Write Buffer后，CPU立即继续执行；写数据时，如果Cache命中则新数据也写入Cache中；写数据时，无法被外设中止</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>Cached，write-back（WB，写回）mode；读数据时，如果Cache命中则从Cache中返回数据，不读取主存；读数据时，如果Cache确实则从读主存中返回数据，并导致“linefill”的动作；写数据时，如果Cache缺失则将数据先存入Write Buffer，存储完毕后CPU立即继续执行，这些数据随后写入主存；写数据时，如果Cache命中则在Cache中更新数据，并设置这些数据为“脏”，但是不会写入主存；无论Cache命中与否，写数据都无法被外设中止。</td>
+</tr>
+</tbody></table>
+<p>与TLB类似，使用Cache需要保证Cache、WriteBuffer的内容和主存保持一致，需要遵循以下两个原则：</p>
+<ol>
+<li>清空DCache，使得主存数据得到更新。</li>
+<li>使无效ICache，使得CPU取值时重新读取主存。</li>
+</ol>
+<p>在实际编写程序前，需要注意以下几点：</p>
+<ol>
+<li>开启MMU之前，使无效ICache、DCache、WriteBuffer。</li>
+<li>关闭MMU之前，清空ICache、DCache，即将“脏”数据写入主存。</li>
+<li>如果代码有变，使无效ICache，这样CPU取指时会重新读取主存。</li>
+<li>使用DMA操作可以被Cache的主存时：将内存的数据发送出去时，要清空Cache；将内存的数据读入时，要使无效Cache。</li>
+<li>改变页表中地址映射关系时，也要慎重考虑。</li>
+<li>开启ICache和DCache时，要考虑ICache或DCache中的内容是否与主存保持一致。</li>
+<li>对于I&#x2F;O空间，不使用Cache和Write Buffer。所谓I&#x2F;O空间，就是对于其中的地址连续两次的写操作不能合并在一起，每次读写都必须直接访问设备，否则程序的运行结果无法预料。比如寄存器、非内存的外设（扩展串口、网卡等）。<br>S3C2410&#x2F;S3C2440提供了相关指令来操作Cache和Write buffer，可以使无效整个ICache或其中的条目，可以清空使无效整个DCache或其中的条目。</li>
+</ol>
+<h3 id="S3C2410-x2F-S3C2440-MMU、TLB、Cache的控制指令"><a href="#S3C2410-x2F-S3C2440-MMU、TLB、Cache的控制指令" class="headerlink" title="S3C2410&#x2F;S3C2440 MMU、TLB、Cache的控制指令"></a>S3C2410&#x2F;S3C2440 MMU、TLB、Cache的控制指令</h3><p>S3C2410&#x2F;S3C2440中，除了有一个ARM920T的CPU核之外，还有若干协处理器。协处理器也是一个微处理器，它被用来帮助主CPU来完成一些特殊功能，如浮点运算等。对MMU、TLB、Cache等的操作就涉及协处理器。CPU核与协处理器间传送数据时使用这两条指令：MRC和MCR，它们的格式如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;MCR | MRC&gt;&#123;cond&#125; p#,&lt;expression1&gt;,Rd,cn,cm,&#123;,&lt;expression2&gt;&#125;</span><br><span class="line">MRC             //从协处理器获得数据，传给ARM920T CPU核的寄存器</span><br><span class="line">MCR             //数据从ARM920T CPU核的寄存器传给协处理器</span><br><span class="line">&#123;cond&#125;          //执行条件  为空时表示无条件执行</span><br><span class="line">p#              //协处理器序号</span><br><span class="line">&lt;exporession1&gt;  //一个常数</span><br><span class="line">Rd              //ARM920T核的寄存器</span><br><span class="line">cn和cm          //协处理器中的寄存器</span><br><span class="line">&lt;expression1&gt;   //一个常数</span><br></pre></td></tr></table></figure>
+<p>其中，expression1、expression2、cn、cm仅供协处理器使用，它们的作用如何取决于具体的协处理器。</p>
+<h1 id="MMU使用实例"><a href="#MMU使用实例" class="headerlink" title="MMU使用实例"></a>MMU使用实例</h1><h2 id="程序设计"><a href="#程序设计" class="headerlink" title="程序设计"></a>程序设计</h2>]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>嵌入式Linux应用完全开发手册</category>
+        <category>第1篇第7章 MMU</category>
       </categories>
       <tags>
         <tag>Linux 应用开发</tag>
