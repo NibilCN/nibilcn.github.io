@@ -16,6 +16,25 @@
       </tags>
   </entry>
   <entry>
+    <title>何谓硬解码和软解码</title>
+    <url>/2022/08/05/%E4%BD%95%E8%B0%93%E7%A1%AC%E8%A7%A3%E7%A0%81%E5%92%8C%E8%BD%AF%E8%A7%A3%E7%A0%81/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>关于“硬解码”与“软解码”。</p>
+<span id="more"></span>
+<p>软解码和硬解码的区别：</p>
+<ol>
+<li>软解码使用CPU进行解码。</li>
+<li>硬解码使用非CPU进行解码，如GPU、专用的DSP、FPGA、ASIC等芯片。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>何谓硬解码和软解码</category>
+      </categories>
+      <tags>
+        <tag>多媒体编解码</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>嵌入式Linux开发概述</title>
     <url>/2022/08/04/%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BC%80%E5%8F%91%E6%A6%82%E8%BF%B0/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《嵌入式Linux应用完全开发手册》第1篇第1章总结归纳</p>
@@ -72,25 +91,6 @@
       </categories>
       <tags>
         <tag>Linux 应用开发</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>何谓硬解码和软解码</title>
-    <url>/2022/08/05/%E4%BD%95%E8%B0%93%E7%A1%AC%E8%A7%A3%E7%A0%81%E5%92%8C%E8%BD%AF%E8%A7%A3%E7%A0%81/</url>
-    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>关于“硬解码”与“软解码”。</p>
-<span id="more"></span>
-<p>软解码和硬解码的区别：</p>
-<ol>
-<li>软解码使用CPU进行解码。</li>
-<li>硬解码使用非CPU进行解码，如GPU、专用的DSP、FPGA、ASIC等芯片。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>学习</category>
-        <category>何谓硬解码和软解码</category>
-      </categories>
-      <tags>
-        <tag>多媒体编解码</tag>
       </tags>
   </entry>
   <entry>
