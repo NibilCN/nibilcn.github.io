@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":false,"version":"8.12.2","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"mac"},"bookmark":{"enable":true,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="《嵌入式Linux应用完全开发手册》第1篇第8章总结归纳">
+<meta property="og:type" content="article">
+<meta property="og:title" content="NAND_Flash控制器">
+<meta property="og:url" content="http://example.com/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/index.html">
+<meta property="og:site_name" content="Laugh Tale">
+<meta property="og:description" content="《嵌入式Linux应用完全开发手册》第1篇第8章总结归纳">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/1.jpeg">
+<meta property="og:image" content="http://example.com/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/2.jpeg">
+<meta property="og:image" content="http://example.com/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/3.jpeg">
+<meta property="og:image" content="http://example.com/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/4.jpeg">
+<meta property="og:image" content="http://example.com/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/5.jpeg">
+<meta property="og:image" content="http://example.com/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/6.jpeg">
+<meta property="og:image" content="http://example.com/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/7.jpeg">
+<meta property="og:image" content="http://example.com/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/8.jpeg">
+<meta property="og:image" content="http://example.com/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/9.jpeg">
+<meta property="og:image" content="http://example.com/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/10.jpeg">
+<meta property="og:image" content="http://example.com/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/11.jpeg">
+<meta property="og:image" content="http://example.com/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/12.jpeg">
+<meta property="article:published_time" content="2022-08-18T01:15:00.000Z">
+<meta property="article:modified_time" content="2022-08-18T01:15:00.000Z">
+<meta property="article:author" content="Nibil">
+<meta property="article:tag" content="Linux 应用开发">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/1.jpeg">
+
+
+<link rel="canonical" href="http://example.com/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":"","permalink":"http://example.com/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/","path":"2022/08/18/NAND-Flash控制器/","title":"NAND_Flash控制器"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>NAND_Flash控制器 | Laugh Tale</title>
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+  <!--pjax：防止跳转页面音乐暂停-->
+  <script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.js"></script>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Laugh Tale</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">A Nibil's Sharing Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%AC%E7%AB%A0%E8%A6%81%E7%82%B9"><span class="nav-number">1.</span> <span class="nav-text">本章要点</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#NAND-Flash%E4%BB%8B%E7%BB%8D%E5%92%8CNAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8%E4%BD%BF%E7%94%A8"><span class="nav-number">2.</span> <span class="nav-text">NAND Flash介绍和NAND Flash控制器使用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Flash%E4%BB%8B%E7%BB%8D"><span class="nav-number">2.1.</span> <span class="nav-text">Flash介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NAND-Flash%E7%9A%84%E7%89%A9%E7%90%86%E7%BB%93%E6%9E%84"><span class="nav-number">2.2.</span> <span class="nav-text">NAND Flash的物理结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Nand-Flash%E7%9A%84%E8%AE%BF%E9%97%AE%E6%96%B9%E6%B3%95"><span class="nav-number">2.3.</span> <span class="nav-text">Nand Flash的访问方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A1%AC%E4%BB%B6%E8%BF%9E%E6%8E%A5"><span class="nav-number">2.3.1.</span> <span class="nav-text">硬件连接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%91%BD%E4%BB%A4%E5%AD%97%E5%8F%8A%E6%93%8D%E4%BD%9C%E6%96%B9%E6%B3%95"><span class="nav-number">2.3.2.</span> <span class="nav-text">命令字及操作方法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#S3C2410-x2F-S3C2440-NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8%E4%BB%8B%E7%BB%8D"><span class="nav-number">2.4.</span> <span class="nav-text">S3C2410&#x2F;S3C2440 NAND Flash控制器介绍</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Nibil</p>
+  <div class="site-description" itemprop="description">A Nibil's Sharing Blog</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/NibilCN" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;NibilCN" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-inner">
+      <!-- require APlayer -->
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css">
+      <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
+      <!-- require MetingJS -->
+      <script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+      <!--网易云-->   
+      <meting-js
+        server="netease"
+        id="7593069088"
+        type="playlist" 
+        mini="false"
+        fixed="false"
+        list-folded="true"
+        autoplay="true"
+        volume="0.4"
+        theme="#FADFA3"
+        order="random"
+        loop="all"
+        preload="auto"
+        mutex="true">
+      </meting-js>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/NibilCN" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Nibil">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Laugh Tale">
+      <meta itemprop="description" content="A Nibil's Sharing Blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="NAND_Flash控制器 | Laugh Tale">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          NAND_Flash控制器
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-08-18 09:15:00" itemprop="dateCreated datePublished" datetime="2022-08-18T09:15:00+08:00">2022-08-18</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">学习</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/" itemprop="url" rel="index"><span itemprop="name">书籍</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BA%94%E7%94%A8%E5%AE%8C%E5%85%A8%E5%BC%80%E5%8F%91%E6%89%8B%E5%86%8C/" itemprop="url" rel="index"><span itemprop="name">嵌入式Linux应用完全开发手册</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BA%94%E7%94%A8%E5%AE%8C%E5%85%A8%E5%BC%80%E5%8F%91%E6%89%8B%E5%86%8C/%E7%AC%AC1%E7%AF%87%E7%AC%AC8%E7%AB%A0-NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/" itemprop="url" rel="index"><span itemprop="name">第1篇第8章 NAND Flash控制器</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>7k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>6 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>《嵌入式Linux应用完全开发手册》第1篇第8章总结归纳</p>
+<span id="more"></span>
+<h1 id="本章要点"><a href="#本章要点" class="headerlink" title="本章要点"></a>本章要点</h1><ol>
+<li>了解NAND Flash芯片的接口</li>
+<li>掌握通过NAND Flash控制器访问NAND Flash的方法</li>
+</ol>
+<h1 id="NAND-Flash介绍和NAND-Flash控制器使用"><a href="#NAND-Flash介绍和NAND-Flash控制器使用" class="headerlink" title="NAND Flash介绍和NAND Flash控制器使用"></a>NAND Flash介绍和NAND Flash控制器使用</h1><p>NAND Flash在嵌入式系统中地位与PC中的硬盘类似，用于保存系统运行所必须的操作系统、应用程序、用户数据、运行过程中产生的各类数据。与内存掉电后数据丢失不同，NAND Flash中的数据在掉电后仍可永久保存。</p>
+<h2 id="Flash介绍"><a href="#Flash介绍" class="headerlink" title="Flash介绍"></a>Flash介绍</h2><p>常用的Flash类型有NOR Flash和NAND Flash两种。NOR Flash由Intel公司在1988年发明，以替代当时在市场上占据主要地位的EPROM和EEPROM。NAND Flash由Toshiba公司在1989年发明。两者主要差别如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>NOR</th>
+<th>NAND</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>容量</td>
+<td>1MB-32MB</td>
+<td>16MB-512MB</td>
+</tr>
+<tr>
+<td>XIP</td>
+<td>YES</td>
+<td>NO</td>
+</tr>
+<tr>
+<td>擦除性能</td>
+<td>非常慢（5S）</td>
+<td>（快）3ms</td>
+</tr>
+<tr>
+<td>写性能</td>
+<td>慢</td>
+<td>快</td>
+</tr>
+<tr>
+<td>读性能</td>
+<td>快</td>
+<td>快</td>
+</tr>
+<tr>
+<td>可靠性</td>
+<td>比较高，位反转的比例小于NAND Flash的10%</td>
+<td>比较低，位反转比较常见，必须有校验措施。比如TNR必须有坏块管理措施</td>
+</tr>
+<tr>
+<td>可擦除次数</td>
+<td>10000-100000</td>
+<td>100000-1000000</td>
+</tr>
+<tr>
+<td>生命周期</td>
+<td>低于NAND Flash的10%</td>
+<td>是NOR Flash的10倍以上</td>
+</tr>
+<tr>
+<td>接口</td>
+<td>与RAM接口相同</td>
+<td>I&#x2F;O接口</td>
+</tr>
+<tr>
+<td>访问方法</td>
+<td>随机访问</td>
+<td>顺序访问</td>
+</tr>
+<tr>
+<td>易用性</td>
+<td>容易</td>
+<td>复杂</td>
+</tr>
+<tr>
+<td>主要用途</td>
+<td>用于保存代码和关键数据</td>
+<td>用于保存数据</td>
+</tr>
+<tr>
+<td>价格</td>
+<td>高</td>
+<td>低</td>
+</tr>
+</tbody></table>
+<p>NOR Flash支持XIP，即代码可以直接在NOR上运行，无须复制到内存中。这是由于NOR的接口与RAM完全相同，可以随机访问任意地址的数据。在NOR上进行读数据的效率非常高，但是擦除和写的效率很低。而且NOR的容量一般比较小。NAND Flash进行擦除和写操作的效率更高，并且容量更大。一般而言，NOR Flash用于存储程序，NAND Flash用于存储数据。基于NAND Flash的设备通常也要搭配NOR以存储程序。<br>Flash存储器件由擦除单元（块）组成，当要写某个块时，需要确保这个块已经被擦除。NOR Flash的块大小范围为64KB-128KB；NAND Flash的块大小为8KB-64KB。擦&#x2F;写一个NOR Flash块需要4S，而擦&#x2F;写一个NAND Flash块仅需2ms。NOR Flash的块太大，不仅增加了擦写时间，对于给定的操作，NOR Flash也需要更多的擦除操作–特别是小文件。比如一个文件只有1KB，但是为了保存它却需要擦除大小为64KB-128KB的NOR Flash块。<br>NOR Flash的接口与RAM完全相同，可以随意访问任意地址的数据。而NAND Flash的接口仅仅包含几个I&#x2F;O引脚，需要串行访问。NAND Flash一般以512字节为单位进行读写。这使得NOR Flash更适合运行程序，NAND Flash更适合存储数据。<br>容量相同的情况下，NAND Flash的体积更小，对于空间有严格要求的系统，NAND Flash可以节省更多空间。市场上NOR Flash的容量通常为1MB-4MB(也有32MB的NOR Flash)。NAND Flash的容量为8MB-512MB。容量的差别也使得NOR Flash多用于存储程序，NAND Flash多用于存储数据。<br>基于Flash存储器件的可靠性需要考虑3点：位反转、坏块和可擦除次数。所有Flash器件都遭遇位反转问题：由于Flash固有的电气特性，在读写数据的过程中，偶尔会产生一位或几位数据错误，而NAND Flash出现的概率远大于NOR Flash。当位反转发生在关键的代码、数据时，有可能导致系统崩溃。当仅仅是报告位反转，重新读取即可；如果确实发生了位反转，则必须有相应的错误检测&#x2F;恢复措施。在NAND Flash上发生位反转的概率更高，推荐使用EDC&#x2F;ECC进行错误检测和恢复。NAND Flash上面会有坏块随机分布，在使用前需要将坏块扫描出来，确保不在使用它们，否则会使产品含有严重的故障。NAND Flash每块的可擦除次数通常在100000次左右。是NOR Flash的10倍。另外，因为NAND Flash的块大小通常是NOR Flash的1&#x2F;8，所以NAND Flash的寿命远远超过NOR Flash。<br>嵌入式Linux对NOR、NAND Flash的软件支持都很成熟。在NOR Flash上常用jffs2文件系统，而在NAND Flash常用yaffs文件系统。在更底层，有MTD驱动程序实现对它们的读、写、擦除操作，它也实现了EDC&#x2F;ECC校验。</p>
+<h2 id="NAND-Flash的物理结构"><a href="#NAND-Flash的物理结构" class="headerlink" title="NAND Flash的物理结构"></a>NAND Flash的物理结构</h2><p>以NAND Flash K9F1208U0M为例，K9F1208U0M是Samsung公司生产的容量为64MB的NAND Flash，常用于手持设备等消费电子产品。它的封装下图所示：<br><img src="/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/1.jpeg" alt="img not found"></p>
+<p>外部引脚如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>引脚名称</th>
+<th>引脚功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>I&#x2F;O0-I&#x2F;O7</td>
+<td>数据输入&#x2F;输出</td>
+</tr>
+<tr>
+<td>CLE</td>
+<td>命令锁存使能</td>
+</tr>
+<tr>
+<td>ALE</td>
+<td>地址锁存使能</td>
+</tr>
+<tr>
+<td>CE</td>
+<td>芯片使能</td>
+</tr>
+<tr>
+<td>RE</td>
+<td>读使能</td>
+</tr>
+<tr>
+<td>WE</td>
+<td>写使能</td>
+</tr>
+<tr>
+<td>WP</td>
+<td>写保护</td>
+</tr>
+<tr>
+<td>R&#x2F;B</td>
+<td>就绪&#x2F;忙输出信号</td>
+</tr>
+<tr>
+<td>Vcc</td>
+<td>电源</td>
+</tr>
+<tr>
+<td>Vss</td>
+<td>地</td>
+</tr>
+<tr>
+<td>N.C</td>
+<td>不接</td>
+</tr>
+</tbody></table>
+<p>K9F1208U0M的功能结构图：<br><img src="/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/2.jpeg" alt="img not found"><br>K9F1208U0M的内部结构包含10个功能部件：</p>
+<ol>
+<li>X-Buffers Latche &amp; Decoders：用于行地址。</li>
+<li>Y-Buffers Latche &amp; Decoders：用于列地址。</li>
+<li>Command Register：用于命令字。</li>
+<li>Control Logic &amp; High Voltage Generator：控制逻辑及产生Flash所需高压。</li>
+<li>Nand Flash Array：存储部件。</li>
+<li>Page Register &amp; S&#x2F;A：页寄存器，当读、写某页时，会将数据先读入&#x2F;写入此寄存器，大小为528字节。</li>
+<li>Y-Gating。</li>
+<li>I&#x2F;O Buffers &amp; Latches。</li>
+<li>Global Buffers。</li>
+<li>Output Drivers。</li>
+</ol>
+<p>Nand Flash 存储单元组织结构如下图所示：<br><img src="/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/3.jpeg" alt="img not found"><br>K9F1208U0M容量为528Mbit，分为131072行（页）、528列。每一页大小为512字节，外加16字节的额外空间，这16字节额外空间的列地址为512-527。<br>命令、地址、数据都通过8个I&#x2F;O口输入&#x2F;输出，这种形式减少了芯片的引脚个数，并使得系统很容易升级到更大的容量。写入命令、地址或数据时，都需要将WE、CE信号同时拉低。<br>数据在WE信号的上升沿被NAND Flash锁存。命令锁存信号CLE、地址锁存信号ALE用来分辨、锁存命令或地址。K9F1208U0M的64MB存储空间需要26位地址，因此以字节为单位访问Flash时需要4个地址序列：列地址、行地址的低位部分，行地址的高位部分。读&#x2F;写页发出命令之后，需要4个地址序列，而擦除块在发出擦除命令后仅需要3个地址序列。</p>
+<h2 id="Nand-Flash的访问方法"><a href="#Nand-Flash的访问方法" class="headerlink" title="Nand Flash的访问方法"></a>Nand Flash的访问方法</h2><h3 id="硬件连接"><a href="#硬件连接" class="headerlink" title="硬件连接"></a>硬件连接</h3><p>NAND Flash和S3C2410&#x2F;S3C2440的硬件连接图如下所示：<br><img src="/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/4.jpeg" alt="img not found"><br>NAND Flash和S3C2410&#x2F;S3C2440的连线较少：8个I&#x2F;O引脚（I&#x2F;O0-I&#x2F;O7），5个使能信号（nWE、ALE、CLE、nCE、nRE）、1个状态引脚（RDY&#x2F;B）、1个写保护引脚（nWP）。地址、数据、命令都是在这些使能信号的配合下，通过8个I&#x2F;O引脚的传输。写地址、数据、命令时，nCE、nWE信号必须为低电平，它们在nWE信号的上升沿被锁存。命令锁存使能信号CLE和地址锁存信号ALE用来区分I&#x2F;O引脚上传输的是命令还是地址。</p>
+<h3 id="命令字及操作方法"><a href="#命令字及操作方法" class="headerlink" title="命令字及操作方法"></a>命令字及操作方法</h3><p>操作NAND Flash时，先传输命令，然后传输地址，最后读写数据。期间要检查Flash的状态。对于K9F1208U0M，它的容量是64MB，需要一个26位的地址。发出命令后，后面要紧跟着4个地址序列。比如读Flash时，发出读命令和4个地址序列后，后续的读操作就可以得到这个地址及器后续地址的数据。相应的命令字和地址序列如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>第1个访问周期</th>
+<th>第2个访问周期</th>
+<th>第3个访问周期</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Read1（读）</td>
+<td>00h&#x2F;01h</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Read2（读）</td>
+<td>50h</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Read ID（读芯片ID）</td>
+<td>90h</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Page Program（写页）</td>
+<td>80h</td>
+<td>10h</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Block Erase（擦除块）</td>
+<td>60h</td>
+<td>D0h</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Read Status（读状态）</td>
+<td>70h</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Read Multi-Plane Status（读多层的状态）</td>
+<td>71h</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Reset（复位）</td>
+<td>FFh</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Page Program（Dummy）</td>
+<td>80h</td>
+<td>11h</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Copy-Back Program（True）</td>
+<td>00h</td>
+<td>8Ah</td>
+<td>10H</td>
+</tr>
+<tr>
+<td>Copy-Back Program（Dummy）</td>
+<td>03h</td>
+<td>8Ah</td>
+<td>11H</td>
+</tr>
+<tr>
+<td>Multi-Plane Block Erase</td>
+<td>60h-60h</td>
+<td>D0h</td>
+<td>-</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>&#x2F;</th>
+<th>I&#x2F;O0</th>
+<th>I&#x2F;O1</th>
+<th>I&#x2F;O2</th>
+<th>I&#x2F;O3</th>
+<th>I&#x2F;O4</th>
+<th>I&#x2F;O5</th>
+<th>I&#x2F;O6</th>
+<th>I&#x2F;O7</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>第1个地址序列</td>
+<td>A0</td>
+<td>A1</td>
+<td>A2</td>
+<td>A3</td>
+<td>A4</td>
+<td>A5</td>
+<td>A6</td>
+<td>A7</td>
+<td>列地址</td>
+</tr>
+<tr>
+<td>第2个地址序列</td>
+<td>A9</td>
+<td>A10</td>
+<td>A11</td>
+<td>A12</td>
+<td>A13</td>
+<td>A14</td>
+<td>A15</td>
+<td>A16</td>
+<td>行地址（页地址）</td>
+</tr>
+<tr>
+<td>第3个地址序列</td>
+<td>A17</td>
+<td>A18</td>
+<td>A19</td>
+<td>A20</td>
+<td>A21</td>
+<td>A22</td>
+<td>A23</td>
+<td>A24</td>
+<td>行地址（页地址）</td>
+</tr>
+<tr>
+<td>第4个地址序列</td>
+<td>A25</td>
+<td>L</td>
+<td>L</td>
+<td>L</td>
+<td>L</td>
+<td>L</td>
+<td>L</td>
+<td>L</td>
+<td>行地址（页地址）</td>
+</tr>
+</tbody></table>
+<p>注：<br>①K9F1208U0M一页大小为512字节，分两部分：上半部、下半部。<br>②列地址用来在半页（256字节）中寻址。<br>③当发出读命令00h时，表示列地址将在上半部寻址。当发出写命令01h时，表示列地址将在下半部寻址。<br>④A8被读命令00h设为低电平，被01h设为高电平。<br>⑤L表示低电平。</p>
+<p>K9F1208U0M一页大小为508字节，而列地址A0-A7可以寻址的范围是256字节，所以必须辅以其他手段才能完全寻址着528字节。将一页分为A、B、C三个区：A区为0-255字节，B区为256-511字节，C区为512-527字节。访问某页时，需要选定特定的区，这称为“使地址指针指向特定的区”。这通过3个命令来实现：命令00h让地址指针指向A区、命令01h让地址指针指向B区、命令50h让地址指针指向C区。命令00h和命令50h会使得访问Flash的地址指针一直从A区或C区开始，除非发出了其他的修改地址指针的命令。命令01h的效果只能维持一次，当前的读、写、擦除、复位或者上电操作完成后，地址指针重新指向A区。写A区或C区的数据时，必须在发出命令80h之前发出命令00h或50h；写B区的数据时，发出命令01h后必须紧接着发出命令80h。下图形象的描述了这个过程：<br><img src="/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/5.jpeg" alt="img not found"></p>
+<ol>
+<li>Read 1：命令字为00h或01h<br>在发出命令00h或者01h后，就选定了读操作是从A区还是B区开始。列地址A0-A7可以寻址的范围是256字节，命令00h和01h使得可以在512字节大小的页内任意寻址–这相当于A8被命令00h设为0，而命令01h设为1。<br>发出命令字后，随后发出4个地址序列，然后就可以检测R&#x2F;nB引脚以确定Flash是否准备好。如果准备好了，就可以发起读操作一次读出数据。</li>
+<li>Read 2：命令字为50h<br>与Read 1类似，不过读取的是C区数据，操作序列为：发出命令字50h、发出4个地址序列、等待R&#x2F;nB引脚为高，最后读取数据。不同的是，地址序列中A0-A3用于设定C区（16字节）要读取的起始地址，A4-A7被忽略。</li>
+<li>Read ID：命令字90h。<br>发出命令字90h，发出4个地址序列（都设为0），然后就可以连续读入5个数据，分别表示：厂商代码（Samsung格式为Ech）、设备代码（K9F1208U0M为76h）、保留的字节（K9F1208U0M为A5h）、多层操作代码（C0h表示支持多层操作）。</li>
+<li>Reset：命令字为FFh<br>发出命令字FFh即可复位NAND Flash芯片。如果芯片正处于读、写、擦除状态，复位命令会终止这些命令。</li>
+<li>Page Program（True）：命令字分两阶段，80h和10h<br>它的操作序列如下图所示：<br><img src="/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/6.jpeg" alt="img not found"><br>NAND Flash的写操作一般是以页为单位的，但是可以只写一页中的一部分。发出命令字80h后，紧接着的是4个地址序列，然后向Flash发送数据（最大可达528字节），然后发送命令字10h启动写操作，此时Flash内部会自动完成写、校验操作。一旦发出命令字10h后，就可以通过读状态命令70h获知当前写操作是否完成、是否成功。</li>
+<li>Page Program（Dummy）：命令字分为两阶段，80h和11h。<br>NAND Flash K9F1208U0M分为4个128Mbit的存储层（plane），每个存储层包含1024个block和528字节的寄存器。这使得可以同时写多个页（page）或者同时擦除多个块（block）。块的地址经过精心安排，可以在4个连续的块内同时进行写或者擦除操作。下图为K9F1208U0M的块组织图：<br><img src="/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/7.jpeg" alt="img not found"><br>命令Page Program（Dummy）正是在这种结构下对命令Page Program（True）的扩展，后者仅能对一页进行写操作，前者可以同时写4页。操作序列如下图：<br><img src="/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/8.jpeg" alt="img not found"><br>发出命令字80h、4个地址序列及最多528字节的数据之后，发出命令字11h（11h称为“Dummy Page Program command”，相对的，10h称为“True Page Program Command”）；接着对相邻层（plane）上的页进行同样的操作。仅在第4页的最后使用10h替代11h，这样即可启动Flash内部的写操作。此时可以通过命令71h获知这些写操作是否完成、是否成功。</li>
+<li>Copy-Back Program（True）：命令字分3阶段，00h、08h、10h。<br>此命令用于将一页复制到同一层（plane）内的另一页，它省略了读出源数据、将数据重新载入Flash，这使得效率大卫提高。此命令有两个限制：源页、目的页必须在同一层（plane）中，并且将源地址、目的地址的A14、A15必须相同。<br>操作序列如下图所示：<br><img src="/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/9.jpeg" alt="img not found"><br>首先发出命令Read 1（00h）、4个源地址序列，此时源页的528字节数据很快就被全部读入内部寄存器中；接着发出命令字8Ah（Page-Copy Data-input command）,随之发出4个目的地址序列；最后发出命令字10h启动对目的页的写操作。此后可以使用命令70h来查看此操作是否完成、是否成功。</li>
+<li>Copy-Back Program（Dummy）：命令字分3个阶段，03h、8Ah、11h。<br>与命令Page Program（Dummy）类似，Copy-Back Program（Dummy）可以同时启动对多达4个连续plane内的Copy-Back Program操作。操作序列如下所示：<br><img src="/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/10.jpeg" alt="img not found"><br>从图中可得知，首先发出命令字00h、源页地址，这使得源页的528字节数据被读入所在plane的寄存器；对于随后的其他plane的源页，发出命令字03h和相应的源页地址将数据读入该plane的寄存器；按照前述说明读出最多4页的数据到寄存器后，发出命令字8Ah、目的地址、命令字11h，在发出最后一页地址后，用10h代替11h启动写操作。</li>
+<li>Block Erase：命令字分3阶段，60h、D0h。<br>此命令用于擦除NAND Flash块（block，大小为16KB）。发出命令字后，发出block地址—仅需要3个地址序列，并且A9-A13被忽略，操作序列如下图所示：<br><img src="/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/11.jpeg" alt="img not found"></li>
+<li>Multi-Plane Block Erase：60h—-60h D0h。<br>此命令用于擦除不同的plane中的块，发出命令字60h后，紧接着发出block地址序列，如此最多可以发出4个block地址，最后发出命令字D0h启动擦除操作。操作序列如图所示：<br><img src="/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/12.jpeg" alt="img not found"></li>
+<li>读状态命令字有如下两种：<br>①Read Status：命令字为70h。<br>②Read Multi-Plane Status：命令字为71h。<br>Falsh中有状态寄存器，发出命令字70h或71h后，启动读操作即可读入此寄存器。状态寄存器中各位的含义如下表所示：<table>
+<thead>
+<tr>
+<th>I&#x2F;O引脚</th>
+<th>所标识的状态</th>
+<th>命令70h对应的定义</th>
+<th>命令71h对应的定义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>I&#x2F;O0</td>
+<td>总标记：成功&#x2F;失败</td>
+<td>成功：0 失败：1</td>
+<td>成功：0 失败：1</td>
+</tr>
+<tr>
+<td>I&#x2F;O1</td>
+<td>Plane0的标记：成功&#x2F;失败</td>
+<td>忽略</td>
+<td>成功：0 失败：1</td>
+</tr>
+<tr>
+<td>I&#x2F;O2</td>
+<td>Plane1的标记：成功&#x2F;失败</td>
+<td>忽略</td>
+<td>成功：0 失败：1</td>
+</tr>
+<tr>
+<td>I&#x2F;O3</td>
+<td>Plane2的标记：成功&#x2F;失败</td>
+<td>忽略</td>
+<td>成功：0 失败：1</td>
+</tr>
+<tr>
+<td>I&#x2F;O4</td>
+<td>Plane3的标记：成功&#x2F;失败</td>
+<td>忽略</td>
+<td>成功：0 失败：1</td>
+</tr>
+<tr>
+<td>I&#x2F;O5</td>
+<td>保留</td>
+<td>忽略</td>
+<td>忽略</td>
+</tr>
+<tr>
+<td>I&#x2F;O6</td>
+<td>设备状态</td>
+<td>忙：0 就绪：1</td>
+<td>成功：0 失败：1</td>
+</tr>
+<tr>
+<td>I&#x2F;O7</td>
+<td>写保护状态</td>
+<td>保护：0 没有保护：1</td>
+<td>保护：0 没有保护：1</td>
+</tr>
+</tbody></table>
+</li>
+</ol>
+<p>注：<br>①I&#x2F;O0是所有Plane的“总标记”，只要有一个Plane的操作是失败的，I&#x2F;O0就会被设为“失败”。<br>②I&#x2F;O0-I&#x2F;O4引脚只部件它对应的Plane。</p>
+<h2 id="S3C2410-x2F-S3C2440-NAND-Flash控制器介绍"><a href="#S3C2410-x2F-S3C2440-NAND-Flash控制器介绍" class="headerlink" title="S3C2410&#x2F;S3C2440 NAND Flash控制器介绍"></a>S3C2410&#x2F;S3C2440 NAND Flash控制器介绍</h2>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux-%E5%BA%94%E7%94%A8%E5%BC%80%E5%8F%91/" rel="tag"># Linux 应用开发</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/08/17/Cpp%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/" rel="prev" title="Cpp设计模式之单例模式">
+                  <i class="fa fa-chevron-left"></i> Cpp设计模式之单例模式
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Nibil</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">95k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:26</span>
+  </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.0/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
