@@ -206,6 +206,100 @@
       </tags>
   </entry>
   <entry>
+    <title>中断体系结构</title>
+    <url>/2022/08/19/%E4%B8%AD%E6%96%AD%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《嵌入式Linux应用完全开发手册》第1篇第9章总结归纳</p>
+<span id="more"></span>
+
+<h1 id="本章目标"><a href="#本章目标" class="headerlink" title="本章目标"></a>本章目标</h1><ol>
+<li>了解ARM系统CPU的7中工作模式</li>
+<li>了解S3C2410&#x2F;S3C2440中断体系结构</li>
+<li>掌握S3C2410&#x2F;S3C2440的中断服务程序的编写方法</li>
+</ol>
+<h1 id="S3C2410-x2F-S3C2440中断体系结构"><a href="#S3C2410-x2F-S3C2440中断体系结构" class="headerlink" title="S3C2410&#x2F;S3C2440中断体系结构"></a>S3C2410&#x2F;S3C2440中断体系结构</h1><h2 id="ARM体系CPU的7种工作模式"><a href="#ARM体系CPU的7种工作模式" class="headerlink" title="ARM体系CPU的7种工作模式"></a>ARM体系CPU的7种工作模式</h2><ol>
+<li>用户模式（usr）：ARM处理器正常的程序执行状态。</li>
+<li>快速中断模式（fiq）：用于高速数据传输或通道处理。</li>
+<li>中断模式（irq）：用于通用的中断处理。</li>
+<li>管理模式（svc）：操作系统使用的保护模式。</li>
+<li>数据访问终止模式（abt）：当数据或指令预取终止时进入该模式，可用于虚拟存储及存储保护。</li>
+<li>系统模式（sys）：运行具有特权的操作系统任务。</li>
+<li>未定义指令中止模式（und）：当未定义的指令执行时进入该模式，可用于支持硬件协处理器的软件仿真。</li>
+</ol>
+<p>可以通过软件来进行模式切换，或者发生各类中断、异常时CPU自动进入相应的模式。除用户模式外，其他6种模式都属于特权模式。大多数程序运行于用户模式，进入特权模式是为了处理中断、异常，或者访问被保护的系统资源。<br>另外，ARM体系的CPU有以下两种工作状态。<br>ARM状态：此时处理器执行32位的字对齐的ARM指令。<br>Thumb状态：此时处理器执行16位的、半字对齐的Thumb指令。<br>实际上，本书所有的程序都是在ARM状态下运行的，而CPU一上电就处于ARM状态，所以无需关心CPU的工作状态。<br>ARM920T有31个通用的32位寄存器和6个程序状态寄存器。这37个寄存器分为7组，进入某个工作模式是就使用它的那组寄存器。有些寄存器，不同的工作模式有自己的副本，当切换到另一个工作模式时，那个工作模式的寄存器副本将被使用：这些寄存器被称为备份寄存器。<br>在ARM状态下，每种工作模式都有16个通用寄存器和1个（或2个，取决于工作模式）程序状态寄存器。下图列出了ARM状态下不同工作模式所使用的寄存器：<br><img src="/2022/08/19/%E4%B8%AD%E6%96%AD%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/1.jpeg" alt="img not found"><br>图中R0-R15可以直接访问，这些寄存器除R15之外都是通用寄存器。即它们既可以保存数据也可以保存地址。另外，R13-R15稍有特殊。R13又被称为栈指针寄存器，通常用于保存栈指针。R14  又被称为程序连接寄存器或连接寄存器，当执行BL子程序调用指令时，R14中得到R15（程序计数器PC）的备份。而当发生中断或者异常时，对应的R14_svc、R14_irq、R14_fiq、R14_abt或R14_und中保存R15的返回值。R15是程序计数器。<br>快速中断模式有7个备份寄存器R8-R14（即R8_fiq-R14_fiq），这使得进入快速中断模式执行很大部分程序时（只要它们不改变R0-R7），甚至不需要保存任何寄存器。用户模式、管理模式、数据访问终止模式和未定义指令中止模式都含有两个独占的寄存器副本R13、R14，这样可以令每个模式拥有自己的栈指针寄存器和连接寄存器。<br>每种工作模式除R0-R15共有16个寄存器外，还有第17个寄存器CPSR，即“当前程序状态寄存器（Current Program Status Register）”。CPSR中一些位被用于表示各种状态，一些位被用于标识当前处于说明工作模式。<br>CPSR中各位意义如下：<br><img src="/2022/08/19/%E4%B8%AD%E6%96%AD%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/2.jpeg" alt="img not found"></p>
+<ol>
+<li>T位：置位时，CPU处于Thumb状态，否则处于ARM状态。</li>
+<li>中断禁止位：I位和F位属于中断禁止位。它们置位时，IRQ中断、FIQ中断分别被禁止。</li>
+<li>工作模式位：表明CPU当前处于什么工作模式。可以编写这些位，使CPU进入指定的工作模式。</li>
+</ol>
+<p>除CPSR外，还有快速中断模式、中断模式、管理模式、数据访问终止模式和未定义指令中止模式等5种工作模式和一个寄存器–SPSR，即“程序状态保存寄存器（Saved Process Status Registers）”。当切换进入这些工作模式时，在SPSR中保存前一个工作模式的CPSR值，这样，当返回前一个工作模式时，可以将SPSR的值恢复到CPSR中。<br>综上所述，当一个异常发生时，将切换进入相应的工作模式（下文中将称为异常模式），这是CPU核将自动完成以下事情：</p>
+<ol>
+<li>在异常工作模式的连接寄存器R14中保存前一个工作模式的下一条，即将执行的指令的地址。对于ARM状态，这个值是当前PC值加4或加8。</li>
+<li>将CPSR的值复制到异常模式的SPSR。</li>
+<li>将CPSR的工作模式位设为这个异常对应的工作模式。</li>
+<li>令PC值等于这个异常模式在异常向量表中的地址，即跳转去执行异常向量表中的相应指令。</li>
+</ol>
+<p>相反的，从异常工作模式推出到之前的工作模式时，需要通过软件完成如下事情。</p>
+<ol>
+<li>前面进入异常工作模式时，连接寄存器保存了前一工作模式的一个指令地址，将它减去一个适当的值后赋值给PC寄存器。</li>
+<li>将SPSR的值复制回CPSR。</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>异常模式</th>
+<th>退出异常模式时PC的计算方法</th>
+<th>进入异常模式时R14中保存的值（ARM状态）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>管理模式（通过SWI指令进入）</td>
+<td>MOVS PC，R14</td>
+<td>PC + 4 ①</td>
+</tr>
+<tr>
+<td>未定义指令中止模式</td>
+<td>MOVS PC，R14</td>
+<td>PC + 4  ①</td>
+</tr>
+<tr>
+<td>快速中断模式</td>
+<td>SUBS PC，R14，#4</td>
+<td>PC + 4 ②</td>
+</tr>
+<tr>
+<td>中断模式</td>
+<td>SUBS PC，R14，#4</td>
+<td>PC + 4 ②</td>
+</tr>
+<tr>
+<td>数据访问终止模式</td>
+<td>异常原因：指令预取终止 SUBS PC，R14，#4</td>
+<td>PC + 4 ①</td>
+</tr>
+<tr>
+<td>数据访问终止模式</td>
+<td>异常原因：指令访问终止 SUBS PC，R14，#8</td>
+<td>PC + 8 ③</td>
+</tr>
+</tbody></table>
+<p>注：<br>①PC值是这些指令的地址：SWI、未定义的指令、在预取时就失败的指令。<br>②PC值是这些指令的地址：进入快速中断模式、中断模式前、被打断而未执行的指令。<br>③PC值是这些指令的地址：导致数据访问终止的加载&#x2F;存储指令（LDR、STR、LDM、STM）。</p>
+<h2 id="S3C2410-x2F-S3C2440中断控制器"><a href="#S3C2410-x2F-S3C2440中断控制器" class="headerlink" title="S3C2410&#x2F;S3C2440中断控制器"></a>S3C2410&#x2F;S3C2440中断控制器</h2><!-- CPU运行过程中，如何知道各类外设发生了某些不预期的事件，比如串口收到了新数据，USB接口中插入了设备，按下了某个按键等。主要有以下两种方法：
+1. 轮询方式：程序循环的查询各个设备的状态并作出相应反应。它实现简单，常用在功能相对单一的系统中。比如在一个温控系统中可以使用查询方式不断检测温度的变化。缺点是占用CPU资源过高，不适用于多任务系统。
+2. 中断方式：当某件事情发生时，硬件会设置某个寄存器；CPU在每执行完一条指令时，通过硬件查看这个寄存器，如果发现所关注的事情发生了，则中断当前程序流程，跳转到一个固定的地址处理这件事情，最后返回继续执行被中断的程序。它的实现相对复杂，但是效率很高，是常用的方法。
+
+参考下图，不论何种CPU，中断的处理过程是相似的：
+![img not found](2022/08/19/中断体系结构/3.jpeg) -->]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>嵌入式Linux应用完全开发手册</category>
+        <category>第1篇第9章 中断体系结构</category>
+      </categories>
+      <tags>
+        <tag>Linux 应用开发</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>设备与模块</title>
     <url>/2022/08/02/%E8%AE%BE%E5%A4%87%E4%B8%8E%E6%A8%A1%E5%9D%97/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《Linux内核设计与实现》第17章总结归纳</p>
