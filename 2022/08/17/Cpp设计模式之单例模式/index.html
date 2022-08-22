@@ -27,6 +27,7 @@
 <meta property="og:site_name" content="Laugh Tale">
 <meta property="og:description" content="C++常用设计模式之单例模式">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2022/08/17/Cpp%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/1.jpeg">
 <meta property="article:published_time" content="2022-08-17T08:51:23.000Z">
 <meta property="article:modified_time" content="2022-08-17T08:51:23.000Z">
 <meta property="article:author" content="Nibil">
@@ -34,6 +35,7 @@
 <meta property="article:tag" content="面向对象编程">
 <meta property="article:tag" content="设计模式">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2022/08/17/Cpp%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/1.jpeg">
 
 
 <link rel="canonical" href="http://example.com/2022/08/17/Cpp%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/">
@@ -161,13 +163,13 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-count">13</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-count">19</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
@@ -342,6 +344,7 @@
 
 <h1 id="饿汉单例模式"><a href="#饿汉单例模式" class="headerlink" title="饿汉单例模式"></a>饿汉单例模式</h1><p>饿汉模式，在访问量较大，或者访问线程较多时，采用饿汉实现，可以实现更好的性能。这是一种空间换时间的策略。</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//饿汉式：线程安全，注意一定要在合适的地方去delete它</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SingleMan</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="type">static</span> SingleMan* <span class="title">getInstance</span><span class="params">()</span></span>;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="built_in">SingleMan</span>()&#123;&#125;                                           <span class="comment">//不允许类外实例化</span></span><br><span class="line">    <span class="built_in">SingleMan</span>(<span class="type">const</span> SingleMan&amp; man) = <span class="keyword">delete</span>;               <span class="comment">//不允许拷贝构造</span></span><br><span class="line">    SingleMan&amp; <span class="keyword">operator</span>=(<span class="type">const</span> SingleMan&amp; man) = <span class="keyword">delete</span>;    <span class="comment">//不允许赋值</span></span><br><span class="line">​</span><br><span class="line">    <span class="type">static</span> SingleMan* m_singleMan;</span><br><span class="line">&#125;;</span><br><span class="line">​</span><br><span class="line">SingleMan* SingleMan::m_singleMan = <span class="keyword">new</span> <span class="built_in">SingleMan</span>();</span><br><span class="line">​</span><br><span class="line"><span class="function">SingleMan* <span class="title">SingleMan::getInstance</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> m_singleMan;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>UML类图：<br><img src="/2022/08/17/Cpp%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/1.jpeg" alt="img not found"></p>
 
     </div>
 
