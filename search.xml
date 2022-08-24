@@ -16,25 +16,6 @@
       </tags>
   </entry>
   <entry>
-    <title>何谓硬解码和软解码</title>
-    <url>/2022/08/05/%E4%BD%95%E8%B0%93%E7%A1%AC%E8%A7%A3%E7%A0%81%E5%92%8C%E8%BD%AF%E8%A7%A3%E7%A0%81/</url>
-    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>关于“硬解码”与“软解码”。</p>
-<span id="more"></span>
-<p>软解码和硬解码的区别：</p>
-<ol>
-<li>软解码使用CPU进行解码。</li>
-<li>硬解码使用非CPU进行解码，如GPU、专用的DSP、FPGA、ASIC等芯片。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>学习</category>
-        <category>何谓硬解码和软解码</category>
-      </categories>
-      <tags>
-        <tag>多媒体编解码</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>嵌入式Linux开发概述</title>
     <url>/2022/08/04/%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BC%80%E5%8F%91%E6%A6%82%E8%BF%B0/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《嵌入式Linux应用完全开发手册》第1篇第1章总结归纳</p>
@@ -91,6 +72,25 @@
       </categories>
       <tags>
         <tag>Linux 应用开发</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>何谓硬解码和软解码</title>
+    <url>/2022/08/05/%E4%BD%95%E8%B0%93%E7%A1%AC%E8%A7%A3%E7%A0%81%E5%92%8C%E8%BD%AF%E8%A7%A3%E7%A0%81/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>关于“硬解码”与“软解码”。</p>
+<span id="more"></span>
+<p>软解码和硬解码的区别：</p>
+<ol>
+<li>软解码使用CPU进行解码。</li>
+<li>硬解码使用非CPU进行解码，如GPU、专用的DSP、FPGA、ASIC等芯片。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>何谓硬解码和软解码</category>
+      </categories>
+      <tags>
+        <tag>多媒体编解码</tag>
       </tags>
   </entry>
   <entry>
@@ -234,6 +234,202 @@
         <tag>C++</tag>
         <tag>面向对象编程</tag>
         <tag>设计模式</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>通用异步收发器UART</title>
+    <url>/2022/08/24/%E9%80%9A%E7%94%A8%E5%BC%82%E6%AD%A5%E6%94%B6%E5%8F%91%E5%99%A8UART/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《嵌入式Linux应用完全开发手册》第1篇第11章总结归纳</p>
+<span id="more"></span>
+<h1 id="本章目标"><a href="#本章目标" class="headerlink" title="本章目标"></a>本章目标</h1><ol>
+<li>了解UART的原理</li>
+<li>掌握S3C2410&#x2F;S3C2440中UART的使用</li>
+</ol>
+<h1 id="UART原理以及UART部件使用方法"><a href="#UART原理以及UART部件使用方法" class="headerlink" title="UART原理以及UART部件使用方法"></a>UART原理以及UART部件使用方法</h1><h2 id="UART原理说明"><a href="#UART原理说明" class="headerlink" title="UART原理说明"></a>UART原理说明</h2><p>通用异步收发器简称UART（Universal Asynchronous Reciver Transmitter），它用来传输串行数据。发送数据时，CPU将并行数据写入UART，UART按照一定的格式在一根电线上发出；接收数据时，UART检测另一根电线上的信号，将串行收集放在缓冲区中，CPU即可读取UART获得这些数据。UART之间以全双工方式传输数据，最精简的连线方法只有三根电线，TxD用于发送数据，RxD用于接收数据，GnD用于给双方提供参考电平。<br><img src="/2022/08/24/%E9%80%9A%E7%94%A8%E5%BC%82%E6%AD%A5%E6%94%B6%E5%8F%91%E5%99%A8UART/1.jpeg" alt="img not found"><br>UART使用标准的TTL&#x2F;CMOS逻辑电平（0-5V、0-3.3V、0-2.5V、0-1.8V）来表示数据，高电平表示1，低电平表示0。为了增强数据的抗干扰能力、提高传输长度，通常将TTL&#x2F;CMOS逻辑电平转换为RS-232逻辑电平，3<del>12V表示0，-3</del>-12V表示1。<br>TxD、RxD数据线以“位”为最小单位传输数据。帧（Frame）由具有完整意义、不可分割的若干位组成，它包含开始位、数据位、校验位（需要的话）和停止位。发送数据之前，UART之间要约定好数据的传输速率（即每位所占据的时间，其倒数称为波特率）、数据的传输格式（即有多少个数据位、是否使用校验位、奇校验还是偶校验、有多少个停止位）。<br>数据传输流程如下：</p>
+<ol>
+<li>平时数据线处于空闭状态（1状态）。</li>
+<li>当要发送数据时，UART改变TxD数据线的状态（变为0状态），并维持1位的时间，这样接收方检测到开始位之后，再等待1.5位的时间就开始一位一位检测数据线的状态得到所传输的数据。</li>
+<li>UART一帧中可以有5、6、7或8位得数据，发送方一位一位地改变数据线的状态将它们发送出去，首先发送最低位。</li>
+<li>如果使用校验功能，UART在发送完数据位之后，还要发送一个校验位。有两种校验方法：奇校验、偶校验—数据位连同校验位中“1”的数目等于奇数还是偶数。</li>
+<li>最后，发送停止位，数据线恢复到空闭状态（1状态）。停止位的长度有3种：1位、1.5位、2位。</li>
+</ol>
+<p>下图演示了UART使用7个数据位、偶校验、2个停止位的格式传输字符’A‘（二进制格式为0b1000001）时，TTL&#x2F;CMOS逻辑电平、RS232逻辑电平对应的波形。<br><img src="/2022/08/24/%E9%80%9A%E7%94%A8%E5%BC%82%E6%AD%A5%E6%94%B6%E5%8F%91%E5%99%A8UART/2.jpeg" alt="img not found"></p>
+<h2 id="S3C2410-x2F-S3C2440-UART的特性"><a href="#S3C2410-x2F-S3C2440-UART的特性" class="headerlink" title="S3C2410&#x2F;S3C2440 UART的特性"></a>S3C2410&#x2F;S3C2440 UART的特性</h2><p>S3C2410&#x2F;S3C2440 中UART的特性相似，有3个独立的通道，每个通道都可以工作于中断模式或DMA模式，即UART可以发出中断或DMA请求以便在CPU、UART之间传输数据。S3C2410&#x2F;S3C2440 UART由波特率发生器、发送器、接收器和控制逻辑组成。<br>使用系统时钟时，S3C2410的UART波特率可以达到230.4Kbit&#x2F;s，S3C2440则可以达到115.2Kbit&#x2F;s；如果使用UEXTCLK引脚提供的外部时钟，则可以达到更高的波特率。波特率可以通过编程控制。<br>S3C2410 UART的每个控制通道都有16字节的发送FIFO和16字节的接收FIFO，S3C2440 UART的FIFO深度为64。发送数据时，CPU先将数据写入发送FIFO中，然后UART控制器会自动将FIFO中的数据复制到“发送移位器（Transmit Shifter）”中，发送移位器将数据一位一位的发送到TxD数据线上。接收数据时，“接收移位器（Receive Shifter）”，将RxD数据线上的数据一位一位的接收进来，然后复制到接收FIFO中，CPU即可从中读取数据。<br>S3C2410&#x2F;S3C2440 UART的每个通道支持的停止位有1位、2位，数据位有5、6、7或8位，支持校验功能，另外还有红外发送&#x2F;接收功能。<br>S3C2410&#x2F;S3C2440 UART结构如下图所示：<br><img src="/2022/08/24/%E9%80%9A%E7%94%A8%E5%BC%82%E6%AD%A5%E6%94%B6%E5%8F%91%E5%99%A8UART/3.jpeg" alt="img not found"></p>
+<h2 id="S3C2410-x2F-S3C2440-UART的使用"><a href="#S3C2410-x2F-S3C2440-UART的使用" class="headerlink" title="S3C2410&#x2F;S3C2440 UART的使用"></a>S3C2410&#x2F;S3C2440 UART的使用</h2><p>在使用UART之前需要设置波特率、传输格式；对于S3C2410&#x2F;S3C2440，还要选择所涉及管脚为UART功能，选择UART通道的工作模式为中断模式还是DMA模式。设置好之后，往某个寄存器写入数据即可发送。可以通过查询状态寄存器或设置中断来获知数据是否已经发送完毕、是否已经接收到数据。</p>
+<h3 id="将所涉及的UART通道管脚设为UART功能"><a href="#将所涉及的UART通道管脚设为UART功能" class="headerlink" title="将所涉及的UART通道管脚设为UART功能"></a>将所涉及的UART通道管脚设为UART功能</h3><p>比如UART通道0中，GPH2、GPH3分别用作TXD0、RXD0，要使用UART通道0时，先设置GPHCON寄存器将GPH2、GPH3引脚的功能设为TXD0、RXD0。</p>
+<h3 id="UBRDIVn寄存器（UART-BAUD-RATE-DIVISOR）：设置波特率"><a href="#UBRDIVn寄存器（UART-BAUD-RATE-DIVISOR）：设置波特率" class="headerlink" title="UBRDIVn寄存器（UART BAUD RATE DIVISOR）：设置波特率"></a>UBRDIVn寄存器（UART BAUD RATE DIVISOR）：设置波特率</h3><p>S3C2410 UART的时钟源有两种选择：PCLK、UEXTCLK；S3C2440的时钟源有三种选择：PCLK、UEXTCLK、FCLK&#x2F;n，其中n通过UCON0<del>UCON2联合设置。<br>根据给定的波特率、所选择的时钟源的频率，可以通过以下公式计算UBRDIVn寄存器（n为0</del>2，对应3个UART通道）。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">UBRDIVn = (<span class="type">int</span>)(UART clock/(baud rate x <span class="number">16</span>)) - <span class="number">1</span></span><br></pre></td></tr></table></figure>
+<p>上述公式计算出来的UBRDIVn寄存器值不一定是整数，只要误差在1.87%之内即可。误差计算公式如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">tUPCLK = (UBRDIVn + <span class="number">1</span>) x <span class="number">16</span> x <span class="number">1F</span>rame / (UART clock)     <span class="comment">//tUPCLK 实际的UART时钟</span></span><br><span class="line">tUEXACT = <span class="number">1F</span>rame / baud rate                            <span class="comment">//tUEXACT 理论的UART时钟</span></span><br><span class="line">UART error = (tUPCLK - tUEXACT) / tUEXACT x <span class="number">100</span>%        <span class="comment">//误差</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="ULCONn寄存器（UART-LINE-CONTROL）：设置传输格式"><a href="#ULCONn寄存器（UART-LINE-CONTROL）：设置传输格式" class="headerlink" title="ULCONn寄存器（UART LINE CONTROL）：设置传输格式"></a>ULCONn寄存器（UART LINE CONTROL）：设置传输格式</h3><p>ULCONn寄存器（n为0~2）格式如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>位</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>数据位宽度</td>
+<td>[1:0]</td>
+<td>0b00：5位<br> 0b01：6位<br> 0b10：7位<br> 0b11：8位</td>
+</tr>
+<tr>
+<td>停止位宽度</td>
+<td>[2]</td>
+<td>0：一帧中有一个停止位 <br>1：一帧中有两个停止位</td>
+</tr>
+<tr>
+<td>校验模式</td>
+<td>[5:3]</td>
+<td>设置校验位的产生方法、检验方法: <br> 0b0xx：无校验 <br>0b100：奇校验<br>0b101：偶校验<br>0b110：发送数据时强制设为1，接收数据时检查是否为1<br>0b111：发送数据时强制设为0，接收数据时检查是否为0</td>
+</tr>
+<tr>
+<td>红外模式</td>
+<td>[6]</td>
+<td>0：正常模式<br>1：红外模式</td>
+</tr>
+</tbody></table>
+<p>UART通道被设为红外模式时，其串行数据的波形与正常模式稍有不同。</p>
+<h3 id="ULCONn寄存器（UART-CONTROL）"><a href="#ULCONn寄存器（UART-CONTROL）" class="headerlink" title="ULCONn寄存器（UART CONTROL）"></a>ULCONn寄存器（UART CONTROL）</h3><p>ULCONn寄存器用于选择UART时钟源、设置UART中断方式等。S3C2410 UART的时钟源有两种选择：PCLK、UEXTCLK；S3C2440的时钟源有三种选择：PCLK、UEXTCLK、FCLK&#x2F;n。所以在时钟源的选择与设置方面稍有不同。<br>S3C2410的ULCONn寄存器格式如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>位</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>接收模式</td>
+<td>[1:0]</td>
+<td>选择如何从UART接收缓冲区中读取数据。<br>0b00：禁止接收数据 <br>0b01：中断方式或者查询方式 <br>0b10：DMA0请求（UART0） DMA3请求（UART2）<br>0b11：DMA1请求（UART1）</td>
+</tr>
+<tr>
+<td>发送模式</td>
+<td>[3:2]</td>
+<td>选择如何将数据发送到UART发送缓存区。<br>0b00：禁止发送数据 <br>0b01：中断方式或者查询方式 <br>0b10：DMA0请求（UART0） DMA3请求（UART2）<br>0b11：DMA1请求（UART1）</td>
+</tr>
+<tr>
+<td>自环模式</td>
+<td>[5]</td>
+<td>自环模式就是将TxDn和RxDn在内部相连，用于自发自收。<br>0：正常模式 1：自环模式</td>
+</tr>
+<tr>
+<td>接收错误状态中断使能</td>
+<td>[6]</td>
+<td>用于使能当发生错误时（帧错误、溢出）时，产生中断。<br> 0：出错时不产生中断 <br>1：出错时产生中断</td>
+</tr>
+<tr>
+<td>接收超时使能</td>
+<td>[7]</td>
+<td>当使用UART FIFO时，用于使能&#x2F;禁止接收超时的中断。 <br>0&#x3D;禁止 1&#x3D;使能</td>
+</tr>
+<tr>
+<td>接收中断方式</td>
+<td>[8]</td>
+<td>如下情况发生时，将产生接收中断。<br> 不使用FIFO时，接收到一个数据；<br>使用FIFO时，FIFO中的数据达到RxFIFO的触发阈值。<br>中断方式如下设置。<br>0：脉冲 <br>1：电平</td>
+</tr>
+<tr>
+<td>发送中断方式</td>
+<td>[9]</td>
+<td>如下情况发生时，将产生发送中断。<br> 不使用FIFO时，发送缓冲区变空；<br>使用FIFO时，FIFO中的数据达到TxFIFO的触发阈值。<br>中断方式如下设置。<br>0：脉冲 <br>1：电平</td>
+</tr>
+<tr>
+<td>时钟选择</td>
+<td>[10]</td>
+<td>选择UART时钟源。<br>0：PCLK <br>UEXTCLK</td>
+</tr>
+</tbody></table>
+<p>S3C2440的UCONn寄存器在UART时钟的选择方面与S3C2410有所不同，从位[10]往上的位含义不一样，并且原来的位[4]用于选择是否发出“break”信号，这些位的含义如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>位</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>“break”信号</td>
+<td>[4]</td>
+<td>设置此位时，UART会在一帧的时间内发出一个“break”信号。<br>0：正常发送  1：发出“break”信号</td>
+</tr>
+<tr>
+<td>时钟选择</td>
+<td>[11:10]</td>
+<td>选择UART时钟源。<br>0b00&#x2F;0b10：PCLK <br> 0b01：UEXTVLK <br> 0b11：FCLK&#x2F;n</td>
+</tr>
+<tr>
+<td>FCLK分频率系数</td>
+<td>[15:12]</td>
+<td>用来设置“FCLK&#x2F;n”中的n值</td>
+</tr>
+</tbody></table>
+<p>ULCON0、ULCON1、ULCON2这3个寄存器的位[15:12]一起用来确定n值，它们的意义如下。</p>
+<ol>
+<li>ULCON2[15]：“FCLK&#x2F;n”使能位。<br>它等于0时，禁止使用“FCLK&#x2F;n”作为UART时钟源；等于1时，可以用作UART时钟源。</li>
+<li>n值的设置。<br>ULCON0[15:12]、ULCON1[15:12]、ULCON2[14:12]三者用于设置n值，当其中一个被设置为非0值时，其他两个必须为0。<ol>
+<li>n值处于7~12时，UART时钟&#x3D;FCLK&#x2F;（divider + 6），divider为ULCON0[15:12]的值，大于0。</li>
+<li>n值处于22~36时，UART时钟&#x3D;FCLK&#x2F;（divider + 21），divider为ULCON1[15:12]的值，大于0。</li>
+<li>n值处于37~43时，UART时钟&#x3D;FCLK&#x2F;（divider + 36），divider为ULCON2[14:12]的值，大于0。</li>
+<li>ULCON0[15:12]、ULCON1[15:12]、ULCON2[14:12]都等于0时，UART时钟：FCLK&#x2F;44。</li>
+</ol>
+</li>
+</ol>
+<h3 id="UFCONn寄存器（UART-FIFO-CONTROL）、UFSTATn寄存器（UART-FIFO-STATUS）"><a href="#UFCONn寄存器（UART-FIFO-CONTROL）、UFSTATn寄存器（UART-FIFO-STATUS）" class="headerlink" title="UFCONn寄存器（UART FIFO CONTROL）、UFSTATn寄存器（UART FIFO STATUS）"></a>UFCONn寄存器（UART FIFO CONTROL）、UFSTATn寄存器（UART FIFO STATUS）</h3><p>UFCONn寄存器用于设置是否使用FIFO，设置各FIFO的触发阈值，即发送FIFO中有多少个数据产生中断、接收FIFO中有多少个数据产生中断。并可以通过设置UFCONn寄存器来复位各个FIFO。<br>读取UFSTATn寄存器可以知道各个FIFO是否已经满、其中有多少个数据。<br>不适用FIFO时，可以认为FIFO的深度是1，使用FIFO时，S3C2410的FIFO深度是16，S3C2440的深度是64。</p>
+<h3 id="UMCONn寄存器（UART-MODEM-CONTROL）、UMSTATn寄存器（UART-MODEM-STATUS）"><a href="#UMCONn寄存器（UART-MODEM-CONTROL）、UMSTATn寄存器（UART-MODEM-STATUS）" class="headerlink" title="UMCONn寄存器（UART MODEM CONTROL）、UMSTATn寄存器（UART MODEM STATUS）"></a>UMCONn寄存器（UART MODEM CONTROL）、UMSTATn寄存器（UART MODEM STATUS）</h3><p>这两类寄存器用于流量控制。</p>
+<h3 id="UTRSTATn寄存器（UART-TX-x2F-RX-STATUS）"><a href="#UTRSTATn寄存器（UART-TX-x2F-RX-STATUS）" class="headerlink" title="UTRSTATn寄存器（UART TX&#x2F;RX STATUS）"></a>UTRSTATn寄存器（UART TX&#x2F;RX STATUS）</h3><p>UTRSTATn寄存器用来表明数据是否已经发送完毕、是否已经接收到数据。格式如下表所示。缓冲区其实就是FIFO，只不过不适用FIFO时，FIFO的深度为1。</p>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>位</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>接收缓冲区数据就绪</td>
+<td>[0]</td>
+<td>当接收到数据时，此位被自动设为1</td>
+</tr>
+<tr>
+<td>发送缓冲区空</td>
+<td>[1]</td>
+<td>当发送缓冲区没有数据时，此位被自动设为1</td>
+</tr>
+<tr>
+<td>发送器空</td>
+<td>[2]</td>
+<td>当发送缓冲区中没有数据，并且最后一个数据也已经发送出去，此位被自动设为1</td>
+</tr>
+</tbody></table>
+<h3 id="UERSTATn寄存器（UART-ERROR-STATUS）"><a href="#UERSTATn寄存器（UART-ERROR-STATUS）" class="headerlink" title="UERSTATn寄存器（UART ERROR STATUS）"></a>UERSTATn寄存器（UART ERROR STATUS）</h3><p>用来表示各种错误是否发生，位[0]~位[3]为1时分别表示溢出错误、校验错误、帧错误、检测到“break”信号。读取这个寄存器时，它会自动清0。<br>需要注意的是，接收数据时如果使用FIFO，则UART内部会使用一个“错误FIFO”来表明接收FIFO中哪个数据在接收过程中发生了错误。CPU只有在读出这个错误的数据时，才会察觉到发生了错误。要想清除“错误FIFO”，则必须读出错误的数据，并读出UERSTATn寄存器。</p>
+<h3 id="UTXHn寄存器（UART-TRANSMIT-BUFFER-REGISTER）"><a href="#UTXHn寄存器（UART-TRANSMIT-BUFFER-REGISTER）" class="headerlink" title="UTXHn寄存器（UART TRANSMIT BUFFER REGISTER）"></a>UTXHn寄存器（UART TRANSMIT BUFFER REGISTER）</h3><p>CPU将数据写入这个寄存器，UART即会将它保存到缓冲区，并自动发送出去。</p>
+<h3 id="URXHn寄存器（UART-RECEIVER-BUFFER-REGISTER）"><a href="#URXHn寄存器（UART-RECEIVER-BUFFER-REGISTER）" class="headerlink" title="URXHn寄存器（UART RECEIVER BUFFER REGISTER）"></a>URXHn寄存器（UART RECEIVER BUFFER REGISTER）</h3><p>当UART接收到数据，CPU读取这个寄存器，即可获得数据。</p>
+<h1 id="UART操作实例"><a href="#UART操作实例" class="headerlink" title="UART操作实例"></a>UART操作实例</h1><h2 id="代码详解"><a href="#代码详解" class="headerlink" title="代码详解"></a>代码详解</h2><p>本示例代码的目的是在串口上输出一串字符，单板接收到后将它的ASCII码加1后从串口输出。<br>首先设置MPLL提高系统时钟，令PCLK为50MHz，UART将选择PCLK为时钟源。将代码复制到SDRAM中之后，调用main函数。重点在于UART0的初始化、收发数据，这由3个函数来实现：uart0_init、getc和putc。</p>
+<h3 id="UART初始化"><a href="#UART初始化" class="headerlink" title="UART初始化"></a>UART初始化</h3><p>uart0_init函数代码如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> PCLK                        50000000            <span class="comment">//init.c中的clock_init函数设置PCLK为50MHz</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> UART_CLK                    PCLK                <span class="comment">//UART0的时钟源设置为PCLK</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> UART_BAUD_RATE              115200              <span class="comment">//波特率</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> UART_BRD                    ((UART_CLK / (UART_BAUD_RATE * 16 )) - 1)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">初始化UART0</span></span><br><span class="line"><span class="comment">115200 8N1 无流控</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">uart0_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    GPHCON |= <span class="number">0xa0</span>;                     <span class="comment">//GPH2、GPH3用作TXD0、RXD0</span></span><br><span class="line">    GPHUP   = <span class="number">0x0c</span>;                     <span class="comment">//GPH2、GPH3内部上拉</span></span><br><span class="line"></span><br><span class="line">    ULCON0  = <span class="number">0x03</span>;                     <span class="comment">//波特率为115200，数据格式为：8个数据位、没有流控、1个停止位</span></span><br><span class="line">    UCON0   = <span class="number">0x05</span>;                     <span class="comment">//查询方式，UART时钟源位PLCK</span></span><br><span class="line">    UFCON0  = <span class="number">0x00</span>;                     <span class="comment">//不使用FIFO</span></span><br><span class="line">    UMCON0  = <span class="number">0x00</span>;                     <span class="comment">//不使用流控</span></span><br><span class="line">    UBRDIV0 = UART_BRD;                 <span class="comment">//波特率位115200</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="发送字符的函数"><a href="#发送字符的函数" class="headerlink" title="发送字符的函数"></a>发送字符的函数</h3><p>本实例不使用FIFO，发送字符前，首先判断上一个字符是否已经被发送出去。如果没有，则不断查询UTRSTAT0寄存器的位[2]，当它为1时表示已经发送完毕。于是，即可向UTXH0寄存器中写入当前要发送的字符。代码如下（宏TXD0READY被定义为（1 &lt;&lt; 2））:</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">发送一个字符</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">putc</span><span class="params">(<span class="type">unsigned</span> <span class="type">char</span> c)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//等待，直到发送缓区中的数据已经全部发送出去</span></span><br><span class="line">    <span class="keyword">while</span>(!(UTRSTAT0 &amp; TXD0READY));</span><br><span class="line"></span><br><span class="line">    <span class="comment">//向UTXH0寄存器中写入数据，UART即自动将它发送出去</span></span><br><span class="line">    UTXH0 = c;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="接收字符的函数"><a href="#接收字符的函数" class="headerlink" title="接收字符的函数"></a>接收字符的函数</h3><p>试图读取数据前，先查询UTRSTAT0寄存器的位[1]，当它为1时表示接收缓冲区有数据，于是，即可读取URXH0得到数据。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">接收一个字符</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"></span><br><span class="line"><span class="type">unsigned</span> <span class="type">char</span> <span class="title function_">getc</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//等待，直到接收缓存区有数据</span></span><br><span class="line">    <span class="keyword">while</span>(!(UTRSTAT0 &amp; RXD0READY));</span><br><span class="line"></span><br><span class="line">    <span class="comment">//直接读取URXH0寄存器，即可获得接收到的数据</span></span><br><span class="line">    <span class="keyword">return</span> URXH0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="主函数"><a href="#主函数" class="headerlink" title="主函数"></a>主函数</h3><p>在main函数中，初始化UART0之后，即不断读取串口数据，并判断它是否为数字或字母。如果是的话，就将它加1后从串口输出。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;serial.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">char</span> c;</span><br><span class="line"></span><br><span class="line">    uart0_init();               <span class="comment">//波特率115200，8N1（8个数据位，无校验位，1个停止位）</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//从串口接收到数据之后，判断其是否为数字或字母，若是则加1后输出</span></span><br><span class="line">        c = getc();</span><br><span class="line">        <span class="keyword">if</span>(isDigital(c) || isLetter(c))</span><br><span class="line">            putc(c+<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="测试方式"><a href="#测试方式" class="headerlink" title="测试方式"></a>测试方式</h2><p>首先使用串口将开发板的COM0和PC的串口相连，打开PC上的串口工具（推荐使用SecureCRT），设置其波特率为115200、8N1（8个数据位，无校验位，1个停止位）。然后将编译生成的uart.bin文件烧入NAND Flash后上电运行。最后在PC上的串口工具中输入数字或者字母，可以看到输出另一个字符（加1）；如果输入其他字符，则无输出。</p>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>嵌入式Linux应用完全开发手册</category>
+        <category>第1篇第11章 通用异步收发器UART</category>
+      </categories>
+      <tags>
+        <tag>Linux 应用开发</tag>
       </tags>
   </entry>
   <entry>
