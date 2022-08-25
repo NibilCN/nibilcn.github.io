@@ -433,6 +433,209 @@
       </tags>
   </entry>
   <entry>
+    <title>IIC</title>
+    <url>/2022/08/25/IIC/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《嵌入式Linux应用完全开发手册》第1篇第12章总结归纳</p>
+<span id="more"></span>
+<h1 id="本章目标"><a href="#本章目标" class="headerlink" title="本章目标"></a>本章目标</h1><ol>
+<li>了解IIC总线协议</li>
+<li>掌握S3C2410&#x2F;S3C2440中IIC的使用方法</li>
+</ol>
+<h1 id="IIC总线协议及硬件介绍"><a href="#IIC总线协议及硬件介绍" class="headerlink" title="IIC总线协议及硬件介绍"></a>IIC总线协议及硬件介绍</h1><h2 id="IIC总线协议"><a href="#IIC总线协议" class="headerlink" title="IIC总线协议"></a>IIC总线协议</h2><h3 id="IIC总线的概念"><a href="#IIC总线的概念" class="headerlink" title="IIC总线的概念"></a>IIC总线的概念</h3><p>IIC（Inter-Integrated Circuit）总线是一种由PHILIPS公司开发的串行总线，用于连接微控制器及其外围设备。</p>
+<ol>
+<li>只有两条总线线路：一条串行数据线（SDA），一条串行时钟线（SCL）。</li>
+<li>每个连接到总线的器件都可以使用软件根据它的唯一地址来识别。</li>
+<li>传输数据的设备间是简单的主从关系。</li>
+<li>主机可以用作主机发送器或主机接收器。</li>
+<li>它是一个真正的多主机总线，两个或多个主机同时发起数据传输时，可以通过冲突检测和仲裁来防止数据被破坏。</li>
+<li>串行的8位双向数据传输，位速率在标准模式下可达100kbit&#x2F;s，在快速模式下可达400kbit&#x2F;s，在高速模式下可达3.4Mbit&#x2F;s。</li>
+<li>片上的滤波器可以增加抗干扰功能，保证数据的完整。</li>
+<li>连接到同一总线上的IC数量只受到总线最大电容400pF的限制。</li>
+</ol>
+<p>下图是一条IIC总线多个设备相连的例子：<br><img src="/2022/08/25/IIC/1.jpeg" alt="img not found"></p>
+<p>一些术语如下表：</p>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>发送器</td>
+<td>发送数据到总线的器件</td>
+</tr>
+<tr>
+<td>接收器</td>
+<td>从总线接收数据的器件</td>
+</tr>
+<tr>
+<td>主机</td>
+<td>发起&#x2F;停止数据传输、提供时钟信号的器件</td>
+</tr>
+<tr>
+<td>从机</td>
+<td>被主机寻址的器件</td>
+</tr>
+<tr>
+<td>多主机</td>
+<td>可以有多个主机试图去控制总线，但是不会破坏数据</td>
+</tr>
+<tr>
+<td>仲裁</td>
+<td>当多个主机试图去控制总线时，通过仲裁可以使得只有一个主机获得总线控制权，并且它传输的信息不会被破坏</td>
+</tr>
+<tr>
+<td>同步</td>
+<td>多个器件同步时钟信号的过程</td>
+</tr>
+</tbody></table>
+<h3 id="IIC总线的信号类型"><a href="#IIC总线的信号类型" class="headerlink" title="IIC总线的信号类型"></a>IIC总线的信号类型</h3><p>IIC总线在传送数据的过程中共有3种类型信号：开始信号、结束信号和响应信号。</p>
+<ol>
+<li>开始信号（S）：SCL为高电平时，SDA由高电平向低电平跳变，开始传送数据。</li>
+<li>结束信号（P）：SCL为高电平时，SDA由低电平向高电平跳变，结束传送数据。</li>
+<li>响应信号（ACk）：接收器在接收到8位数据之后，在第9个时钟周期，拉低SDA电平。</li>
+</ol>
+<p>它们的波形如下图：<br><img src="/2022/08/25/IIC/2.jpeg" alt="img not found"></p>
+<p>SDA上传输的数据必须在SCL为高电平期间保持稳定，SDA上的数据只能在SCL为低电平期间变化，如下图所示：<br><img src="/2022/08/25/IIC/3.jpeg" alt="img not found"></p>
+<h3 id="IIC总线的数据传输格式"><a href="#IIC总线的数据传输格式" class="headerlink" title="IIC总线的数据传输格式"></a>IIC总线的数据传输格式</h3><p>发送到SDA线上的每个字节必须是8位的，每次传输可以发送的字节数量不受限制。每个字节后必须跟一个响应位。首先传输的是数据的最高位。如果从机要完成一些其他功能后（例如一个内部中断程序）才能继续接收或发送下一个字节，从机可以拉低SCL迫使主机进入等待状态。当从机准备好接收下一个数据并释放SCL后，数据继续传输。如果主机在传输数据期间也需要完成一些其他功能（例如一个内部中断程序）也可以拉低SCL以占住总线。<br>启动一个传输时，主机发出S信号，然后发出8位数据。这8位数据中前7位为从机的地址，第8位表示传输的方向（0表示写操作，1表示读操作）。被选中的从机发出响应信号。紧接着传输一系列字节及其响应位。最后，主机发出P信号结束本次传输。<br>下图是IIC数据传输的3种类型读、写、读写转换：<br><img src="/2022/08/25/IIC/4.jpeg" alt="img not found"></p>
+<p>并非每传输8位之后就会由ACK信号，以下3种例外：</p>
+<ol>
+<li>当主机不能响应从机地址时（例如它正忙着其他事情而无法响应IIC总线的操作，或者这个地址没有对应的主机），在第9个SCL周期内SDA线没有被拉低，即没有ACK信号。这时，主机发出一个P信号终止传输或者重新发出一个S信号开始新的传输。</li>
+<li>如果从机接收器在传输过程中不能接收更多数据时，它也不会发出ACK信号。这样，主机就可以意识到这点，从而发出一个P信号终止传输或者重新发出一个S信号开始新的传输。</li>
+<li>主机接收器在接收到最后一个字节后，也不会发出ACK信号，于是，从机发送器释放SDA线，以允许主机发出P信号结束传输。</li>
+</ol>
+<h2 id="S3C2410-x2F-S3C2440-IIC-总线控制器"><a href="#S3C2410-x2F-S3C2440-IIC-总线控制器" class="headerlink" title="S3C2410&#x2F;S3C2440 IIC 总线控制器"></a>S3C2410&#x2F;S3C2440 IIC 总线控制器</h2><h3 id="S3C2410-x2F-S3C2440-IIC-总线控制器介绍"><a href="#S3C2410-x2F-S3C2440-IIC-总线控制器介绍" class="headerlink" title="S3C2410&#x2F;S3C2440 IIC 总线控制器介绍"></a>S3C2410&#x2F;S3C2440 IIC 总线控制器介绍</h3><p>S3C2410&#x2F;S3C2440 IIC 接口有4种工作模式：主机发送器、主机接收器、从机发送器、从机接收器。其内部结构如下图所示：<br><img src="/2022/08/25/IIC/5.jpeg" alt="img not found"><br>S3C2410&#x2F;S3C2440提供4个寄存器来完成所有的IIC操作，SDA线上的数据从IICDS寄存器发出，或传入IICDS寄存器中；IICADD寄存器中保存S3C2410&#x2F;S3C2440当作从机的地址：IICCON、IICSTAT两个寄存器用来控制或标识各种各种状态，比如选择工作模式，发出S信号，P信号，决定是否发出ACK信号，检测是否收到ACK信号。寄存器的用法如下：</p>
+<ol>
+<li>IICCON寄存器（Multi-master IIC-bus control）<br>IICCON寄存器用于控制是否发出ACK信号、设置发送器的时钟、开启IIC中断，并标识中断是否发生。<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>位</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ACK信号使能</td>
+<td>[7]</td>
+<td>0 &#x3D; 禁止 1 &#x3D; 使能 <br> 在发送模式，此位无意义 <br> 在接收模式，此位使能时，SDA线在响应周期内将被拉低，即发出ACK信号</td>
+</tr>
+<tr>
+<td>发送模式时钟源选择</td>
+<td>[6]</td>
+<td>0 &#x3D; IICCLK 为PCLK&#x2F;6，1 &#x3D; IICCLK为PCLK&#x2F;512</td>
+</tr>
+<tr>
+<td>发送&#x2F;接收中断使能</td>
+<td>[5]</td>
+<td>0 &#x3D; IIC总线 Tx&#x2F;Rx中断使能 <br> 1 &#x3D; IIC总线 Tx&#x2F;Rx中断使能</td>
+</tr>
+<tr>
+<td>中断标记</td>
+<td>[4]</td>
+<td>此位用来标识是否有IIC中断发生，读出为0时表示没有中断发生，读出为1时表示有中断发生。当此位为1时，SCL线被拉低，此时所有IIC传输停止：如果需要继续传输，需写入0清除它</td>
+</tr>
+<tr>
+<td>发生模式时钟分频系数</td>
+<td>[3:0]</td>
+<td>发送器时钟&#x3D;IICCLK&#x2F;(IICCON[3:0] + 1)</td>
+</tr>
+</tbody></table>
+</li>
+</ol>
+<p>使用IICCON寄存器时，有如下注意事项：<br>①发送模式的时钟频率由位[6]、位[3:0]联合决定。另外，当IICCON[6]&#x3D;0时，IICCON[3:0]不能取0或1。<br>②IIC中断在以下3种情况下发生：当发出地址信息或者接收到一个从机地址并且吻合时，当总线仲裁失败时，当发送&#x2F;接收完一个字节的数据（包括ACK）时。<br>③基于SDA、SCL线上时间特性的考虑，要发送数据时，先将数据写入IICDS寄存器，然后再清除中断。<br>④如果IICCON[5] &#x3D; 0，IICCON[4]将不能正常工作。所以，即使不使用IIC中断，也要将IICCON[5]设为1。</p>
+<ol start="2">
+<li><p>IICSTAT（Multi-master IIC-bus control&#x2F;status）<br>IICSTAT寄存器用于选择IIC接口的工作模式，发出S信号、P信号，使能接收&#x2F;发送功能，并标识各种状态，比如总线仲裁是否成功、作为从机是否被寻址、是否接受到0地址、是否接收到ACK信号等。<br>IICSTAT寄存器的各位表示如下表：</p>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>位</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>工作模式</td>
+<td>[7:6]</td>
+<td>0b00：从机接收器 <br> 0b01：从机发送器 <br> 0b10：从机接收器 <br> 0b11：从机发送器</td>
+</tr>
+<tr>
+<td>忙状态位&#x2F;S信号、P信号</td>
+<td>[5]</td>
+<td>读此位时0：总线空闲，1：总线忙 <br> 写此位时0：发出P信号，1：发出S信号。当发出S信号后，IICDS寄存器中的数据将被自动发送。</td>
+</tr>
+<tr>
+<td>串行输出使能位</td>
+<td>[4]</td>
+<td>0：禁止接收&#x2F;发送功能，1：使能接收&#x2F;发送功能</td>
+</tr>
+<tr>
+<td>仲裁状态</td>
+<td>[3]</td>
+<td>0：总线仲裁成功 1：总线仲裁失败</td>
+</tr>
+<tr>
+<td>从机地址状态</td>
+<td>[2]</td>
+<td>作为从机时，在检测到S&#x2F;P信号时此位被自动清0 <br> 接收到的地址与IICADD寄存器中的值相等时，此位被置1</td>
+</tr>
+<tr>
+<td>0地址状态</td>
+<td>[1]</td>
+<td>在检测到S&#x2F;P信号时此位被自动清0 <br> 接收到的地址为0b0000000时，此位被置1</td>
+</tr>
+<tr>
+<td>最后一位的状态</td>
+<td>[0]</td>
+<td>0：接收到的最后一位为0（接收到ACK信号） <br> 1：接收到的最后一位为1 （没有接受到ACK信号）</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>IICADD寄存器（Multi-master IIC-bus address）<br>用到IICADD寄存器的位[7:1]，表示从机地址。IICADD寄存器在串行输出使能位IICSTAT[4]为0时，才可以写入；在任何时间都可以读出。</p>
+</li>
+<li><p>IICDS寄存器（Multi-master IIC-bus Tx&#x2F;Rx data shift）<br>用到IICDS寄存器的位[7:0]，其中保存的是要发送或已经接受的数据。IICDS寄存器在串行输出使能位IICSTAT[4]为1时，才可以写入；在任何时候都可以读出。</p>
+</li>
+</ol>
+<h3 id="S3C2410-x2F-S3C2440-IIC-总线操作方法"><a href="#S3C2410-x2F-S3C2440-IIC-总线操作方法" class="headerlink" title="S3C2410&#x2F;S3C2440 IIC 总线操作方法"></a>S3C2410&#x2F;S3C2440 IIC 总线操作方法</h3><p>启动或恢复S3C2410&#x2F;S3C2440 的IIC传输有以下两种方法：</p>
+<ol>
+<li>当IICCON[4]即中断状态位为0时，通过写IICSTAT寄存器启动IIC操作，有以下两种情况：<br>①在主机模式，令IICSTAT[5:4]等于0b11，将发出S信号和IICDS寄存器的数据（寻址），令IICSTAT[5:4]等于0b01，将发出P信号。<br>②在从机模式，令IICSTAT[4]等于1将等待其他主机发出S信号及地址信息。</li>
+<li>当IICCON[4]即中断位为1时，表示IIC操作被暂停。在这期间设置好其他寄存器之后，向IICCON[4]中写入0即可恢复IIC操作。所谓“设置其他寄存器”，有以下3种情况。<br>①对于主机模式，可以按照上面①的方法写IICSTAT寄存器，恢复IIC操作后即可发出S信号和IICDS寄存器的值（寻址），或者发出P信号。<br>②对于发送器，可以将下一个要发送的数据写入IICDS寄存器中，恢复IIC操作后即可发出这个数据。<br>③对于接收器，可以从IICDS寄存器中读出接收到的数据。最后向IICCON[4]写入0的同时，设置IICCON[7]以决定在接收到下一个数据后是否发出ACK信号。</li>
+</ol>
+<p>通过中断服务程序来驱动IIC传输。</p>
+<ol>
+<li>当仲裁失败时发生中断—本次传输没有抢到总线，可以稍后继续。</li>
+<li>对于主机模式，当发出S信号、地址信息并经过一个SCL周期（对于ACK信号）后，发生中断—主机可在此时判断是否成功寻址到从机。</li>
+<li>对于从机模式，当接收到的地址与IICADD寄存器吻合时，先发出ACK信号，然后发生中断—从机可在此时准备后续的传输。</li>
+<li>对于发送器，当发送完一个数据并经过一个SCL周期（对于ACK信号）后，发生中断。这是可以准备下一个要发送的数据，或者发送P信号以停止传输。</li>
+<li>对于接收器，当接收到一个数据时，先根据IICCON[7]决定是否发出ACK信号后，然后发生中断。这时可以读取IICDS寄存器得到数据，并设置IICCON[7]以决定接收到下一个数据后是否发出ACK信号。</li>
+</ol>
+<p>对于4种工作模式，S3C2410&#x2F;S3C2440数据手册中都有它们的操作流程图。现在以主机发送器作为例子说明，它的工作流程如图所示：<br><img src="/2022/08/25/IIC/6.jpeg" alt="img not found"></p>
+<ol>
+<li>配置主机发送器的各类参数。<br>设置GPE15、GPE14引脚用于SDA、SCL，设置IICCON寄存器选择IIC发送时钟，最后设置IICSTAT[4]为1。这样，后面才能写IICDS寄存器。<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Tips：初始时IICCON[4]为0，不能将IICSTAT设为主机模式，否则就会立刻发出S信号，发送IICDS寄存器的值。</span><br></pre></td></tr></table></figure></li>
+<li>将要寻址的从机地址写入IICDS寄存器。</li>
+<li>将0xF0写入IICSTAT寄存器，即设为主机发送器、使能串行输出功能、发出S信号。</li>
+<li>发出S信号后，步骤2中设置的IICDS寄存器值也将被发出，它用来寻址从机。</li>
+<li>在响应周期之后，发生中断，此时IICCON[4]为1，IIC传输暂停。</li>
+<li>如果没有数据要发送，则跳到步骤10 否则跳到步骤7。</li>
+<li>将下一个要发送的数据写入IICDS寄存器中。</li>
+<li>往IICCON[4]中写入0，恢复IIC传输。</li>
+<li>这时IICDS寄存器中的值将被一位一位地发送出去。当8位数据发送完毕，在经过另一个SCL周期（对应ACK信号）后，中断再次发生，跳到步骤5。</li>
+<li>将0xF0写入IICSTAT寄存器，即：设为主机发送器、使能串行输出功能、发出P信号。<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Tips：这时的P信号并没有实际发出，只有清除了IICCON[4]后才会发出P信号。</span><br></pre></td></tr></table></figure></li>
+<li>清除IICCON[4]，P信号得以发出。</li>
+<li>等待一段时间，使得P信号完全发出。</li>
+</ol>
+<h1 id="IIC总线操作实例"><a href="#IIC总线操作实例" class="headerlink" title="IIC总线操作实例"></a>IIC总线操作实例</h1>]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>嵌入式Linux应用完全开发手册</category>
+        <category>第1篇第12章 IIC</category>
+      </categories>
+      <tags>
+        <tag>Linux 应用开发</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>设备与模块</title>
     <url>/2022/08/02/%E8%AE%BE%E5%A4%87%E4%B8%8E%E6%A8%A1%E5%9D%97/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《Linux内核设计与实现》第17章总结归纳</p>

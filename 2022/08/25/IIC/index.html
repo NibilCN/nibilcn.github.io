@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":false,"version":"8.12.2","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"mac"},"bookmark":{"enable":true,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="《嵌入式Linux应用完全开发手册》第1篇第12章总结归纳">
+<meta property="og:type" content="article">
+<meta property="og:title" content="IIC">
+<meta property="og:url" content="http://example.com/2022/08/25/IIC/index.html">
+<meta property="og:site_name" content="Laugh Tale">
+<meta property="og:description" content="《嵌入式Linux应用完全开发手册》第1篇第12章总结归纳">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2022/08/25/IIC/1.jpeg">
+<meta property="og:image" content="http://example.com/2022/08/25/IIC/2.jpeg">
+<meta property="og:image" content="http://example.com/2022/08/25/IIC/3.jpeg">
+<meta property="og:image" content="http://example.com/2022/08/25/IIC/4.jpeg">
+<meta property="og:image" content="http://example.com/2022/08/25/IIC/5.jpeg">
+<meta property="og:image" content="http://example.com/2022/08/25/IIC/6.jpeg">
+<meta property="article:published_time" content="2022-08-25T02:17:50.000Z">
+<meta property="article:modified_time" content="2022-08-25T02:17:50.000Z">
+<meta property="article:author" content="Nibil">
+<meta property="article:tag" content="Linux 应用开发">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2022/08/25/IIC/1.jpeg">
+
+
+<link rel="canonical" href="http://example.com/2022/08/25/IIC/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":"","permalink":"http://example.com/2022/08/25/IIC/","path":"2022/08/25/IIC/","title":"IIC"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>IIC | Laugh Tale</title>
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+  <!--pjax：防止跳转页面音乐暂停-->
+  <script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.js"></script>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Laugh Tale</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">A Nibil's Sharing Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%AC%E7%AB%A0%E7%9B%AE%E6%A0%87"><span class="nav-number">1.</span> <span class="nav-text">本章目标</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#IIC%E6%80%BB%E7%BA%BF%E5%8D%8F%E8%AE%AE%E5%8F%8A%E7%A1%AC%E4%BB%B6%E4%BB%8B%E7%BB%8D"><span class="nav-number">2.</span> <span class="nav-text">IIC总线协议及硬件介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#IIC%E6%80%BB%E7%BA%BF%E5%8D%8F%E8%AE%AE"><span class="nav-number">2.1.</span> <span class="nav-text">IIC总线协议</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#IIC%E6%80%BB%E7%BA%BF%E7%9A%84%E6%A6%82%E5%BF%B5"><span class="nav-number">2.1.1.</span> <span class="nav-text">IIC总线的概念</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IIC%E6%80%BB%E7%BA%BF%E7%9A%84%E4%BF%A1%E5%8F%B7%E7%B1%BB%E5%9E%8B"><span class="nav-number">2.1.2.</span> <span class="nav-text">IIC总线的信号类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IIC%E6%80%BB%E7%BA%BF%E7%9A%84%E6%95%B0%E6%8D%AE%E4%BC%A0%E8%BE%93%E6%A0%BC%E5%BC%8F"><span class="nav-number">2.1.3.</span> <span class="nav-text">IIC总线的数据传输格式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#S3C2410-x2F-S3C2440-IIC-%E6%80%BB%E7%BA%BF%E6%8E%A7%E5%88%B6%E5%99%A8"><span class="nav-number">2.2.</span> <span class="nav-text">S3C2410&#x2F;S3C2440 IIC 总线控制器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#S3C2410-x2F-S3C2440-IIC-%E6%80%BB%E7%BA%BF%E6%8E%A7%E5%88%B6%E5%99%A8%E4%BB%8B%E7%BB%8D"><span class="nav-number">2.2.1.</span> <span class="nav-text">S3C2410&#x2F;S3C2440 IIC 总线控制器介绍</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#S3C2410-x2F-S3C2440-IIC-%E6%80%BB%E7%BA%BF%E6%93%8D%E4%BD%9C%E6%96%B9%E6%B3%95"><span class="nav-number">2.2.2.</span> <span class="nav-text">S3C2410&#x2F;S3C2440 IIC 总线操作方法</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#IIC%E6%80%BB%E7%BA%BF%E6%93%8D%E4%BD%9C%E5%AE%9E%E4%BE%8B"><span class="nav-number">3.</span> <span class="nav-text">IIC总线操作实例</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Nibil</p>
+  <div class="site-description" itemprop="description">A Nibil's Sharing Blog</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">16</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/NibilCN" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;NibilCN" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-inner">
+      <!-- require APlayer -->
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css">
+      <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
+      <!-- require MetingJS -->
+      <script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+      <!--网易云-->   
+      <meting-js
+        server="netease"
+        id="7593069088"
+        type="playlist" 
+        mini="false"
+        fixed="false"
+        list-folded="true"
+        autoplay="true"
+        volume="0.4"
+        theme="#FADFA3"
+        order="random"
+        loop="all"
+        preload="auto"
+        mutex="true">
+      </meting-js>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/NibilCN" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/08/25/IIC/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Nibil">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Laugh Tale">
+      <meta itemprop="description" content="A Nibil's Sharing Blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="IIC | Laugh Tale">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          IIC
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-08-25 10:17:50" itemprop="dateCreated datePublished" datetime="2022-08-25T10:17:50+08:00">2022-08-25</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">学习</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/" itemprop="url" rel="index"><span itemprop="name">书籍</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BA%94%E7%94%A8%E5%AE%8C%E5%85%A8%E5%BC%80%E5%8F%91%E6%89%8B%E5%86%8C/" itemprop="url" rel="index"><span itemprop="name">嵌入式Linux应用完全开发手册</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BA%94%E7%94%A8%E5%AE%8C%E5%85%A8%E5%BC%80%E5%8F%91%E6%89%8B%E5%86%8C/%E7%AC%AC1%E7%AF%87%E7%AC%AC12%E7%AB%A0-IIC/" itemprop="url" rel="index"><span itemprop="name">第1篇第12章 IIC</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>4.8k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>4 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>《嵌入式Linux应用完全开发手册》第1篇第12章总结归纳</p>
+<span id="more"></span>
+<h1 id="本章目标"><a href="#本章目标" class="headerlink" title="本章目标"></a>本章目标</h1><ol>
+<li>了解IIC总线协议</li>
+<li>掌握S3C2410&#x2F;S3C2440中IIC的使用方法</li>
+</ol>
+<h1 id="IIC总线协议及硬件介绍"><a href="#IIC总线协议及硬件介绍" class="headerlink" title="IIC总线协议及硬件介绍"></a>IIC总线协议及硬件介绍</h1><h2 id="IIC总线协议"><a href="#IIC总线协议" class="headerlink" title="IIC总线协议"></a>IIC总线协议</h2><h3 id="IIC总线的概念"><a href="#IIC总线的概念" class="headerlink" title="IIC总线的概念"></a>IIC总线的概念</h3><p>IIC（Inter-Integrated Circuit）总线是一种由PHILIPS公司开发的串行总线，用于连接微控制器及其外围设备。</p>
+<ol>
+<li>只有两条总线线路：一条串行数据线（SDA），一条串行时钟线（SCL）。</li>
+<li>每个连接到总线的器件都可以使用软件根据它的唯一地址来识别。</li>
+<li>传输数据的设备间是简单的主从关系。</li>
+<li>主机可以用作主机发送器或主机接收器。</li>
+<li>它是一个真正的多主机总线，两个或多个主机同时发起数据传输时，可以通过冲突检测和仲裁来防止数据被破坏。</li>
+<li>串行的8位双向数据传输，位速率在标准模式下可达100kbit&#x2F;s，在快速模式下可达400kbit&#x2F;s，在高速模式下可达3.4Mbit&#x2F;s。</li>
+<li>片上的滤波器可以增加抗干扰功能，保证数据的完整。</li>
+<li>连接到同一总线上的IC数量只受到总线最大电容400pF的限制。</li>
+</ol>
+<p>下图是一条IIC总线多个设备相连的例子：<br><img src="/2022/08/25/IIC/1.jpeg" alt="img not found"></p>
+<p>一些术语如下表：</p>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>发送器</td>
+<td>发送数据到总线的器件</td>
+</tr>
+<tr>
+<td>接收器</td>
+<td>从总线接收数据的器件</td>
+</tr>
+<tr>
+<td>主机</td>
+<td>发起&#x2F;停止数据传输、提供时钟信号的器件</td>
+</tr>
+<tr>
+<td>从机</td>
+<td>被主机寻址的器件</td>
+</tr>
+<tr>
+<td>多主机</td>
+<td>可以有多个主机试图去控制总线，但是不会破坏数据</td>
+</tr>
+<tr>
+<td>仲裁</td>
+<td>当多个主机试图去控制总线时，通过仲裁可以使得只有一个主机获得总线控制权，并且它传输的信息不会被破坏</td>
+</tr>
+<tr>
+<td>同步</td>
+<td>多个器件同步时钟信号的过程</td>
+</tr>
+</tbody></table>
+<h3 id="IIC总线的信号类型"><a href="#IIC总线的信号类型" class="headerlink" title="IIC总线的信号类型"></a>IIC总线的信号类型</h3><p>IIC总线在传送数据的过程中共有3种类型信号：开始信号、结束信号和响应信号。</p>
+<ol>
+<li>开始信号（S）：SCL为高电平时，SDA由高电平向低电平跳变，开始传送数据。</li>
+<li>结束信号（P）：SCL为高电平时，SDA由低电平向高电平跳变，结束传送数据。</li>
+<li>响应信号（ACk）：接收器在接收到8位数据之后，在第9个时钟周期，拉低SDA电平。</li>
+</ol>
+<p>它们的波形如下图：<br><img src="/2022/08/25/IIC/2.jpeg" alt="img not found"></p>
+<p>SDA上传输的数据必须在SCL为高电平期间保持稳定，SDA上的数据只能在SCL为低电平期间变化，如下图所示：<br><img src="/2022/08/25/IIC/3.jpeg" alt="img not found"></p>
+<h3 id="IIC总线的数据传输格式"><a href="#IIC总线的数据传输格式" class="headerlink" title="IIC总线的数据传输格式"></a>IIC总线的数据传输格式</h3><p>发送到SDA线上的每个字节必须是8位的，每次传输可以发送的字节数量不受限制。每个字节后必须跟一个响应位。首先传输的是数据的最高位。如果从机要完成一些其他功能后（例如一个内部中断程序）才能继续接收或发送下一个字节，从机可以拉低SCL迫使主机进入等待状态。当从机准备好接收下一个数据并释放SCL后，数据继续传输。如果主机在传输数据期间也需要完成一些其他功能（例如一个内部中断程序）也可以拉低SCL以占住总线。<br>启动一个传输时，主机发出S信号，然后发出8位数据。这8位数据中前7位为从机的地址，第8位表示传输的方向（0表示写操作，1表示读操作）。被选中的从机发出响应信号。紧接着传输一系列字节及其响应位。最后，主机发出P信号结束本次传输。<br>下图是IIC数据传输的3种类型读、写、读写转换：<br><img src="/2022/08/25/IIC/4.jpeg" alt="img not found"></p>
+<p>并非每传输8位之后就会由ACK信号，以下3种例外：</p>
+<ol>
+<li>当主机不能响应从机地址时（例如它正忙着其他事情而无法响应IIC总线的操作，或者这个地址没有对应的主机），在第9个SCL周期内SDA线没有被拉低，即没有ACK信号。这时，主机发出一个P信号终止传输或者重新发出一个S信号开始新的传输。</li>
+<li>如果从机接收器在传输过程中不能接收更多数据时，它也不会发出ACK信号。这样，主机就可以意识到这点，从而发出一个P信号终止传输或者重新发出一个S信号开始新的传输。</li>
+<li>主机接收器在接收到最后一个字节后，也不会发出ACK信号，于是，从机发送器释放SDA线，以允许主机发出P信号结束传输。</li>
+</ol>
+<h2 id="S3C2410-x2F-S3C2440-IIC-总线控制器"><a href="#S3C2410-x2F-S3C2440-IIC-总线控制器" class="headerlink" title="S3C2410&#x2F;S3C2440 IIC 总线控制器"></a>S3C2410&#x2F;S3C2440 IIC 总线控制器</h2><h3 id="S3C2410-x2F-S3C2440-IIC-总线控制器介绍"><a href="#S3C2410-x2F-S3C2440-IIC-总线控制器介绍" class="headerlink" title="S3C2410&#x2F;S3C2440 IIC 总线控制器介绍"></a>S3C2410&#x2F;S3C2440 IIC 总线控制器介绍</h3><p>S3C2410&#x2F;S3C2440 IIC 接口有4种工作模式：主机发送器、主机接收器、从机发送器、从机接收器。其内部结构如下图所示：<br><img src="/2022/08/25/IIC/5.jpeg" alt="img not found"><br>S3C2410&#x2F;S3C2440提供4个寄存器来完成所有的IIC操作，SDA线上的数据从IICDS寄存器发出，或传入IICDS寄存器中；IICADD寄存器中保存S3C2410&#x2F;S3C2440当作从机的地址：IICCON、IICSTAT两个寄存器用来控制或标识各种各种状态，比如选择工作模式，发出S信号，P信号，决定是否发出ACK信号，检测是否收到ACK信号。寄存器的用法如下：</p>
+<ol>
+<li>IICCON寄存器（Multi-master IIC-bus control）<br>IICCON寄存器用于控制是否发出ACK信号、设置发送器的时钟、开启IIC中断，并标识中断是否发生。<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>位</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ACK信号使能</td>
+<td>[7]</td>
+<td>0 &#x3D; 禁止 1 &#x3D; 使能 <br> 在发送模式，此位无意义 <br> 在接收模式，此位使能时，SDA线在响应周期内将被拉低，即发出ACK信号</td>
+</tr>
+<tr>
+<td>发送模式时钟源选择</td>
+<td>[6]</td>
+<td>0 &#x3D; IICCLK 为PCLK&#x2F;6，1 &#x3D; IICCLK为PCLK&#x2F;512</td>
+</tr>
+<tr>
+<td>发送&#x2F;接收中断使能</td>
+<td>[5]</td>
+<td>0 &#x3D; IIC总线 Tx&#x2F;Rx中断使能 <br> 1 &#x3D; IIC总线 Tx&#x2F;Rx中断使能</td>
+</tr>
+<tr>
+<td>中断标记</td>
+<td>[4]</td>
+<td>此位用来标识是否有IIC中断发生，读出为0时表示没有中断发生，读出为1时表示有中断发生。当此位为1时，SCL线被拉低，此时所有IIC传输停止：如果需要继续传输，需写入0清除它</td>
+</tr>
+<tr>
+<td>发生模式时钟分频系数</td>
+<td>[3:0]</td>
+<td>发送器时钟&#x3D;IICCLK&#x2F;(IICCON[3:0] + 1)</td>
+</tr>
+</tbody></table>
+</li>
+</ol>
+<p>使用IICCON寄存器时，有如下注意事项：<br>①发送模式的时钟频率由位[6]、位[3:0]联合决定。另外，当IICCON[6]&#x3D;0时，IICCON[3:0]不能取0或1。<br>②IIC中断在以下3种情况下发生：当发出地址信息或者接收到一个从机地址并且吻合时，当总线仲裁失败时，当发送&#x2F;接收完一个字节的数据（包括ACK）时。<br>③基于SDA、SCL线上时间特性的考虑，要发送数据时，先将数据写入IICDS寄存器，然后再清除中断。<br>④如果IICCON[5] &#x3D; 0，IICCON[4]将不能正常工作。所以，即使不使用IIC中断，也要将IICCON[5]设为1。</p>
+<ol start="2">
+<li><p>IICSTAT（Multi-master IIC-bus control&#x2F;status）<br>IICSTAT寄存器用于选择IIC接口的工作模式，发出S信号、P信号，使能接收&#x2F;发送功能，并标识各种状态，比如总线仲裁是否成功、作为从机是否被寻址、是否接受到0地址、是否接收到ACK信号等。<br>IICSTAT寄存器的各位表示如下表：</p>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>位</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>工作模式</td>
+<td>[7:6]</td>
+<td>0b00：从机接收器 <br> 0b01：从机发送器 <br> 0b10：从机接收器 <br> 0b11：从机发送器</td>
+</tr>
+<tr>
+<td>忙状态位&#x2F;S信号、P信号</td>
+<td>[5]</td>
+<td>读此位时0：总线空闲，1：总线忙 <br> 写此位时0：发出P信号，1：发出S信号。当发出S信号后，IICDS寄存器中的数据将被自动发送。</td>
+</tr>
+<tr>
+<td>串行输出使能位</td>
+<td>[4]</td>
+<td>0：禁止接收&#x2F;发送功能，1：使能接收&#x2F;发送功能</td>
+</tr>
+<tr>
+<td>仲裁状态</td>
+<td>[3]</td>
+<td>0：总线仲裁成功 1：总线仲裁失败</td>
+</tr>
+<tr>
+<td>从机地址状态</td>
+<td>[2]</td>
+<td>作为从机时，在检测到S&#x2F;P信号时此位被自动清0 <br> 接收到的地址与IICADD寄存器中的值相等时，此位被置1</td>
+</tr>
+<tr>
+<td>0地址状态</td>
+<td>[1]</td>
+<td>在检测到S&#x2F;P信号时此位被自动清0 <br> 接收到的地址为0b0000000时，此位被置1</td>
+</tr>
+<tr>
+<td>最后一位的状态</td>
+<td>[0]</td>
+<td>0：接收到的最后一位为0（接收到ACK信号） <br> 1：接收到的最后一位为1 （没有接受到ACK信号）</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>IICADD寄存器（Multi-master IIC-bus address）<br>用到IICADD寄存器的位[7:1]，表示从机地址。IICADD寄存器在串行输出使能位IICSTAT[4]为0时，才可以写入；在任何时间都可以读出。</p>
+</li>
+<li><p>IICDS寄存器（Multi-master IIC-bus Tx&#x2F;Rx data shift）<br>用到IICDS寄存器的位[7:0]，其中保存的是要发送或已经接受的数据。IICDS寄存器在串行输出使能位IICSTAT[4]为1时，才可以写入；在任何时候都可以读出。</p>
+</li>
+</ol>
+<h3 id="S3C2410-x2F-S3C2440-IIC-总线操作方法"><a href="#S3C2410-x2F-S3C2440-IIC-总线操作方法" class="headerlink" title="S3C2410&#x2F;S3C2440 IIC 总线操作方法"></a>S3C2410&#x2F;S3C2440 IIC 总线操作方法</h3><p>启动或恢复S3C2410&#x2F;S3C2440 的IIC传输有以下两种方法：</p>
+<ol>
+<li>当IICCON[4]即中断状态位为0时，通过写IICSTAT寄存器启动IIC操作，有以下两种情况：<br>①在主机模式，令IICSTAT[5:4]等于0b11，将发出S信号和IICDS寄存器的数据（寻址），令IICSTAT[5:4]等于0b01，将发出P信号。<br>②在从机模式，令IICSTAT[4]等于1将等待其他主机发出S信号及地址信息。</li>
+<li>当IICCON[4]即中断位为1时，表示IIC操作被暂停。在这期间设置好其他寄存器之后，向IICCON[4]中写入0即可恢复IIC操作。所谓“设置其他寄存器”，有以下3种情况。<br>①对于主机模式，可以按照上面①的方法写IICSTAT寄存器，恢复IIC操作后即可发出S信号和IICDS寄存器的值（寻址），或者发出P信号。<br>②对于发送器，可以将下一个要发送的数据写入IICDS寄存器中，恢复IIC操作后即可发出这个数据。<br>③对于接收器，可以从IICDS寄存器中读出接收到的数据。最后向IICCON[4]写入0的同时，设置IICCON[7]以决定在接收到下一个数据后是否发出ACK信号。</li>
+</ol>
+<p>通过中断服务程序来驱动IIC传输。</p>
+<ol>
+<li>当仲裁失败时发生中断—本次传输没有抢到总线，可以稍后继续。</li>
+<li>对于主机模式，当发出S信号、地址信息并经过一个SCL周期（对于ACK信号）后，发生中断—主机可在此时判断是否成功寻址到从机。</li>
+<li>对于从机模式，当接收到的地址与IICADD寄存器吻合时，先发出ACK信号，然后发生中断—从机可在此时准备后续的传输。</li>
+<li>对于发送器，当发送完一个数据并经过一个SCL周期（对于ACK信号）后，发生中断。这是可以准备下一个要发送的数据，或者发送P信号以停止传输。</li>
+<li>对于接收器，当接收到一个数据时，先根据IICCON[7]决定是否发出ACK信号后，然后发生中断。这时可以读取IICDS寄存器得到数据，并设置IICCON[7]以决定接收到下一个数据后是否发出ACK信号。</li>
+</ol>
+<p>对于4种工作模式，S3C2410&#x2F;S3C2440数据手册中都有它们的操作流程图。现在以主机发送器作为例子说明，它的工作流程如图所示：<br><img src="/2022/08/25/IIC/6.jpeg" alt="img not found"></p>
+<ol>
+<li>配置主机发送器的各类参数。<br>设置GPE15、GPE14引脚用于SDA、SCL，设置IICCON寄存器选择IIC发送时钟，最后设置IICSTAT[4]为1。这样，后面才能写IICDS寄存器。<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Tips：初始时IICCON[4]为0，不能将IICSTAT设为主机模式，否则就会立刻发出S信号，发送IICDS寄存器的值。</span><br></pre></td></tr></table></figure></li>
+<li>将要寻址的从机地址写入IICDS寄存器。</li>
+<li>将0xF0写入IICSTAT寄存器，即设为主机发送器、使能串行输出功能、发出S信号。</li>
+<li>发出S信号后，步骤2中设置的IICDS寄存器值也将被发出，它用来寻址从机。</li>
+<li>在响应周期之后，发生中断，此时IICCON[4]为1，IIC传输暂停。</li>
+<li>如果没有数据要发送，则跳到步骤10 否则跳到步骤7。</li>
+<li>将下一个要发送的数据写入IICDS寄存器中。</li>
+<li>往IICCON[4]中写入0，恢复IIC传输。</li>
+<li>这时IICDS寄存器中的值将被一位一位地发送出去。当8位数据发送完毕，在经过另一个SCL周期（对应ACK信号）后，中断再次发生，跳到步骤5。</li>
+<li>将0xF0写入IICSTAT寄存器，即：设为主机发送器、使能串行输出功能、发出P信号。<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Tips：这时的P信号并没有实际发出，只有清除了IICCON[4]后才会发出P信号。</span><br></pre></td></tr></table></figure></li>
+<li>清除IICCON[4]，P信号得以发出。</li>
+<li>等待一段时间，使得P信号完全发出。</li>
+</ol>
+<h1 id="IIC总线操作实例"><a href="#IIC总线操作实例" class="headerlink" title="IIC总线操作实例"></a>IIC总线操作实例</h1>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux-%E5%BA%94%E7%94%A8%E5%BC%80%E5%8F%91/" rel="tag"># Linux 应用开发</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/08/24/%E9%80%9A%E7%94%A8%E5%BC%82%E6%AD%A5%E6%94%B6%E5%8F%91%E5%99%A8UART/" rel="prev" title="通用异步收发器UART">
+                  <i class="fa fa-chevron-left"></i> 通用异步收发器UART
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Nibil</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">136k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">2:04</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.0/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+</body>
+</html>
