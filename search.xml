@@ -433,6 +433,245 @@
       </tags>
   </entry>
   <entry>
+    <title>ADC和TP接口</title>
+    <url>/2022/08/30/ADC%E5%92%8CTP%E6%8E%A5%E5%8F%A3/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《嵌入式Linux应用完全开发手册》第1篇第14章总结归纳</p>
+<span id="more"></span>
+<h1 id="本章目标"><a href="#本章目标" class="headerlink" title="本章目标"></a>本章目标</h1><ol>
+<li>了解S3C2410&#x2F;S3C2440 ADC和触摸屏的结构</li>
+<li>了解电阻触摸屏的工作原理和等效电路图</li>
+<li>了解S3C2410&#x2F;S3C2440触摸屏控制器的多种工作方式</li>
+<li>掌握S3C2410&#x2F;S3C2440 ADC和触摸屏的编程方法</li>
+</ol>
+<h1 id="ADC和触摸屏硬件介绍和使用"><a href="#ADC和触摸屏硬件介绍和使用" class="headerlink" title="ADC和触摸屏硬件介绍和使用"></a>ADC和触摸屏硬件介绍和使用</h1><h2 id="S3C2410-x2F-S3C2440-ADC和触摸屏接口概述"><a href="#S3C2410-x2F-S3C2440-ADC和触摸屏接口概述" class="headerlink" title="S3C2410&#x2F;S3C2440 ADC和触摸屏接口概述"></a>S3C2410&#x2F;S3C2440 ADC和触摸屏接口概述</h2><p>S3C2410&#x2F;S3C2440 的CMOS模数转换器（ADC，Analog to Digital Converter）可以接收8个通道的模拟信号输入，并将它们转换为10位的二进制数据。在2.5MHz的A&#x2F;D转换时钟下，最大的转换速率可达500KSPS（samples per second，每秒采样的次数）。<br>S3C2410&#x2F;S3C2440 都提供触摸屏的接口，不过有所不同。S3C2410的触摸屏接口向外提供4个控制信号引脚（nYPON、YMON、nXPON、XMON）和2个模拟信号输入引脚（AIN[7]、AIN[5]）。这6个引脚通过4个晶体管与触摸屏的4个引脚相连。而S3C2440提供了与触摸屏直接相连的4个引脚，不在需要外接晶体管。<br>S3C2410&#x2F;S3C2440 ADC和触摸屏接口有如下特性：</p>
+<ol>
+<li>分辨率：10位</li>
+<li>微分线性度误差：±1.0LSB</li>
+<li>积分线性度误差：±2.0LSB</li>
+<li>最大转换功率：500KSPS</li>
+<li>低功耗</li>
+<li>供电电压：3.3V</li>
+<li>输入模拟电压范围：0-3.3V</li>
+<li>片上采样保持功能</li>
+<li>普通转换模式</li>
+<li>分离的x&#x2F;y轴坐标转换模式</li>
+<li>自动（连续）x&#x2F;y轴坐标转换模式</li>
+<li>等待中断模式</li>
+</ol>
+<p>ADC和触摸屏接口结构如图所示：<br><img src="/2022/08/30/ADC%E5%92%8CTP%E6%8E%A5%E5%8F%A3/1.jpeg" alt="img not found"><br>从上图可以知道，ADC和触摸屏接口中只有一个A&#x2F;D转换器可以通过设置寄存器来选择对哪路模拟信号（多达8路）进行采样。图中有两个中断信号：INT_ADC、INT_TC，前者表示A&#x2F;D转化器已经转换完毕，后者表示触摸屏被按下了。<br>对于S3C2410，在使用触摸屏时，AIN[7]和AIN[5]被用来测量XP、YP的电平，只剩下AIN[6]、AIN[4:0]共6个引脚被用于一般的ADC输入。对于S3C2440，在使用触摸屏时，引脚XP、XM、YP和YM被用于和触摸屏直接相连，只剩下AIN[3:0]共4个引脚用于一般的ADC输入；当不使用触摸屏时，XP、XM、YP和YM这4个引脚也可以用于一般的ADC输入。<br>S3C2410与触摸屏的连接比S3C2440复杂，需要增加几个外接晶体管，如下图所示：<br><img src="/2022/08/30/ADC%E5%92%8CTP%E6%8E%A5%E5%8F%A3/2.jpeg" alt="img not found"></p>
+<h2 id="S3C2410-x2F-S3C2440-ADC接口的使用方法"><a href="#S3C2410-x2F-S3C2440-ADC接口的使用方法" class="headerlink" title="S3C2410&#x2F;S3C2440 ADC接口的使用方法"></a>S3C2410&#x2F;S3C2440 ADC接口的使用方法</h2><p>ADC的启动方式有两种：手工启动、读结果时就自动启动下一次转换。也有两种方法获知当前转换是否已经结束：查询状态位、转换结束时就发出中断。<br>ADC的操作只涉及3个寄存器：ADCCON、ADCTSC、ADCDAT0。下面介绍它们的用法，有关触摸屏的数据位将在下面的小节介绍。<br>ADCCON寄存器</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>位</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ECFLG</td>
+<td>[15]</td>
+<td>只读，A&#x2F;D转换结束标志。<br> 0：正在转换。1：转换结束。</td>
+</tr>
+<tr>
+<td>PRSCEN</td>
+<td>[14]</td>
+<td>决定A&#x2F;D转换器的时钟是否分频。<br> 0：不使用。1：使用。</td>
+</tr>
+<tr>
+<td>PRSCVL</td>
+<td>[13:6]</td>
+<td>预分频系数，取值0-255：A&#x2F;D时钟 &#x3D; PCLK&#x2F;(PRSCVL + 1)。<br>注意：A&#x2F;D时钟必须小于PCLK的1&#x2F;5。</td>
+</tr>
+<tr>
+<td>SEL_MUX</td>
+<td>[5:3]</td>
+<td>选择进行A&#x2F;D转换的通道。 <br> 对于S3C2410,取值如下：<br>000：AIN 0； 001：AIN 1；010：AIN 2；011：AIN 3；<br>100：AIN 4；101：AIN 5；110：AIN 6；111：AIN 7（XP）；<br>对于S3C2440，取值如下：<br>000：AIN 0； 001：AIN 1；010：AIN 2；011：AIN 3；<br>100：YM；101：YP；110：XM；111：XP；</td>
+</tr>
+<tr>
+<td>STDBM</td>
+<td>[2]</td>
+<td>选择静态模式（Standby Mode）。<br>0：正常模式；1：静态模式。</td>
+</tr>
+<tr>
+<td>READ_START</td>
+<td>[1]</td>
+<td>读转换数据时是否启动下一次转换。<br> 0：不启动；1：启动；</td>
+</tr>
+<tr>
+<td>ENABLE_START</td>
+<td>[0]</td>
+<td>启动A&#x2F;D转换（当READ_START为1时，此位无效）。<br> 0：无作用；1：启动A&#x2F;D转换（转换真正开始时，此位被清零）。</td>
+</tr>
+</tbody></table>
+<p>ADCDAT0寄存器</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>位</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>UPDOWN</td>
+<td>[15]</td>
+<td>对于触摸屏，使用“等待中断模式”时，<br>0：触摸屏被按下；1：触摸屏没有被按下。</td>
+</tr>
+<tr>
+<td>AUTO_PST</td>
+<td>[14]</td>
+<td>决定是否使用自动（连续）x&#x2F;y轴坐标转换模式。<br>0：正常转换；1：自动（连续）x&#x2F;y坐标轴转换。</td>
+</tr>
+<tr>
+<td>XY_PST</td>
+<td>[13:12]</td>
+<td>手动x&#x2F;y轴坐标转换模式。<br>00：无操作；01：x轴坐标转换；<br>10：y轴坐标转换；11：等待中断模式。</td>
+</tr>
+<tr>
+<td>Reserved</td>
+<td>[11:10]</td>
+<td>保留</td>
+</tr>
+<tr>
+<td>XPDATA（普通ADC转换数据）</td>
+<td>[9:0]</td>
+<td>x轴坐标转换数据值（或普通ADC转换数据值）<br> 数值范围：0-0x3FF</td>
+</tr>
+</tbody></table>
+<p>ADC的使用分4个步骤：</p>
+<ol>
+<li>设置ADCCON寄存器，选择信号输入通道，设置A&#x2F;D转换器的时钟。<br>使能A&#x2F;D转化器时钟的预分频功能时，A&#x2F;D时钟的计算公式如下：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">A/D时钟 = PCLK / (PRSCVL + <span class="number">1</span>)</span><br><span class="line">注：A/D时钟最大为 <span class="number">2.5</span>MHz，并且应该小于PCLK的<span class="number">1</span>/<span class="number">5</span>。</span><br></pre></td></tr></table></figure></li>
+<li>设置ADCTSC寄存器，使用设为普通转换模式，不使用触摸屏功能。<br>ADCTSC寄存器多用于触摸屏，对于普通ADC，使用它的默认值即可，或设置其位[2]为0。ADCTSC寄存器的格式在下面的小节介绍。</li>
+<li>设置ADCCON寄存器，启用A&#x2F;D转换。<br>如果设置READ_START位，则读转换数据（读ADCDAT0寄存器）时即启动下一次转换；否则，可以通过设置ENABLE_START位来启动A&#x2F;D转换。</li>
+<li>转换结束时，读取ADCDAT0寄存器获得数值。<br>如果使用查询方式，则可以不断读取ADCCON寄存器的ECFLG位来确定转换是否结束；否则可以使用INT_ADC中断，发生INT_ADC中断时表示转换结束。</li>
+</ol>
+<h2 id="触摸屏原理及接口"><a href="#触摸屏原理及接口" class="headerlink" title="触摸屏原理及接口"></a>触摸屏原理及接口</h2><h3 id="电阻触摸屏的原理"><a href="#电阻触摸屏的原理" class="headerlink" title="电阻触摸屏的原理"></a>电阻触摸屏的原理</h3><p>触摸屏已经在现实生活中大量使用，种类也有很多，比如超声波触摸屏、红外触摸屏、电容触摸屏、电阻触摸屏等。电阻触摸屏由于造价低廉，在电气上可以直接接入用户的系统而得到大量使用。电阻触摸屏有几种类型，比如“四线”、“五线”、“八线”。线越多，精度就越高，温度漂移也越少，但是基本的操作是一样的。它本质是个电阻分压器，将矩形区域中的触摸点（x，y）的物理位置转换为代表x坐标和y坐标的电压。<br>S3C2410&#x2F;S3C2440的触摸屏接口可以驱动四线电阻触摸屏，四线电阻触摸屏的等效电路如下图所示:<br><img src="/2022/08/30/ADC%E5%92%8CTP%E6%8E%A5%E5%8F%A3/3.jpeg" alt="img not found"><br><img src="/2022/08/30/ADC%E5%92%8CTP%E6%8E%A5%E5%8F%A3/4.jpeg" alt="img not found"><br>图中粗黑线表示相互绝缘的两层导电层，当按压时，它们在触点外相连；不同的触点在x，y方向上的分压值不一样，将这两个电压值经过A&#x2F;D转换后即可得到x，y坐标。下面根据等效电路图说明触摸屏的工作过程。</p>
+<ol>
+<li>平时触摸屏没有被按下时，等效电路如图14.5所示。<br>S4、S5闭合，S1、S2、S3断开，即YM接地、XP上拉、XP作为模拟输入（对CPU而言）、YP作为模拟输入（对CPU而言）、XM高阻。<br>平时触摸屏没有按下时，由于上拉电阻的关系，Y_ADC为高电平；当x轴和y轴受挤压而接触导通之后，Y_ADC的电压由于联通到y轴接地而变为低电平，此此低电平可作为中断触发信号来通知CPU发生“Pen Down”事件。在S3C2410&#x2F;S3C2440中，称为等待中断模式。</li>
+<li>采样X_ADC电压，得到x坐标，等效电路如图14.6所示。<br>S1、S3闭合，S2、S4、S5断开，即XP接上电源、XM接地、YP作为模拟输入（对CPU而言）、YM高阻、XP禁止上拉。这时，YP即X_ADC就是x轴的分压点，进行A&#x2F;D转化后得到x坐标。</li>
+<li>采样Y_ADC电压，得到y坐标，等效电路如图14.7所示。<br>S2、S4闭合，S1、S3、S5断开，即YP接上电源、YM接地、XP作为模拟输入（对CPU而言）、XM高阻、XP禁止上拉。这时，XP即Y_ADC就是y轴的分压点，进行A&#x2F;D转换后得到y坐标。</li>
+</ol>
+<h3 id="S3C2410-x2F-S3C2440触摸屏接口"><a href="#S3C2410-x2F-S3C2440触摸屏接口" class="headerlink" title="S3C2410&#x2F;S3C2440触摸屏接口"></a>S3C2410&#x2F;S3C2440触摸屏接口</h3><p>与上面描述的触摸屏工作过程的3个步骤对应，触摸屏控制器也有4种工作模式。</p>
+<ol>
+<li>等待中断模式（Waiting for Interrupt Mode）<br>设置ADCTSC寄存器为0xD3即可令触摸屏控制器处于这种模式。这时，它在等待触摸屏按下。当触摸屏被按下时，触摸屏控制器将发出INT_TC中断信号，这时触摸屏控制器要转入以下两种工作模式中的一种，以读取x、y坐标。<br>对于S3C2410，当触摸屏按下或松开的时候，都产生INT_TC中断信号。<br>对于S3C2440，可以设置ADCTSC寄存器的位[8]为0或1时，表示等待Pen Down中断或Pen Up中断。</li>
+<li>分离的x&#x2F;y轴坐标转换模式<br>这分别对应上述触摸屏工作过程的第2、3步骤。设置ADCTSC寄存器为0x69进入x轴坐标转换模式，x坐标值转换完毕后被写入ADCDAT0，然后发出INT_ADC中断；相似的，设置ADCTSC寄存器为0x9A进入y轴坐标转换模式，y坐标轴转换完毕后被写入ADCDAT1，然后发出INT_ADC中断。</li>
+<li>自动（连续）x&#x2F;y轴坐标转换模式<br>上述触摸屏工作过程的第2、3步骤可以合成一个步骤，设置ADCTSC寄存器值为0x0C，进入自动（连续）x&#x2F;y轴坐标转换模式，触摸屏控制器就会自动转换x、y坐标值，并分别写入ADCDAT0、ADCDAT1寄存器中，然后发出INT_ADC中断。</li>
+<li>普通转换模式<br>不使用触摸屏时，触摸屏控制器处于这种模式。在这种模式下，可以通过设置ADCCON寄存器启动普通的A&#x2F;D转换，转换完成时数据被写入ADCDAT0寄存器中。<br>ADCTSC寄存器被用来选择触摸屏的工作模式，下面介绍ADCTSC寄存器。<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>位</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Reserved&#x2F;UD_SEN</td>
+<td>[8]</td>
+<td>对于S3C2410，此位必须为0。<br> 对于S3C2440，此位表示将检测哪类中断（触点按下、触点松开）。<br>0：按下；1：松开。</td>
+</tr>
+<tr>
+<td>YM_SEN</td>
+<td>[7]</td>
+<td>对于S3C2410，用于选择YMON的输出值。<br>0：YMON输出0（YM：高阻）；1：YMON输出1（YM：GND）<br> 对于S3C2440,YM使能开关。<br>0：YM驱动禁止（高阻）；1：YM驱动使能（接地）</td>
+</tr>
+<tr>
+<td>YP_SEN</td>
+<td>[6]</td>
+<td>对于S3C2410，用于选择nYPON的输出值。<br>0：nYPON输出0（YP：外部电压）；1：nYPON输出1（YM接AIN[5]）<br> 对于S3C2440,YP使能开关。<br>0：YP驱动禁止（接外部电压）；1：YP驱动使能（接模拟输入）</td>
+</tr>
+<tr>
+<td>XM_SEN</td>
+<td>[5]</td>
+<td>对于S3C2410，用于选择XMON的输出值。<br>0：XMON输出0（XM：高阻）；1：XMON输出1（XM：GND）<br> 对于S3C2440,XM使能开关。<br>0：XM驱动禁止（高阻）；1：XM驱动使能（接地）</td>
+</tr>
+<tr>
+<td>XP_SEN</td>
+<td>[4]</td>
+<td>对于S3C2410，用于选择nXPON的输出值。<br>0：nXPON输出0（XP：外部电压）；1：nXPON输出1（XM接AIN[7]）<br> 对于S3C2440,XP使能开关。<br>0：XP驱动禁止（接外部电压）；1：XP驱动使能（接模拟输入）</td>
+</tr>
+<tr>
+<td>PULL_UP</td>
+<td>[3]</td>
+<td>XP上拉使能。 <br> 0：使能上拉；1：禁止上拉</td>
+</tr>
+<tr>
+<td>AUTO_PST</td>
+<td>[2]</td>
+<td>是否使用自动（连续）x&#x2F;y轴坐标转换模式。<br>0：普通转换模式 1：自动（连续）x&#x2F;y轴坐标转换模式</td>
+</tr>
+<tr>
+<td>XY_PST</td>
+<td>[1:0]</td>
+<td>手动测量x、y轴坐标。<br> 00：无操作模式；01：测量x轴坐标；<br>10：测量y轴坐标；11：等待中断模式</td>
+</tr>
+</tbody></table>
+</li>
+</ol>
+<p>注：<br>①处于等待中断模式时，XP_SEN必须设为1（XP接模拟输入），PULL_UP必须设为0（使能上拉）。<br>②AUTO_PST设为1时，必须处于自动（连续）x&#x2F;y轴坐标转换模式下。</p>
+<p>对于S3C2410，当触摸控制器处于等待中断模式时，触摸屏被按下时，可以不断发出INT_TC中断信号，以便进入自动（连续）x&#x2F;y轴转换模式转换x、y坐标。发出中断信号的间隔可以通过ADCDLY寄存器来设置。<br>对于S3C2440，当CPU处于休眠模式下，触摸屏被按下时可以不断发出INT_TC中断信号以唤醒CPU。发出中断信号的间隔可以通过ADCDLY寄存器来设置。<br>另外，对于普通转换模式、分离的x&#x2F;y轴坐标转换模式、自动（连续）x&#x2F;y轴坐标转换模式，都可以通过ADCDLY来设置采样的延时时间。<br>ADCDLY寄存器格式如下表所示，在等待中断模式时，延时时钟为X-tal（3.68MHz），其他情况为PCLK。</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>位</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>DELAY</td>
+<td>[15:0]</td>
+<td>采样的延时值，或发出中断的间隔值</td>
+</tr>
+</tbody></table>
+<p><img src="/2022/08/30/ADC%E5%92%8CTP%E6%8E%A5%E5%8F%A3/5.jpeg" alt="img not found"></p>
+<p>ADCDAT1寄存器的格式如下表所示。它与ADCDAT0寄存器格式相似，ADCDAT1寄存器中保存y坐标值；而ADCDAT0寄存器中保存普通A&#x2F;D转换的值或x坐标值。</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>位</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>UPDOWN</td>
+<td>[15]</td>
+<td>对于触摸屏，使用“等待中断模式”时如下。<br>0：触摸屏被按下；1：触摸屏没有被按下</td>
+</tr>
+<tr>
+<td>AUTO_PST</td>
+<td>[14]</td>
+<td>决定是否使用自动（连续）x&#x2F;y坐标转换模式。 <br> 0：正常转换；1：自动（连续）x&#x2F;y轴坐标转换</td>
+</tr>
+<tr>
+<td>XY_PST</td>
+<td>[13:12]</td>
+<td>手动x&#x2F;y轴坐标转换模式 <br> 00：无操作；01：x轴坐标转换 <br> 10：y轴坐标转换 11：等待中断模式</td>
+</tr>
+<tr>
+<td>Reserved</td>
+<td>[11:10]</td>
+<td>保留</td>
+</tr>
+<tr>
+<td>YPDATA</td>
+<td>[9:0]</td>
+<td>x轴坐标转换数据值</td>
+</tr>
+</tbody></table>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>嵌入式Linux应用完全开发手册</category>
+        <category>第1篇第14章 ADC和TP接口</category>
+      </categories>
+      <tags>
+        <tag>Linux 应用开发</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>设备与模块</title>
     <url>/2022/08/02/%E8%AE%BE%E5%A4%87%E4%B8%8E%E6%A8%A1%E5%9D%97/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《Linux内核设计与实现》第17章总结归纳</p>
