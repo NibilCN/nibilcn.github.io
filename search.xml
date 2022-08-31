@@ -433,6 +433,177 @@
       </tags>
   </entry>
   <entry>
+    <title>移植UBoot</title>
+    <url>/2022/08/31/%E7%A7%BB%E6%A4%8DUBoot/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>嵌入式Linux系统移植之移植U-Boot</p>
+<p>《嵌入式Linux应用完全开发手册》第1篇第15章总结归纳</p>
+<span id="more"></span>
+<h1 id="本章目标"><a href="#本章目标" class="headerlink" title="本章目标"></a>本章目标</h1><ol>
+<li>了解BootLoader的作用及工作流程</li>
+<li>了解U-Boot的代码结构、编译过程</li>
+<li>移植U-Boot</li>
+<li>掌握常用的U-Boot命令</li>
+</ol>
+<h1 id="BootLoader简介"><a href="#BootLoader简介" class="headerlink" title="BootLoader简介"></a>BootLoader简介</h1><h2 id="BootLoader的概念"><a href="#BootLoader的概念" class="headerlink" title="BootLoader的概念"></a>BootLoader的概念</h2><h3 id="BootLoader的引入"><a href="#BootLoader的引入" class="headerlink" title="BootLoader的引入"></a>BootLoader的引入</h3><p>从前面的篇章可以知道，系统上电之后，需要一段程序来进行初始化：关闭WATCHDOG、改变系统时钟、初始化存储控制器、将更多的代码复制到内存中等。如果它能将操作系统内核复制到内存中运行，无论是从本地（Flash）还是远端（网络），那么就称这段程序为BootLoader。<br>简单来说，BootLoader就是这么一段程序，它在系统上电时运行，初始化硬件设备，准备好软件环境，最后调用操作系统内核。<br>可以增强BootLoader的功能，比如增加网络功能、从PC上通过串口或网络下载文件、烧写文件、将Flash上压缩的文件解压后再运行等，这就是一个功能更为强大的BootLoader，也称为Monitor。实际上，最终产品并不需要这些功能，它们只是为了方便开发。<br>BootLoader的实现非常依赖于具体硬件，在嵌入式系统中硬件的配置千差万别，即使CPU相同，它们的外设也可能不同，所以不可能有一个BootLoader支持所有的CPU、所有的电路板卡。即使支持CPU架构较多的U-Boot，也不是拿来就可以使用的，需要进行一些移植。</p>
+<h3 id="BootLoader的启动方式"><a href="#BootLoader的启动方式" class="headerlink" title="BootLoader的启动方式"></a>BootLoader的启动方式</h3><p>CPU上电后，会从某个地址开始执行。比如MIPS架构的CPU会从0xBFC00000取第一条指令，而ARM架构的CPU则会从地址0x00000000开始。嵌入式开发板中，需要把存储器件ROM或Flash等映射到这个地址，BootLoader就存放在这个地址开始处，这样一上电就可以执行。<br>在开发时，通常需要使用各种命令操作BootLoader，一般通过串口来连接PC和开发板，可以在串口上输入各种命令、观察运行结果等。这也只是对开发人员才有意义，用户使用产品时是不需要通过串口来控制BootLoader的。BootLoader可以分为以下两种操作模式。</p>
+<ol>
+<li>启动加载模式（Boot loading）<br>上电后，BootLoader从板子上的某个固态存储设备上将操作相同加载到RAM中运行，整个过程没有用户的介入。产品发布时，BootLoader工作在这种模式下。</li>
+<li>下载模式（Downloading）<br>在这种模式下，开发人员可以使用各种命令，通过串口连接或网络连接等通信手段从主机（Host）下载文件（内核映像、文件系统映像），将它们直接放在内存运行或是烧入Flash。<br>板子与主机间传输文件时，可以使用串口的xmodem、ymodem、zmodem协议，它们使用简单，只是速度较慢；可以使用nfs、tftp协议传输，主机需要开启nfs、tftp服务；也可以使用USB。<br>像Blob或U-Boot等这样功能强大的BootLoader通常支持者两种工作模式，而且运行用户在这两种模式之间切换。比如，U-Boot在启动时处于正常的启动加载模式，但是它会延时若干秒（可设置），等待终端用户按下任意键，而将U-Boot切换到下载模式。如果指定时间内没有用户按键，则U-Boot继续启动Linux内核。</li>
+</ol>
+<h2 id="BootLoader的结构和启动过程"><a href="#BootLoader的结构和启动过程" class="headerlink" title="BootLoader的结构和启动过程"></a>BootLoader的结构和启动过程</h2><h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><p>在移植之前先了解BootLoader的一些通用概念，对理解它的代码会有所帮助。<br>嵌入式Linux系统从软件的角度通常可以分为以下4个层次。</p>
+<ol>
+<li>引导加载程序，包括固化在固件中的boot代码和BootLoader两大部分。<br>有些CPU在运行BootLoader之前先运行一段固化的程序，比如x86结构的CPU就是先运行BIOS中的固件，然后才运行硬盘的第一个分区（MBR）中的BootLoader。在大多数嵌入式系统中并没有固件，BootLoader是上电后执行的第一个程序。</li>
+<li>Linux内核<br>特定于嵌入式板子的定制内核以及内核的启动参数。内核的启动参数可以是内核默认的，或是由BootLoader传递给它的。</li>
+<li>文件系统<br>包括根文件系统和建立于Flash内存设备之上的文件系统。里面包含了Linux系统能够运行所必需的应用程序、库等，比如可以给用户提供操作Linux的控制界面Shell程序、动态连接的程序运行时需要的glibc或uClibc库等。</li>
+<li>用户应用程序<br>特定于用户的应用程序，它们也存储在文件系统中。有时在用户应用程序和内核层之间可能还会包括一个嵌入式图形用户界面。</li>
+</ol>
+<p>显然，在嵌入式系统的固态存储设备上有相应的分区来存储它们，下图是一个典型的分区结构：<br><img src="/2022/08/31/%E7%A7%BB%E6%A4%8DUBoot/1.jpeg" alt="img not found"><br>“Boot parameter”分区中存放一些可设置的参数，比如IP地址，串口波特率、要传递给内核的命令行参数等。正常启动过程中，BootLoader首先运行，然后它将内核复制到内存中（也有些内核可以在固态存储设备上直接运行），并且在内存某个固定的地址设置好要传递给内核的参数，最后运行内核。内核启动之后，它会mount根文件系统（root filesystem），启动根文件系统中的应用程序。</p>
+<h3 id="BootLoader的两个阶段"><a href="#BootLoader的两个阶段" class="headerlink" title="BootLoader的两个阶段"></a>BootLoader的两个阶段</h3><p>BootLoader的启动过程可以分为单阶段（Single Stage）、多阶段（Multi-Stage）两种。通常多阶段的BootLoader能提供更为复杂的功能以及更好的移植性。从固态存储设备上启动的BootLoader大多都是两阶段的启动过程。第一阶段使用汇编来实现，它完成一些依赖于CPU体系结构的初始化，并调用第二阶段的代码；第二阶段则通常使用C语言来实现，这样可以实现更复杂的功能，而且代码会有更好的可读性和可移植性。<br>一般而言，这两个阶段完成的功能可以如下分类。<br>BootLoader第一阶段的功能。</p>
+<ol>
+<li>硬件设备初始化</li>
+<li>为加载BootLoader的第二阶段代码准备到RAM空间</li>
+<li>复制BootLoader的第二阶段代码到RAM空间中</li>
+<li>设置好栈</li>
+<li>跳转到第二阶段代码的C入口点<br>在第一阶段进行的硬件初始化一般包括：关闭WATCHDOG、关中断、设置CPU的速度和时钟频率、RAM初始化等。这些其实不是必须的，比如S3C2410&#x2F;S3C2440的开发板所使用的U-Boot中，就将CPU的速度和时钟频率的设置放在第二阶段。<br>甚至，将第二阶段的代码复制到RAM空间中也不是必须的，对于NOR Flash等存储设备，完全可以在上面直接执行代码，只不过相比在RAM中执行效率大为降低。<br>BootLoader第二阶段的功能</li>
+<li>初始化本阶段要用到的硬件设备</li>
+<li>检测系统内存映射（memory map）</li>
+<li>将内核映像和根文件系统映像从Flash上读到RAM空间中</li>
+<li>为内核设置启动参数</li>
+<li>调用内核<br>为了方便开发，至少要初始化一个串口以便程序员与BootLoader交互。<br>所谓检测内存映射，就是确定板上使用了多少内存、它们的地址空间是什么。由于嵌入式开发中BootLoader多是针对某类板子进行编写，所以可以根据板子的情况直接设置，不需要考虑可以适用于各类情况的复杂算法。<br>Flash上的内核映像有可能是经过压缩的，在读到RAM之后，还需要进行解压。当然，如果内核带有自解压功能，不需要BootLoader来进行解压。<br>将根文件系统映像映射到RAM中，这不是必须的。这取决于是什么类型的根文件系统，以及内核访问它的方法。<br>将内核存放在适当的位置之后，直接跳到它的入口点即可调用内核。调用内核之前，下列条件要满足：</li>
+<li>CPU寄存器的设置<ol>
+<li>R0 &#x3D; 0</li>
+<li>R1 &#x3D; 机器类型ID；对于ARM架构的CPU，其机器类型ID可以参见linux&#x2F;arch&#x2F;arm&#x2F;tools&#x2F;mach-types</li>
+<li>R2 &#x3D; 启动参数标记列表在RAM中的起始基地址</li>
+</ol>
+</li>
+<li>CPU工作模式<ol>
+<li>必须禁止中断（IRQs和FIQs）</li>
+<li>CPU必须为SVC模式</li>
+</ol>
+</li>
+<li>Cache和MMU的设置<ol>
+<li>MMU必须关闭</li>
+<li>指令Cache可以打开也可关闭</li>
+<li>数据Cache必须关闭<br>如果用C语言，可以像下列代码一样来调用内核：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> (*theKernel)(<span class="type">int</span> zero,<span class="type">int</span> arch,u32 params_addr) = (<span class="type">void</span> (*)(<span class="type">int</span>,<span class="type">int</span>,u32))KERNEL_RAM_BASE;</span><br><span class="line">...</span><br><span class="line">theKernel(<span class="number">0</span>,ARCH_NUMBER,(u32)kernel_params_start);</span><br></pre></td></tr></table></figure></li>
+</ol>
+</li>
+</ol>
+<h3 id="BootLoader与内核的交互"><a href="#BootLoader与内核的交互" class="headerlink" title="BootLoader与内核的交互"></a>BootLoader与内核的交互</h3><p>BootLoader与内核的交互是单向的，BootLoader将各类参数传给内核。由于它们不能同时运行，传递办法只有一个：BootLoader将参数放在某个约定的地方，再启动内核，内核启动后从这个地方获取参数。<br>除了约定好参数存放的地址外，还要规定参数的结构。Linux 2.4.x之后的内核都期望以标记列表（tagged list）的形式来传递启动参数。标记就是一种数据结构；标记列表，就是挨着存放的多个标记。标记列表以标记ATAG_CORE开始，以标记ATAG_NONE结束。<br>标记的数据结构为tag，它由一个tag_header结构和一个联合（union）组成。tag_header结构表示标记的类型和长度，比如是表示内存还是表示命令行参数等。对于不同类型的标记使用不同的联合（union），比如表示内存时使用tag_mem32，表示命令行时使用tag_cmdline。数据结构tag和tag_header定义在Linux内核源码的<code>include/asm/setup.h</code>头文件中，如下所示：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span>  <span class="title">tag_header</span>  &#123;</span></span><br><span class="line">    u32 size;</span><br><span class="line">    u32 tag;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span>  <span class="title">tag</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tag_header</span>   <span class="title">hdr</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_core</span> <span class="title">core</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_mem32</span>    <span class="title">mem</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_videotext</span>    <span class="title">videotext</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_ramdisk</span>  <span class="title">ramdisk</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_initrd</span>   <span class="title">initrd</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_serialnr</span>    <span class="title">serialnr</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_revision</span> <span class="title">revision</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_videolfb</span> <span class="title">videolfb</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_cmdline</span>  <span class="title">cmdline</span>;</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">        Acorn   specific</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_acorn</span>    <span class="title">acorn</span>;</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">        DC21285 specific</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_memclk</span>   <span class="title">memclk</span>;</span></span><br><span class="line">    &#125;u;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>下面以设置内存标记、命令行标记为例说明参数的传递。</p>
+<ol>
+<li>设置标记ATAG_CORE<br>标记列表以标记ATAG_CORE开始，假设BootLoader与内核约定的参数存放地址为0x30000100，则可以以如下代码设置标记ATAG_CORE<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">params = (<span class="keyword">struct</span> tag *)<span class="number">0x30000100</span>;</span><br><span class="line"></span><br><span class="line">params-&gt;hdr.tag = ATAG_CORE;</span><br><span class="line">params-&gt;hdr.size = tag_size(tag_core);</span><br><span class="line">params-&gt;u.core.flags = <span class="number">0</span>;</span><br><span class="line">params-&gt;u.core.pagesize = <span class="number">0</span>;</span><br><span class="line">params-&gt;u.core.rootdev = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">params = tag_next(params);</span><br></pre></td></tr></table></figure>
+其中，tag_next定义如下，它指向当前标记的末尾：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> tag_next(t) ((struct tag *) ((u32 *)(t) + (t)-&gt;hdr.size))</span></span><br></pre></td></tr></table></figure></li>
+<li>设置内存标记<br>假设开发板使用的内存起始地址为0x30000000，大小为0x4000000，则内存标记可以加如下设置：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">params-&gt;hdr.tag = ATAG_MEM;</span><br><span class="line">params-&gt;hdr.size = tag_size(tag_mem32);</span><br><span class="line"></span><br><span class="line">params-&gt;u.mem.start = <span class="number">0x30000000</span>;</span><br><span class="line">params-&gt;u.size = <span class="number">0x4000000</span>;</span><br><span class="line"></span><br><span class="line">params = tag_next(params);</span><br></pre></td></tr></table></figure></li>
+<li>设置命令行标记<br>命令行就是一个字符串，它被用来控制内核的一些行为。比如“root&#x3D;&#x2F;dev&#x2F;mtdblock 2 init&#x3D;&#x2F;linuxrc console&#x3D;ttySAC0”表示根文件系统在MTD2分区上，系统启动后执行的第一个程序为&#x2F;linuxrc，控制台为ttySAC0（即第一个串口）。<br>命令行可以在BootLoader中通过命令设置好，然后按如下构造标记传给内核。<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">char</span> *p = <span class="string">&quot;root=/dev/mtdblock 2 init=/linuxrc console=ttySAC0&quot;</span>;</span><br><span class="line">params-&gt;hdr.tag = ATAG_CMDLINE;</span><br><span class="line">params-&gt;hdr.size = (<span class="keyword">sizeof</span>(<span class="keyword">struct</span> tag_header) + <span class="built_in">strlen</span>(p) + <span class="number">1</span> + <span class="number">4</span>) &gt;&gt; <span class="number">2</span>;</span><br><span class="line"><span class="built_in">strcpy</span>(params-&gt;u.cmdline.cmdline,p);</span><br><span class="line">params = tag_next(params);</span><br></pre></td></tr></table></figure></li>
+<li>设置标记ATAG_NONE<br>标记列表以标记ATAG_NONE结束，如下设置：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">params-&gt;hdr.tag = ATAG_NONE;</span><br><span class="line">params-&gt;hdr.size = <span class="number">0</span>;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="常用的BootLoader介绍"><a href="#常用的BootLoader介绍" class="headerlink" title="常用的BootLoader介绍"></a>常用的BootLoader介绍</h2><p>现在的BootLoader种类繁多，比如x86上有LILO、GRUB等。对于ARM架构的CPU，有U-Boot、ViVi等。它们各有特点。</p>
+<table>
+<thead>
+<tr>
+<th>BootLoader</th>
+<th>Monitor</th>
+<th>描述</th>
+<th>X86</th>
+<th>ARM</th>
+<th>PowerPC</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>LILO</td>
+<td>否</td>
+<td>Linux磁盘引导程序</td>
+<td>是</td>
+<td>否</td>
+<td>否</td>
+</tr>
+<tr>
+<td>GRUB</td>
+<td>否</td>
+<td>GNU的LILO替代程序</td>
+<td>是</td>
+<td>否</td>
+<td>否</td>
+</tr>
+<tr>
+<td>Loadlin</td>
+<td>否</td>
+<td>从DOS引导Linux</td>
+<td>是</td>
+<td>否</td>
+<td>否</td>
+</tr>
+<tr>
+<td>ROLO</td>
+<td>否</td>
+<td>从ROM引导Linux而不需要BIOS</td>
+<td>是</td>
+<td>否</td>
+<td>否</td>
+</tr>
+<tr>
+<td>Etherboot</td>
+<td>否</td>
+<td>通过以太网卡启动Linux系统的固件</td>
+<td>是</td>
+<td>否</td>
+<td>否</td>
+</tr>
+<tr>
+<td>LinuxBIOS</td>
+<td>否</td>
+<td>完全替代BUIS的Linux引导程序</td>
+<td>是</td>
+<td>否</td>
+<td>否</td>
+</tr>
+<tr>
+<td>BLOB</td>
+<td>是</td>
+<td>LART等硬件平台的引导程序</td>
+<td>否</td>
+<td>是</td>
+<td>否</td>
+</tr>
+<tr>
+<td>U-Boot</td>
+<td>是</td>
+<td>通用引导程序</td>
+<td>是</td>
+<td>是</td>
+<td>是</td>
+</tr>
+<tr>
+<td>RedBoot</td>
+<td>是</td>
+<td>基于eCos的引导程序</td>
+<td>是</td>
+<td>是</td>
+<td>是</td>
+</tr>
+<tr>
+<td>Vivi</td>
+<td>是</td>
+<td>Mizi公司针对SAMSUNG的ARM CPU设计的引导程序</td>
+<td>否</td>
+<td>是</td>
+<td>否</td>
+</tr>
+</tbody></table>
+<p>对于S3C2410&#x2F;S3C2440开发板，U-Boot和Vivi是两个好选择。<br>Vivi是Mizi针对SAMSUNG的ARM架构CPU专门设计的，基本上可以直接使用，命令简单方便。不过其初始版本只支持串口下载，速度较慢。在网上出现了各种改进版本：支持网络功能、USB功能、烧写YAFFS文件系统映像等。<br>U-Boot支持大多CPU，可以烧写EXT2、JFFS2文件系统映像，支持串口下载、网络下载，并提供大量的命令。相对于Vivi，它的使用更复杂，但是可以用来更方便的调试程序。</p>
+<h1 id="U-Boot分析与移植"><a href="#U-Boot分析与移植" class="headerlink" title="U-Boot分析与移植"></a>U-Boot分析与移植</h1>]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>嵌入式Linux应用完全开发手册</category>
+        <category>第1篇第15章 移植U-Boot</category>
+      </categories>
+      <tags>
+        <tag>Linux 应用开发</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>设备与模块</title>
     <url>/2022/08/02/%E8%AE%BE%E5%A4%87%E4%B8%8E%E6%A8%A1%E5%9D%97/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《Linux内核设计与实现》第17章总结归纳</p>

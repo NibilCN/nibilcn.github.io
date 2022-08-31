@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":false,"version":"8.12.2","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"mac"},"bookmark":{"enable":true,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="嵌入式Linux系统移植之移植U-Boot 《嵌入式Linux应用完全开发手册》第1篇第15章总结归纳">
+<meta property="og:type" content="article">
+<meta property="og:title" content="移植UBoot">
+<meta property="og:url" content="http://example.com/2022/08/31/%E7%A7%BB%E6%A4%8DUBoot/index.html">
+<meta property="og:site_name" content="Laugh Tale">
+<meta property="og:description" content="嵌入式Linux系统移植之移植U-Boot 《嵌入式Linux应用完全开发手册》第1篇第15章总结归纳">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2022/08/31/%E7%A7%BB%E6%A4%8DUBoot/1.jpeg">
+<meta property="article:published_time" content="2022-08-31T06:14:19.000Z">
+<meta property="article:modified_time" content="2022-08-31T06:14:19.000Z">
+<meta property="article:author" content="Nibil">
+<meta property="article:tag" content="Linux 应用开发">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2022/08/31/%E7%A7%BB%E6%A4%8DUBoot/1.jpeg">
+
+
+<link rel="canonical" href="http://example.com/2022/08/31/%E7%A7%BB%E6%A4%8DUBoot/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":"","permalink":"http://example.com/2022/08/31/%E7%A7%BB%E6%A4%8DUBoot/","path":"2022/08/31/移植UBoot/","title":"移植UBoot"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>移植UBoot | Laugh Tale</title>
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+  <!--pjax：防止跳转页面音乐暂停-->
+  <script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.js"></script>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Laugh Tale</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">A Nibil's Sharing Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%AC%E7%AB%A0%E7%9B%AE%E6%A0%87"><span class="nav-number">1.</span> <span class="nav-text">本章目标</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#BootLoader%E7%AE%80%E4%BB%8B"><span class="nav-number">2.</span> <span class="nav-text">BootLoader简介</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#BootLoader%E7%9A%84%E6%A6%82%E5%BF%B5"><span class="nav-number">2.1.</span> <span class="nav-text">BootLoader的概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#BootLoader%E7%9A%84%E5%BC%95%E5%85%A5"><span class="nav-number">2.1.1.</span> <span class="nav-text">BootLoader的引入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#BootLoader%E7%9A%84%E5%90%AF%E5%8A%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">2.1.2.</span> <span class="nav-text">BootLoader的启动方式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#BootLoader%E7%9A%84%E7%BB%93%E6%9E%84%E5%92%8C%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B"><span class="nav-number">2.2.</span> <span class="nav-text">BootLoader的结构和启动过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">2.2.1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#BootLoader%E7%9A%84%E4%B8%A4%E4%B8%AA%E9%98%B6%E6%AE%B5"><span class="nav-number">2.2.2.</span> <span class="nav-text">BootLoader的两个阶段</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#BootLoader%E4%B8%8E%E5%86%85%E6%A0%B8%E7%9A%84%E4%BA%A4%E4%BA%92"><span class="nav-number">2.2.3.</span> <span class="nav-text">BootLoader与内核的交互</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8%E7%9A%84BootLoader%E4%BB%8B%E7%BB%8D"><span class="nav-number">2.3.</span> <span class="nav-text">常用的BootLoader介绍</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#U-Boot%E5%88%86%E6%9E%90%E4%B8%8E%E7%A7%BB%E6%A4%8D"><span class="nav-number">3.</span> <span class="nav-text">U-Boot分析与移植</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Nibil</p>
+  <div class="site-description" itemprop="description">A Nibil's Sharing Blog</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">19</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/NibilCN" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;NibilCN" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-inner">
+      <!-- require APlayer -->
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css">
+      <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
+      <!-- require MetingJS -->
+      <script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+      <!--网易云-->   
+      <meting-js
+        server="netease"
+        id="7593069088"
+        type="playlist" 
+        mini="false"
+        fixed="false"
+        list-folded="true"
+        autoplay="true"
+        volume="0.4"
+        theme="#FADFA3"
+        order="random"
+        loop="all"
+        preload="auto"
+        mutex="true">
+      </meting-js>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/NibilCN" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/08/31/%E7%A7%BB%E6%A4%8DUBoot/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Nibil">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Laugh Tale">
+      <meta itemprop="description" content="A Nibil's Sharing Blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="移植UBoot | Laugh Tale">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          移植UBoot
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-08-31 14:14:19" itemprop="dateCreated datePublished" datetime="2022-08-31T14:14:19+08:00">2022-08-31</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">学习</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/" itemprop="url" rel="index"><span itemprop="name">书籍</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BA%94%E7%94%A8%E5%AE%8C%E5%85%A8%E5%BC%80%E5%8F%91%E6%89%8B%E5%86%8C/" itemprop="url" rel="index"><span itemprop="name">嵌入式Linux应用完全开发手册</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BA%94%E7%94%A8%E5%AE%8C%E5%85%A8%E5%BC%80%E5%8F%91%E6%89%8B%E5%86%8C/%E7%AC%AC1%E7%AF%87%E7%AC%AC15%E7%AB%A0-%E7%A7%BB%E6%A4%8DU-Boot/" itemprop="url" rel="index"><span itemprop="name">第1篇第15章 移植U-Boot</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>6.1k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>6 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>嵌入式Linux系统移植之移植U-Boot</p>
+<p>《嵌入式Linux应用完全开发手册》第1篇第15章总结归纳</p>
+<span id="more"></span>
+<h1 id="本章目标"><a href="#本章目标" class="headerlink" title="本章目标"></a>本章目标</h1><ol>
+<li>了解BootLoader的作用及工作流程</li>
+<li>了解U-Boot的代码结构、编译过程</li>
+<li>移植U-Boot</li>
+<li>掌握常用的U-Boot命令</li>
+</ol>
+<h1 id="BootLoader简介"><a href="#BootLoader简介" class="headerlink" title="BootLoader简介"></a>BootLoader简介</h1><h2 id="BootLoader的概念"><a href="#BootLoader的概念" class="headerlink" title="BootLoader的概念"></a>BootLoader的概念</h2><h3 id="BootLoader的引入"><a href="#BootLoader的引入" class="headerlink" title="BootLoader的引入"></a>BootLoader的引入</h3><p>从前面的篇章可以知道，系统上电之后，需要一段程序来进行初始化：关闭WATCHDOG、改变系统时钟、初始化存储控制器、将更多的代码复制到内存中等。如果它能将操作系统内核复制到内存中运行，无论是从本地（Flash）还是远端（网络），那么就称这段程序为BootLoader。<br>简单来说，BootLoader就是这么一段程序，它在系统上电时运行，初始化硬件设备，准备好软件环境，最后调用操作系统内核。<br>可以增强BootLoader的功能，比如增加网络功能、从PC上通过串口或网络下载文件、烧写文件、将Flash上压缩的文件解压后再运行等，这就是一个功能更为强大的BootLoader，也称为Monitor。实际上，最终产品并不需要这些功能，它们只是为了方便开发。<br>BootLoader的实现非常依赖于具体硬件，在嵌入式系统中硬件的配置千差万别，即使CPU相同，它们的外设也可能不同，所以不可能有一个BootLoader支持所有的CPU、所有的电路板卡。即使支持CPU架构较多的U-Boot，也不是拿来就可以使用的，需要进行一些移植。</p>
+<h3 id="BootLoader的启动方式"><a href="#BootLoader的启动方式" class="headerlink" title="BootLoader的启动方式"></a>BootLoader的启动方式</h3><p>CPU上电后，会从某个地址开始执行。比如MIPS架构的CPU会从0xBFC00000取第一条指令，而ARM架构的CPU则会从地址0x00000000开始。嵌入式开发板中，需要把存储器件ROM或Flash等映射到这个地址，BootLoader就存放在这个地址开始处，这样一上电就可以执行。<br>在开发时，通常需要使用各种命令操作BootLoader，一般通过串口来连接PC和开发板，可以在串口上输入各种命令、观察运行结果等。这也只是对开发人员才有意义，用户使用产品时是不需要通过串口来控制BootLoader的。BootLoader可以分为以下两种操作模式。</p>
+<ol>
+<li>启动加载模式（Boot loading）<br>上电后，BootLoader从板子上的某个固态存储设备上将操作相同加载到RAM中运行，整个过程没有用户的介入。产品发布时，BootLoader工作在这种模式下。</li>
+<li>下载模式（Downloading）<br>在这种模式下，开发人员可以使用各种命令，通过串口连接或网络连接等通信手段从主机（Host）下载文件（内核映像、文件系统映像），将它们直接放在内存运行或是烧入Flash。<br>板子与主机间传输文件时，可以使用串口的xmodem、ymodem、zmodem协议，它们使用简单，只是速度较慢；可以使用nfs、tftp协议传输，主机需要开启nfs、tftp服务；也可以使用USB。<br>像Blob或U-Boot等这样功能强大的BootLoader通常支持者两种工作模式，而且运行用户在这两种模式之间切换。比如，U-Boot在启动时处于正常的启动加载模式，但是它会延时若干秒（可设置），等待终端用户按下任意键，而将U-Boot切换到下载模式。如果指定时间内没有用户按键，则U-Boot继续启动Linux内核。</li>
+</ol>
+<h2 id="BootLoader的结构和启动过程"><a href="#BootLoader的结构和启动过程" class="headerlink" title="BootLoader的结构和启动过程"></a>BootLoader的结构和启动过程</h2><h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><p>在移植之前先了解BootLoader的一些通用概念，对理解它的代码会有所帮助。<br>嵌入式Linux系统从软件的角度通常可以分为以下4个层次。</p>
+<ol>
+<li>引导加载程序，包括固化在固件中的boot代码和BootLoader两大部分。<br>有些CPU在运行BootLoader之前先运行一段固化的程序，比如x86结构的CPU就是先运行BIOS中的固件，然后才运行硬盘的第一个分区（MBR）中的BootLoader。在大多数嵌入式系统中并没有固件，BootLoader是上电后执行的第一个程序。</li>
+<li>Linux内核<br>特定于嵌入式板子的定制内核以及内核的启动参数。内核的启动参数可以是内核默认的，或是由BootLoader传递给它的。</li>
+<li>文件系统<br>包括根文件系统和建立于Flash内存设备之上的文件系统。里面包含了Linux系统能够运行所必需的应用程序、库等，比如可以给用户提供操作Linux的控制界面Shell程序、动态连接的程序运行时需要的glibc或uClibc库等。</li>
+<li>用户应用程序<br>特定于用户的应用程序，它们也存储在文件系统中。有时在用户应用程序和内核层之间可能还会包括一个嵌入式图形用户界面。</li>
+</ol>
+<p>显然，在嵌入式系统的固态存储设备上有相应的分区来存储它们，下图是一个典型的分区结构：<br><img src="/2022/08/31/%E7%A7%BB%E6%A4%8DUBoot/1.jpeg" alt="img not found"><br>“Boot parameter”分区中存放一些可设置的参数，比如IP地址，串口波特率、要传递给内核的命令行参数等。正常启动过程中，BootLoader首先运行，然后它将内核复制到内存中（也有些内核可以在固态存储设备上直接运行），并且在内存某个固定的地址设置好要传递给内核的参数，最后运行内核。内核启动之后，它会mount根文件系统（root filesystem），启动根文件系统中的应用程序。</p>
+<h3 id="BootLoader的两个阶段"><a href="#BootLoader的两个阶段" class="headerlink" title="BootLoader的两个阶段"></a>BootLoader的两个阶段</h3><p>BootLoader的启动过程可以分为单阶段（Single Stage）、多阶段（Multi-Stage）两种。通常多阶段的BootLoader能提供更为复杂的功能以及更好的移植性。从固态存储设备上启动的BootLoader大多都是两阶段的启动过程。第一阶段使用汇编来实现，它完成一些依赖于CPU体系结构的初始化，并调用第二阶段的代码；第二阶段则通常使用C语言来实现，这样可以实现更复杂的功能，而且代码会有更好的可读性和可移植性。<br>一般而言，这两个阶段完成的功能可以如下分类。<br>BootLoader第一阶段的功能。</p>
+<ol>
+<li>硬件设备初始化</li>
+<li>为加载BootLoader的第二阶段代码准备到RAM空间</li>
+<li>复制BootLoader的第二阶段代码到RAM空间中</li>
+<li>设置好栈</li>
+<li>跳转到第二阶段代码的C入口点<br>在第一阶段进行的硬件初始化一般包括：关闭WATCHDOG、关中断、设置CPU的速度和时钟频率、RAM初始化等。这些其实不是必须的，比如S3C2410&#x2F;S3C2440的开发板所使用的U-Boot中，就将CPU的速度和时钟频率的设置放在第二阶段。<br>甚至，将第二阶段的代码复制到RAM空间中也不是必须的，对于NOR Flash等存储设备，完全可以在上面直接执行代码，只不过相比在RAM中执行效率大为降低。<br>BootLoader第二阶段的功能</li>
+<li>初始化本阶段要用到的硬件设备</li>
+<li>检测系统内存映射（memory map）</li>
+<li>将内核映像和根文件系统映像从Flash上读到RAM空间中</li>
+<li>为内核设置启动参数</li>
+<li>调用内核<br>为了方便开发，至少要初始化一个串口以便程序员与BootLoader交互。<br>所谓检测内存映射，就是确定板上使用了多少内存、它们的地址空间是什么。由于嵌入式开发中BootLoader多是针对某类板子进行编写，所以可以根据板子的情况直接设置，不需要考虑可以适用于各类情况的复杂算法。<br>Flash上的内核映像有可能是经过压缩的，在读到RAM之后，还需要进行解压。当然，如果内核带有自解压功能，不需要BootLoader来进行解压。<br>将根文件系统映像映射到RAM中，这不是必须的。这取决于是什么类型的根文件系统，以及内核访问它的方法。<br>将内核存放在适当的位置之后，直接跳到它的入口点即可调用内核。调用内核之前，下列条件要满足：</li>
+<li>CPU寄存器的设置<ol>
+<li>R0 &#x3D; 0</li>
+<li>R1 &#x3D; 机器类型ID；对于ARM架构的CPU，其机器类型ID可以参见linux&#x2F;arch&#x2F;arm&#x2F;tools&#x2F;mach-types</li>
+<li>R2 &#x3D; 启动参数标记列表在RAM中的起始基地址</li>
+</ol>
+</li>
+<li>CPU工作模式<ol>
+<li>必须禁止中断（IRQs和FIQs）</li>
+<li>CPU必须为SVC模式</li>
+</ol>
+</li>
+<li>Cache和MMU的设置<ol>
+<li>MMU必须关闭</li>
+<li>指令Cache可以打开也可关闭</li>
+<li>数据Cache必须关闭<br>如果用C语言，可以像下列代码一样来调用内核：<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> (*theKernel)(<span class="type">int</span> zero,<span class="type">int</span> arch,u32 params_addr) = (<span class="type">void</span> (*)(<span class="type">int</span>,<span class="type">int</span>,u32))KERNEL_RAM_BASE;</span><br><span class="line">...</span><br><span class="line">theKernel(<span class="number">0</span>,ARCH_NUMBER,(u32)kernel_params_start);</span><br></pre></td></tr></table></figure></li>
+</ol>
+</li>
+</ol>
+<h3 id="BootLoader与内核的交互"><a href="#BootLoader与内核的交互" class="headerlink" title="BootLoader与内核的交互"></a>BootLoader与内核的交互</h3><p>BootLoader与内核的交互是单向的，BootLoader将各类参数传给内核。由于它们不能同时运行，传递办法只有一个：BootLoader将参数放在某个约定的地方，再启动内核，内核启动后从这个地方获取参数。<br>除了约定好参数存放的地址外，还要规定参数的结构。Linux 2.4.x之后的内核都期望以标记列表（tagged list）的形式来传递启动参数。标记就是一种数据结构；标记列表，就是挨着存放的多个标记。标记列表以标记ATAG_CORE开始，以标记ATAG_NONE结束。<br>标记的数据结构为tag，它由一个tag_header结构和一个联合（union）组成。tag_header结构表示标记的类型和长度，比如是表示内存还是表示命令行参数等。对于不同类型的标记使用不同的联合（union），比如表示内存时使用tag_mem32，表示命令行时使用tag_cmdline。数据结构tag和tag_header定义在Linux内核源码的<code>include/asm/setup.h</code>头文件中，如下所示：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span>  <span class="title">tag_header</span>  &#123;</span></span><br><span class="line">    u32 size;</span><br><span class="line">    u32 tag;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span>  <span class="title">tag</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tag_header</span>   <span class="title">hdr</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_core</span> <span class="title">core</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_mem32</span>    <span class="title">mem</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_videotext</span>    <span class="title">videotext</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_ramdisk</span>  <span class="title">ramdisk</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_initrd</span>   <span class="title">initrd</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_serialnr</span>    <span class="title">serialnr</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_revision</span> <span class="title">revision</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_videolfb</span> <span class="title">videolfb</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_cmdline</span>  <span class="title">cmdline</span>;</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">        Acorn   specific</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_acorn</span>    <span class="title">acorn</span>;</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">        DC21285 specific</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">tag_memclk</span>   <span class="title">memclk</span>;</span></span><br><span class="line">    &#125;u;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>下面以设置内存标记、命令行标记为例说明参数的传递。</p>
+<ol>
+<li>设置标记ATAG_CORE<br>标记列表以标记ATAG_CORE开始，假设BootLoader与内核约定的参数存放地址为0x30000100，则可以以如下代码设置标记ATAG_CORE<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">params = (<span class="keyword">struct</span> tag *)<span class="number">0x30000100</span>;</span><br><span class="line"></span><br><span class="line">params-&gt;hdr.tag = ATAG_CORE;</span><br><span class="line">params-&gt;hdr.size = tag_size(tag_core);</span><br><span class="line">params-&gt;u.core.flags = <span class="number">0</span>;</span><br><span class="line">params-&gt;u.core.pagesize = <span class="number">0</span>;</span><br><span class="line">params-&gt;u.core.rootdev = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">params = tag_next(params);</span><br></pre></td></tr></table></figure>
+其中，tag_next定义如下，它指向当前标记的末尾：<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> tag_next(t) ((struct tag *) ((u32 *)(t) + (t)-&gt;hdr.size))</span></span><br></pre></td></tr></table></figure></li>
+<li>设置内存标记<br>假设开发板使用的内存起始地址为0x30000000，大小为0x4000000，则内存标记可以加如下设置：<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">params-&gt;hdr.tag = ATAG_MEM;</span><br><span class="line">params-&gt;hdr.size = tag_size(tag_mem32);</span><br><span class="line"></span><br><span class="line">params-&gt;u.mem.start = <span class="number">0x30000000</span>;</span><br><span class="line">params-&gt;u.size = <span class="number">0x4000000</span>;</span><br><span class="line"></span><br><span class="line">params = tag_next(params);</span><br></pre></td></tr></table></figure></li>
+<li>设置命令行标记<br>命令行就是一个字符串，它被用来控制内核的一些行为。比如“root&#x3D;&#x2F;dev&#x2F;mtdblock 2 init&#x3D;&#x2F;linuxrc console&#x3D;ttySAC0”表示根文件系统在MTD2分区上，系统启动后执行的第一个程序为&#x2F;linuxrc，控制台为ttySAC0（即第一个串口）。<br>命令行可以在BootLoader中通过命令设置好，然后按如下构造标记传给内核。<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">char</span> *p = <span class="string">&quot;root=/dev/mtdblock 2 init=/linuxrc console=ttySAC0&quot;</span>;</span><br><span class="line">params-&gt;hdr.tag = ATAG_CMDLINE;</span><br><span class="line">params-&gt;hdr.size = (<span class="keyword">sizeof</span>(<span class="keyword">struct</span> tag_header) + <span class="built_in">strlen</span>(p) + <span class="number">1</span> + <span class="number">4</span>) &gt;&gt; <span class="number">2</span>;</span><br><span class="line"><span class="built_in">strcpy</span>(params-&gt;u.cmdline.cmdline,p);</span><br><span class="line">params = tag_next(params);</span><br></pre></td></tr></table></figure></li>
+<li>设置标记ATAG_NONE<br>标记列表以标记ATAG_NONE结束，如下设置：<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">params-&gt;hdr.tag = ATAG_NONE;</span><br><span class="line">params-&gt;hdr.size = <span class="number">0</span>;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="常用的BootLoader介绍"><a href="#常用的BootLoader介绍" class="headerlink" title="常用的BootLoader介绍"></a>常用的BootLoader介绍</h2><p>现在的BootLoader种类繁多，比如x86上有LILO、GRUB等。对于ARM架构的CPU，有U-Boot、ViVi等。它们各有特点。</p>
+<table>
+<thead>
+<tr>
+<th>BootLoader</th>
+<th>Monitor</th>
+<th>描述</th>
+<th>X86</th>
+<th>ARM</th>
+<th>PowerPC</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>LILO</td>
+<td>否</td>
+<td>Linux磁盘引导程序</td>
+<td>是</td>
+<td>否</td>
+<td>否</td>
+</tr>
+<tr>
+<td>GRUB</td>
+<td>否</td>
+<td>GNU的LILO替代程序</td>
+<td>是</td>
+<td>否</td>
+<td>否</td>
+</tr>
+<tr>
+<td>Loadlin</td>
+<td>否</td>
+<td>从DOS引导Linux</td>
+<td>是</td>
+<td>否</td>
+<td>否</td>
+</tr>
+<tr>
+<td>ROLO</td>
+<td>否</td>
+<td>从ROM引导Linux而不需要BIOS</td>
+<td>是</td>
+<td>否</td>
+<td>否</td>
+</tr>
+<tr>
+<td>Etherboot</td>
+<td>否</td>
+<td>通过以太网卡启动Linux系统的固件</td>
+<td>是</td>
+<td>否</td>
+<td>否</td>
+</tr>
+<tr>
+<td>LinuxBIOS</td>
+<td>否</td>
+<td>完全替代BUIS的Linux引导程序</td>
+<td>是</td>
+<td>否</td>
+<td>否</td>
+</tr>
+<tr>
+<td>BLOB</td>
+<td>是</td>
+<td>LART等硬件平台的引导程序</td>
+<td>否</td>
+<td>是</td>
+<td>否</td>
+</tr>
+<tr>
+<td>U-Boot</td>
+<td>是</td>
+<td>通用引导程序</td>
+<td>是</td>
+<td>是</td>
+<td>是</td>
+</tr>
+<tr>
+<td>RedBoot</td>
+<td>是</td>
+<td>基于eCos的引导程序</td>
+<td>是</td>
+<td>是</td>
+<td>是</td>
+</tr>
+<tr>
+<td>Vivi</td>
+<td>是</td>
+<td>Mizi公司针对SAMSUNG的ARM CPU设计的引导程序</td>
+<td>否</td>
+<td>是</td>
+<td>否</td>
+</tr>
+</tbody></table>
+<p>对于S3C2410&#x2F;S3C2440开发板，U-Boot和Vivi是两个好选择。<br>Vivi是Mizi针对SAMSUNG的ARM架构CPU专门设计的，基本上可以直接使用，命令简单方便。不过其初始版本只支持串口下载，速度较慢。在网上出现了各种改进版本：支持网络功能、USB功能、烧写YAFFS文件系统映像等。<br>U-Boot支持大多CPU，可以烧写EXT2、JFFS2文件系统映像，支持串口下载、网络下载，并提供大量的命令。相对于Vivi，它的使用更复杂，但是可以用来更方便的调试程序。</p>
+<h1 id="U-Boot分析与移植"><a href="#U-Boot分析与移植" class="headerlink" title="U-Boot分析与移植"></a>U-Boot分析与移植</h1>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux-%E5%BA%94%E7%94%A8%E5%BC%80%E5%8F%91/" rel="tag"># Linux 应用开发</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/08/30/ADC%E5%92%8CTP%E6%8E%A5%E5%8F%A3/" rel="prev" title="ADC和TP接口">
+                  <i class="fa fa-chevron-left"></i> ADC和TP接口
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Nibil</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">179k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">2:43</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.0/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+</body>
+</html>
