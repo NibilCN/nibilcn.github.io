@@ -433,6 +433,30 @@
       </tags>
   </entry>
   <entry>
+    <title>移植Linux内核</title>
+    <url>/2022/09/07/%E7%A7%BB%E6%A4%8DLinux%E5%86%85%E6%A0%B8/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>嵌入式Linux系统移植之移植Linux内核</p>
+<p>《嵌入式Linux应用完全开发手册》第1篇第16章总结归纳</p>
+<span id="more"></span>
+<h1 id="本章目标"><a href="#本章目标" class="headerlink" title="本章目标"></a>本章目标</h1><ol>
+<li>了解内核源码结构，了解内核启动过程</li>
+<li>掌握内核配置方法</li>
+<li>移植内核同时支持S3C2410、S3C2440</li>
+<li>掌握MTD设备的分区方法</li>
+<li>掌握YAFFS文件系统的移植方法</li>
+</ol>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>嵌入式Linux应用完全开发手册</category>
+        <category>第1篇第16章 移植Linux内核</category>
+      </categories>
+      <tags>
+        <tag>Linux 应用开发</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>设备与模块</title>
     <url>/2022/08/02/%E8%AE%BE%E5%A4%87%E4%B8%8E%E6%A8%A1%E5%9D%97/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《Linux内核设计与实现》第17章总结归纳</p>
