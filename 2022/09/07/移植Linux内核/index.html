@@ -27,11 +27,14 @@
 <meta property="og:site_name" content="Laugh Tale">
 <meta property="og:description" content="嵌入式Linux系统移植之移植Linux内核 《嵌入式Linux应用完全开发手册》第1篇第16章总结归纳">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2022/09/07/%E7%A7%BB%E6%A4%8DLinux%E5%86%85%E6%A0%B8/1.jpeg">
+<meta property="og:image" content="http://example.com/2022/09/07/%E7%A7%BB%E6%A4%8DLinux%E5%86%85%E6%A0%B8/2.jpeg">
 <meta property="article:published_time" content="2022-09-07T08:36:37.000Z">
 <meta property="article:modified_time" content="2022-09-07T08:36:37.000Z">
 <meta property="article:author" content="Nibil">
 <meta property="article:tag" content="Linux 应用开发">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2022/09/07/%E7%A7%BB%E6%A4%8DLinux%E5%86%85%E6%A0%B8/1.jpeg">
 
 
 <link rel="canonical" href="http://example.com/2022/09/07/%E7%A7%BB%E6%A4%8DLinux%E5%86%85%E6%A0%B8/">
@@ -146,7 +149,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%AC%E7%AB%A0%E7%9B%AE%E6%A0%87"><span class="nav-number">1.</span> <span class="nav-text">本章目标</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%AC%E7%AB%A0%E7%9B%AE%E6%A0%87"><span class="nav-number">1.</span> <span class="nav-text">本章目标</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux-%E7%89%88%E6%9C%AC%E5%8F%8A%E7%89%B9%E7%82%B9"><span class="nav-number">2.</span> <span class="nav-text">Linux 版本及特点</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux%E7%A7%BB%E6%A4%8D%E5%87%86%E5%A4%87"><span class="nav-number">3.</span> <span class="nav-text">Linux移植准备</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96Linux%E5%86%85%E6%A0%B8%E6%BA%90%E7%A0%81"><span class="nav-number">3.1.</span> <span class="nav-text">获取Linux内核源码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E6%BA%90%E7%A0%81%E7%BB%93%E6%9E%84%E5%8F%8AMakefile%E5%88%86%E6%9E%90"><span class="nav-number">3.2.</span> <span class="nav-text">内核源码结构及Makefile分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E6%BA%90%E7%A0%81%E7%BB%93%E6%9E%84"><span class="nav-number">3.2.1.</span> <span class="nav-text">内核源码结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux-Makefile-%E5%88%86%E6%9E%90"><span class="nav-number">3.2.2.</span> <span class="nav-text">Linux Makefile 分析</span></a></li></ol></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -308,14 +311,14 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>131</span>
+      <span>7.7k</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
         <i class="far fa-clock"></i>
       </span>
       <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>1 分钟</span>
+      <span>7 分钟</span>
     </span>
 </div>
 
@@ -335,6 +338,195 @@
 <li>移植内核同时支持S3C2410、S3C2440</li>
 <li>掌握MTD设备的分区方法</li>
 <li>掌握YAFFS文件系统的移植方法</li>
+</ol>
+<h1 id="Linux-版本及特点"><a href="#Linux-版本及特点" class="headerlink" title="Linux 版本及特点"></a>Linux 版本及特点</h1><p>Linux内核的版本号可以从源代码的顶层目录下的Makefile中看到，比如下面几行它们构成了Linux的版本号：2.6.22.6。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">VERSION = <span class="number">2</span></span><br><span class="line">PATCHLEVEL = <span class="number">6</span></span><br><span class="line">SUBLEVEL = <span class="number">22</span></span><br><span class="line">EXTRAVERSION = <span class="number">.6</span></span><br></pre></td></tr></table></figure>
+<p>其中的“VERSION”和“PATCHLEVEL”组成主版本号，比如2.4、2.5、2.6等，稳定版本的主版本号用偶数表示（比如2.4、2.6），每隔2-3年出现一个稳定版本。开发中的版本用技术表示（2.3、2.5），它是下一个稳定版本的前身。<br>“SUBLEVEL”称为此版本号，它不分奇偶顺序递增。每隔1-2个月发布一个稳定版本。<br>“EXTRAVERSION”称为扩展版本号，它不分奇偶，顺序递增。每周发布几次扩展版本号，修正最新的稳定版本的问题。<br>Linux内核的最初版本在1991年发布，这是Linus Torvalds为他开发的386开发的一个类Minix的操作系统。<br>Linux 1.0的官方版发行于1994年3月，包含了386的官方支持，仅支持单CPU系统。<br>Linux 1.2发行于1995年3月，它是第一个包含多平台（Alpha、Sparc、Mips等）支持的官方版本。<br>Linux 2.0发行于1996年6月，包含很多新的平台支持，但是最重要的是，它是第一个支持SMP（对称多处理器）体系的版本。<br>Linux 2.2发行于1999年1月，它带来了SMP系统性能的极大提升，同时支持更多的硬件。<br>Linux 2.2发行于2001年1月，它进一步提升了SMP系统的扩展性，同时它集成了很多用于支持桌面系统的特性：USB、PC卡（PCMCIA）的支持，内置的即插即用等。<br>Linux 2.6发行于2003年12月，在Linux 2.4的基础上作了极大的改进。2.6内核支持更多的平台，从小规模的嵌入式系统到服务器级的64位的系统；使用新的调度器，进程的切换更高效；内核可被抢占，使得用户的操作可以得到更快速的响应；I&#x2F;O子系统也经历很大的修改，使得它在各种工作负荷下都更具响应性；模块子系统、文件系统都做了大量的改进。另外，以前使用Linux的变种μClinux来支持没有MMU的处理器，现在2.6版本的Linux中已经合入了μClinux的功能，也可以支持没有MMU的处理器。</p>
+<h1 id="Linux移植准备"><a href="#Linux移植准备" class="headerlink" title="Linux移植准备"></a>Linux移植准备</h1><h2 id="获取Linux内核源码"><a href="#获取Linux内核源码" class="headerlink" title="获取Linux内核源码"></a>获取Linux内核源码</h2><p>登录Linux内核的官方网站<code>http://www.kernel.org/</code>，可以看到下图所示的内容：<br><img src="/2022/09/07/%E7%A7%BB%E6%A4%8DLinux%E5%86%85%E6%A0%B8/1.jpeg" alt="img not found"><br>上面标明了Linux内核的最新稳定版本、正在开发的测试版本，图中间的版本号就是各种补丁的链接地址。各种标记符的意义如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>标记</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F</td>
+<td>全部代码，单击“F”即可下载全部内核代码</td>
+</tr>
+<tr>
+<td>B</td>
+<td>当前补丁基于哪个版本的内核，单击“B”可以下载这个内核</td>
+</tr>
+<tr>
+<td>V</td>
+<td>查看补丁文件的信息，修改了哪些文件</td>
+</tr>
+<tr>
+<td>VI</td>
+<td>查看与上一个扩展版本相比，修改了哪些文件</td>
+</tr>
+<tr>
+<td>C</td>
+<td>当前的修改记录</td>
+</tr>
+<tr>
+<td>ChangeLog</td>
+<td>正式的修改记录，由开发者提供</td>
+</tr>
+</tbody></table>
+<p>一般而言，各种补丁文件都是基于内核的某个正式版本生成的，除非使用标记符“B”指明了它所基于的版本。比如有补丁文件patch-2.6.xx.1、patch-2.6.xx.2、patch-2.6.xx.3，它们都是基于内核2.6.xx生成的补丁文件。使用时可以在内核2.6.xx上直接打补丁patch-2.6.xx.3，并不需要先打上补丁文件patch-2.6.xx.1、patch-2.6.xx.2；相应的，如果已经打上了补丁文件patch-2.6.xx.2，在打补丁之前，要先去除补丁文件patch-2.6.xx.2。<br>本书在Linux2.6.22.6上进行移植开发。下载linux-2.6.22.6.tar.bz2后如下解压即可得到目录linux-2.6.22.6，里面存放了内核源码，如下所示：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar xjf linux<span class="number">-2.6</span><span class="number">.22</span><span class="number">.6</span>.tar.bz2</span><br></pre></td></tr></table></figure>
+<p>也可以先下载内核源文件linux-2.6.22.tar.bz2、补丁文件patch-2.6.22.6.bz2，然后解压、打补丁：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">tar xjf linux<span class="number">-2.6</span><span class="number">.22</span>.tar.bz2</span><br><span class="line">tar xjf patch<span class="number">-2.6</span><span class="number">.22</span><span class="number">.6</span>.bz2</span><br><span class="line">cd linux<span class="number">-2.6</span><span class="number">.22</span></span><br><span class="line">patch -p1 &lt; ../patch<span class="number">-2.6</span><span class="number">.22</span><span class="number">.6</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="内核源码结构及Makefile分析"><a href="#内核源码结构及Makefile分析" class="headerlink" title="内核源码结构及Makefile分析"></a>内核源码结构及Makefile分析</h2><h3 id="内核源码结构"><a href="#内核源码结构" class="headerlink" title="内核源码结构"></a>内核源码结构</h3><p>Linux内核文件有近2万，出去其他架构CPU的相关文件，支持S3C2410、S3C2440这两款芯片的完整内核文件有1万多个。这些文件的组织结构并不复杂，它们分别位于顶层目录下的17个子目录，各个目录功能独立。下表描述各目录的功能，最后两个目录不包含代码。</p>
+<table>
+<thead>
+<tr>
+<th>目录名</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>arch</td>
+<td>体系结构相关的代码，对于每个架构的CPU，arch下有一个对应的子目录，比如<code>arch/arm</code>、<code>arch/i386</code>。</td>
+</tr>
+<tr>
+<td>block</td>
+<td>块设备的通用函数</td>
+</tr>
+<tr>
+<td>crypto</td>
+<td>常用的加密和散列算法（AES、SHA），还有一些压缩和CRC校验算法</td>
+</tr>
+<tr>
+<td>drivers</td>
+<td>所有的设备驱动程序，里面的每一个子目录对应一类驱动程序，比如<code>drivers/block</code>为块设备驱动程序，<code>drivers/char</code>为字符设备驱动程序，<code>drivers/mtd</code>为NOR Flash、NAND Flash等存储设备的驱动程序</td>
+</tr>
+<tr>
+<td>fs</td>
+<td>Linux支持的文件系统的代码，每一个子目录对应一种文件系统，比如<code>fs/jffs2</code>、<code>fs/ext2</code>、<code>fs/ext3</code></td>
+</tr>
+<tr>
+<td>include</td>
+<td>内核头文件，有基本头文件（存放在<code>include/linux</code>目录下）、各种驱动或功能部件的头文件（比如<code>include/media</code>、<code>include/mtd</code>、<code>include/net</code>）、各种体系相关的头文件（比如<code>include/asm-arm</code>、<code>include/asm-i386</code>）。当配置内核之后，<code>include/asm</code>是某个<code>include/asm-xxx</code>的链接</td>
+</tr>
+<tr>
+<td>init</td>
+<td>内核的初始化代码（不是系统的引导代码），其中的<code>main.c</code>文件中的<code>start_kernel</code>函数是内核引导后运行的第一个函数</td>
+</tr>
+<tr>
+<td>ipc</td>
+<td>进程间的通信代码</td>
+</tr>
+<tr>
+<td>Kernel</td>
+<td>内核管理的核心代码，与处理器相关的代码位于<code>arch/*/kernel</code></td>
+</tr>
+<tr>
+<td>lib</td>
+<td>内核用到的一些库函数的代码，比如<code>crc32.c</code>、<code>string.c</code>，与处理器相关的库函数代码位于<code>arch/*/lib</code>目录下</td>
+</tr>
+<tr>
+<td>mm</td>
+<td>内存管理代码，与处理器相关的内存管理代码位于<code>arch/*/mm</code>目录下</td>
+</tr>
+<tr>
+<td>net</td>
+<td>网络支持代码，每个子目录对应与网络的一个方面</td>
+</tr>
+<tr>
+<td>security</td>
+<td>安全、密钥相关的代码</td>
+</tr>
+<tr>
+<td>sound</td>
+<td>音频设备的驱动代码</td>
+</tr>
+<tr>
+<td>usr</td>
+<td>用来制作一个压缩的cpio归档文件：initrd的镜像，它可以作为内核启动后挂接的第一个文件系统</td>
+</tr>
+<tr>
+<td>Documentation</td>
+<td>内核文档</td>
+</tr>
+<tr>
+<td>scripts</td>
+<td>用于配置、编译内核的脚本文件</td>
+</tr>
+</tbody></table>
+<p>对于ARM架构的S3C2410、S3C2440，其体系相关的代码在<code>arch/arm</code>目录下，在后面进行Linux移植时，开始的工作正是修改这个目录下的文件。内核代码的层次结构如下图：<br><img src="/2022/09/07/%E7%A7%BB%E6%A4%8DLinux%E5%86%85%E6%A0%B8/2.jpeg" alt="img not found"></p>
+<h3 id="Linux-Makefile-分析"><a href="#Linux-Makefile-分析" class="headerlink" title="Linux Makefile 分析"></a>Linux Makefile 分析</h3><p>内核中的哪些文件将被编译，怎样被编译，连接顺序如何确定，哪个文件在最前面，哪些文件或函数先执行。这些都是通过Makefile来管理的。</p>
+<ol>
+<li>决定编译哪些文件</li>
+<li>怎样编译这些文件</li>
+<li>怎样连接这些文件</li>
+</ol>
+<p>Linux内核源码中含有很多个Makefile文件，这些Makefile文件又要包含其他一些文件（比如配置信息、通用的规则等 ）。这些文件构成了Linux的Makefile体系：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>顶层Makefile</td>
+<td>它是所有Makefile文件的核心，从总体上控制着内核的编译、连接</td>
+</tr>
+<tr>
+<td>.config</td>
+<td>配置文件，在配置内核时生成，所有的Makefile文件（包括顶层目录及各级子目录）都是根据.config文件来决定使用哪些文件</td>
+</tr>
+<tr>
+<td>arch&#x2F;$(ARCH)&#x2F;Makefile</td>
+<td>对应体系结构的Makefile，它用来决定哪些体系结构相关的文件参与内核的生成，并提供一些规则来生成特定格式的内核映像</td>
+</tr>
+<tr>
+<td>scipts&#x2F;Makefile.*</td>
+<td>Makefile共用的通用规则、脚本等</td>
+</tr>
+<tr>
+<td>kbuild Makefiles</td>
+<td>各级子目录下的Makefile，它们相对简单，被上一层Makefile调用来编译当前子目录下的文件</td>
+</tr>
+</tbody></table>
+<p>内核文档<code>Documentation/kbuild/makefiles.txt</code>对内核中的Makefile作用、用法讲解的非常透彻，以下根据前面总结的Makefile的3大作用分析这5类文件。</p>
+<ol>
+<li>决定编译哪些文件<br>Linux 内核的编译过程从顶层Makefile开始，然后递归进入各级子目录调用它们的Makefile，分为3个步骤。<br>①顶层Makefile决定内核根目录下哪些子目录将被编进内核。<br>②<code>arch/$(ARCH)/Makefile</code>决定<code>arch/$(ARCH)</code>目录下哪些文件、哪些目录将被编进内核。<br>③各级子目录下的Makefile决定所在目录下哪些文件将被编进内核，哪些文件将被编成模块（即驱动程序），进入哪些子目录继续调用它们的Makefile。</li>
+</ol>
+<p>先看步骤①，在顶层Makefile中可以看到如下内容：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">init-y          :   init/</span><br><span class="line">drivers-y       :   drivers/    sound/</span><br><span class="line">net-y           :   net/</span><br><span class="line">libs-y          :   lib/</span><br><span class="line">core-y          :   usr/</span><br><span class="line">...</span><br><span class="line">core-y          +=  kernerl/    mm/ fs/ ipc/    security/   crypto/ block/</span><br></pre></td></tr></table></figure>
+<p>可见，顶层Makefile将这13个子目录分为5类：init-y、drivers-y、net-y、libs-y和core-y。之前上表中的17个子目录，出去<code>include</code>目录和后面两个不包含内核代码的目录外，还有一个<code>arch</code>目录没有出现在内核中。它在<code>arch/$(ARCH)/Makefile</code>中被包含进内核，在顶层Makefile中直接包含了这个Makefile，如下所示：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">include $(srctree)/arch/$(ARCH)/Makefile</span><br></pre></td></tr></table></figure>
+<p>对于ARCH变量，可以在执行make命令时传入，比如“make ARCH&#x3D;arm …”。另外，对于非x86平台，还需要指定交叉编译工具，这也可以在执行make命令时传入，比如“make CROSS_COMPILE&#x3D;arm-linux- …”。为了方便，常在顶层Makefile中进行修改。<br>修改前：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ARCH    ?= $(SUBARCH)</span><br><span class="line">CROSS_COMPILE   ?= </span><br></pre></td></tr></table></figure>
+<p>修改后：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ARCH    ?= arm</span><br><span class="line">CROSS_COMPILE   ?= arm-linux-</span><br></pre></td></tr></table></figure>
+<p>对于步骤②的<code>arch/$(ARCH)/Makefile</code>，以ARM体系为例，在<code>arch/arm/Makefile</code>中可以看到如下内容：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">head-y  := arch/arm/kernel/head$(MMUEXT).o arch/arm/kernel/init_task.o </span><br><span class="line">...</span><br><span class="line">core-y  += arch/arm/kernel/ arch/arm/mm/ arch/arm/common/</span><br><span class="line">core-y  += $(MACHINE)</span><br><span class="line">core-$(CONFIG_ARCH_S3C2410) += arch/arm/mach-s3c2400/</span><br><span class="line">core-$(CONFIG_ARCH_S3C2410) += arch/arm/mach-s3c2412/</span><br><span class="line">core-$(CONFIG_ARCH_S3C2410) += arch/arm/mach-s3c2440/</span><br><span class="line">...</span><br><span class="line">libs-y  := arch/arm/lib/    $(libs-y)</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>由第1行可知，除前面的5类子目录外，又出现了另一类：<code>head-y</code>，不过它是直接以文件名出现。MMUEXT在<code>arch/arm/Makefile</code>前面定义，对于没有MMU的处理器，MMUEXT的值为-nommu，使用文件head-nommu.S；对于有MMU的处理器，MMUEXT的值为空，使用文件head.S。<br><code>arch/arm/Makefile</code>中类似第3、4、5行的代码进一步扩展了<code>core-y</code>的内容，第9行扩展了<code>libs-y</code>的内容，这些都是体系结构相关的目录。第5-7行中的CONFIG_ARCH_S3C2410在配置内核时定义，它的值有3种：y、m、空。y表示编进内核，m表示编为模块，空表示不使用。<br>编译内核时，将依次进入init-y、core-y、libs-y、drivers-y和net-y所列出的目录执行它们的Makefile，每个子目录都会生成一个build-in.o（libs-y所列目录下，有可能lib.a文件）。最后，<code>head-y</code>所表示的文件将和这些build-in.o、lib.a一起被连接成内核映像文件vmlinux。<br>最后，步骤③是如何进行的。<br>在配置内核时，生成配置文件<code>.config</code>。内核顶层Makefile使用如下语句间接包含<code>.config</code>文件，以后就根据<code>.config</code>中定义的各个变量来决定编译哪些文件。之所以说是“间接”包含，是因为包含的是<code>include/config/auto.conf</code>文件，而它只是将<code>.config</code>文件中的注释去掉，并根据顶层Makefile中定义的变量增加一些变量而已。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#Read in config</span><br><span class="line">-include include/config/<span class="keyword">auto</span>.conf</span><br></pre></td></tr></table></figure>
+<p><code>include/config/auto.conf</code>文件的生成过程不再描述，它与<code>.config</code>的格式相同，摘选部分内容如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">CONFIG_ARCH_SMDK2410=y</span><br><span class="line">CONFIG_ARCH_S3C2440=y</span><br><span class="line"># .config中没有下面这行，它是根据顶层Makefile中定义的内核的版本号增加的</span><br><span class="line">CONFIG_KERNELVERSION=<span class="string">&quot;2.6.22.6&quot;</span></span><br><span class="line"># .config中没有下面这行，它是根据顶层Makefile中定义的ARCH变量增加的</span><br><span class="line">CONFIG_ARCH=<span class="string">&quot;arm&quot;</span></span><br><span class="line">CONFIG_JFFS2_FS=y</span><br><span class="line">CONFIG_LEDS_S3C24XX=m</span><br></pre></td></tr></table></figure>
+
+<p>在<code>include/config/auto.conf</code>文件中，变量的值主要有两类：“y”和“m”。各级子目录的Makefile使用这些变量来决定哪些文件被编译进内核中，哪些文件被编成模块（即驱动程序），要进入哪些下一级子目录继续编译，这通过以下4种方法来确定（obj-y、obj-m、lib-y是Makefile中的变量）。</p>
+<p>①obj-y用来定义哪些文件被编进（build-in）内核。<br>obj-y中定义的.o文件由当前目录下的.c或.S文件编译生成，它们连同下级子目录的build-in.o文件一起被组合成（使用“$(LD) -r”命令）当前目录下的build-in.o文件。这个build-in.o文件将被它的上一层Makefile使用。<br>obj-y中各个.o文件的顺序是有意义的，因为内核中用<code>moudule_init</code>或<code>__initcall</code>定义的函数将按照它们的连接顺序被调用。<br><strong>例子1</strong>，当下面的CONFIG_ISDN、CONFIG_ISDN_PPP_BSDCOMP在<code>.config</code>中被定义为y时，isdn.c或isdn.S、isdn_bsdcomp.c或isdn_bsdcomp.S被编译成isdn.o、isdn_bssdcomp.o。这两个.o文件被组合进buidl-in.o文件中，最后被链接进入内核。假如isdn.o、isdn_bsdcomp.o中分别用<code>moudule_init(A)</code>、<code>moudule_init(B)</code>定义了函数A、B，则内核启动时A先被调用，然后是B。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">obj-$(CONFIG_ISDN)      += isdn.o</span><br><span class="line">obj-$(CONFIG_ISDN_PPP_BSDCOMP)      += isdn_bsdcomp.o</span><br></pre></td></tr></table></figure>
+
+<p>②obj-m用来定义哪些文件被编译成可加载模块（Loadable module）。<br>obj-m中定义的.o文件有当前目录下的.c或.S文件编译生成，它们不会被编进build-in.o中，而是被编成可加载模块。<br>一个模块可以由一个或多个.o文件组成。对于只有一个源文件的模块，在obj-m中直接增加它的.o文件即可。对于有多个源文件的模块，除在obj-m中增加一个.o文件外，还要定义一个<module_name>-objs变量来告诉Makefile这个.o文件由哪些文件组成。<br><strong>例子2</strong>，当下面的CONFIG_ISDN_PPP_BSDCOMP在.config文件中被定义为m时，isdn_bsdcomp.c或isdn_bsdcomp.S将被编译成isdn_bsdcomp.o文件，它最后被制作成isdn_bsdcomp.ko模块。</module_name></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#drivers/isdn/i4l/Makefile</span></span><br><span class="line">obj-$(CONFIG_ISDN_PPP_BSDCOMP)  += isdn_bsdcomp.o</span><br></pre></td></tr></table></figure>
+<p><strong>例子3</strong>，当下面的CONFIG_ISDN在.config文件中被定义为m时，将会生成一个isdn.o文件，它由isdn-objs中定义的isdn-net-lib.o、isdn_v110.o、isdn_common.o等3个文件组合而成。isdn.o最后被制作成isdn.ko模块。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#drivers/isdn/i4l/Makefile</span></span><br><span class="line">obj-$(CONFIG_ISDN)  += isdn.o</span><br><span class="line">isdn-objs   :=  isdn_net_lib.o isdn_v110.o isdn_common.o</span><br></pre></td></tr></table></figure>
+
+<p>③lib-y用来定义哪些文件被编成库文件<br>lib-y中定义的.o文件由当前目录下的.c或.S文件编译生成，它们被打包成当前目录下的一个库文件：lib.a。<br>同时出现在obj-y、lib-y中的.o文件，不会被包含进lib.a中。<br>要把这个lib.a编译进入内核中，需要在顶层Makefile中libs-y变量中列出当前目录。要编成库文件的内核代码一般都在这两个目录下：<code>lib/</code>、<code>arch/$(ARCH)/lib</code>。</p>
+<p>④obj-y、obj-m还可以用来指定要进入的下一级子目录。<br>Linux中一个Makefile文件只负责生成当前目录下的目标文件，子目录下的目标文件由子目录的Makefile生成。Linux的编译系统会自动进入这些子目录调用他们的Makefile，只是需要在进入之前指定这些子目录。<br>这要用到obj-y、obj-m，只要在其中增加这些子目录名即可。<br><strong>例子4</strong>，<code>fs/Makefile</code>中有如下一行，当CONFIG_JFFS2_FS被定义为y或m时，在编译时将会进入<code>jffs2</code>目录进行编译。Linu的编译系统只会根据这些信息决定是否进入下一级目录，而下一级目录的文件如何编译成build-in.o或模块由它的Makefile决定。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">obj-$(CONFIG_JFFS2_FS)      += jffs2</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>怎么编译这些文件</li>
 </ol>
 
     </div>
@@ -388,13 +580,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="站点总字数">227k</span>
+    <span title="站点总字数">235k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">3:27</span>
+    <span title="站点阅读时长">3:34</span>
   </span>
 </div>
 <div class="busuanzi-count">
