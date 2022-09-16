@@ -433,6 +433,43 @@
       </tags>
   </entry>
   <entry>
+    <title>构建Linux根文件系统</title>
+    <url>/2022/09/16/%E6%9E%84%E5%BB%BALinux%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>嵌入式Linux系统移植之构建Linux根文件系统</p>
+<p>《嵌入式Linux应用完全开发手册》第1篇第17章总结归纳</p>
+<span id="more"></span>
+<h1 id="本章目标"><a href="#本章目标" class="headerlink" title="本章目标"></a>本章目标</h1><ol>
+<li>了解Linux的文件系统层次标准（FHS）</li>
+<li>了解根文件系统下各目录的作用</li>
+<li>掌握构建根文件系统的的方法：移植Busybox、构造各个目录、文件等</li>
+<li>掌握制作yaffs、jffs2文件系统映像的方法</li>
+</ol>
+<h1 id="Linux文件系统概述"><a href="#Linux文件系统概述" class="headerlink" title="Linux文件系统概述"></a>Linux文件系统概述</h1><h2 id="Linux文件系统的特点"><a href="#Linux文件系统的特点" class="headerlink" title="Linux文件系统的特点"></a>Linux文件系统的特点</h2><p>类似于Windows下的C、D、E等各个盘，Linux系统也可以将磁盘、Flash等存储设备划分为若干个分区，在不同分区存放不同类别的文件。与Windows的C盘类似，Linux一样要在一个分区上系统启动必须的文件，比如内核映像文件（在嵌入式系统中，内核一般单独存放在一个分区中）、内核启动后运行的第一个程序（init）、给用户提供操作界面的shell程序、应用程序所依赖的库等。这些必需、基本的文件合称为根文件系统。它们存放在一个分区中。Linux系统启动后首先挂载这个分区，称为挂载根文件系统。其他分区上所有目录、文件的集合，也称为文件系统。<br>Linux中没有C、D、E盘符的概念，它以树状结构管理所有目录，文件。其他分区挂载在某个目录上，这个命令称为挂载点，然后就可以通过访问这个目录来访问这个分区上的文件了。比如<code>根文件系统挂载在“/”</code>上之后，根目录下就有根文件系统的各个目录、文件：&#x2F;bin、&#x2F;sbin、&#x2F;mnt等；再将其他分区挂接到&#x2F;mnt目录上，&#x2F;mnt下目录下就有这个分区的目录、文件了。<br>在一个分区下存储文件时，需要遵循一定的格式，这种格式称为文件系统类型，比如<code>fat16</code>、<code>fat32</code>、<code>ntfs</code>、<code>ext2</code>、<code>ext3</code>、<code>jffs2</code>、<code>yaffs</code>等。除这些拥有实实在在的存储分区的文件系统类型外，Linux还有几种虚拟的文件系统类型，比如<code>proc</code>、<code>sysfs</code>等，它们的文件并不存储在实际的设备上，而是在访问它们时由内核临时生成。比如<code>proc</code>文件系统下的uptime文件，读取它时可以得到两个时间值（用来表示系统启动后运行的秒数、空闲的秒数），每次读取时都由内核即刻生成，每次读取结果都不一样。</p>
+<h2 id="Linux根文件系统目录结构"><a href="#Linux根文件系统目录结构" class="headerlink" title="Linux根文件系统目录结构"></a>Linux根文件系统目录结构</h2><p><img src="/2022/09/16/%E6%9E%84%E5%BB%BALinux%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/1.jpeg" alt="img not found"></p>
+<h3 id="x2F-bin-目录"><a href="#x2F-bin-目录" class="headerlink" title="&#x2F;bin 目录"></a>&#x2F;bin 目录</h3><p>该目录下存放所有用户都可以使用的、基本的命令，这些命令在挂接其他文件系统之前就可以使用，所以&#x2F;bin目录必须和根文件系统在同一个分区中。<br>&#x2F;bin目录下常用的命令有：cat、chgrp、chmod、cp、ls、sh、kill、mount、umount、mkdir、mknod、[、test等。“[”命令就是test命令，在脚本文件中“[ expr ]”等价于“test expr”。</p>
+<h3 id="x2F-sbin目录"><a href="#x2F-sbin目录" class="headerlink" title="&#x2F;sbin目录"></a>&#x2F;sbin目录</h3><p>该目录下存放系统目录，即只有管理员能够使用的命令，系统命令话可以存放在&#x2F;usr&#x2F;sbin、&#x2F;usr&#x2F;local&#x2F;sbin目录下。&#x2F;sbin目录中存放的是基本的系统命令，它们用于启动系统、修复系统等。与&#x2F;bin目录相似，在挂载其他文件系统之前就可以使用&#x2F;sbin，所以&#x2F;sbin目录必须和根文件系统在同一个分区中。<br>&#x2F;sbin下常用的命令有：shutdown、reboot、fdisk、fsck等。<br>不是急迫需要使用的系统命令存放在&#x2F;usr&#x2F;sbin目录下。本地安装的系统命令存放在&#x2F;usr&#x2F;local&#x2F;sbin目录下。</p>
+<h3 id="x2F-dev目录"><a href="#x2F-dev目录" class="headerlink" title="&#x2F;dev目录"></a>&#x2F;dev目录</h3><p>该目录下存放的是设备文件。设备文件是Linux中特有的文件类型，在Linux系统下，以文件的方式访问各种外设，即通过读写某个设备文件操作某个具体硬件。比如通过“&#x2F;dev&#x2F;ttySAC0”文件可以操作串口0，通过“&#x2F;dev&#x2F;mtdblcok1”可以访问MTD设备（NAND Flash、NOR Flash等）的第2个分区。<br>设备文件有两种：字符设备和块设备。在PC上执行命令“ls &#x2F;dev&#x2F;ttySAC0 &#x2F;dev&#x2F;hda1 -l”可以看到如下结果：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">brwxrwxr-x  1   root    49      3,  1   Oct 9   2005 /dev/hda1</span><br><span class="line">crwxrwxr-x  1   root    root    4,  64  Sep 24  2007 /dev/ttySAC0</span><br></pre></td></tr></table></figure>
+<p>其中字母“b”、“c”表示这是一个块设备文件或字符设备文件；“3，1”、“4，64”表示设备文件的主、次设备号；主设备号用来表示这是哪类设备，次设备号用来表示这是这类设备中的哪个。<br>设备文件可以使用mknod命令创建</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mknod /dev/ttySAC0 c 4 64</span><br><span class="line">mknod /dev/hda1 b 3 1</span><br></pre></td></tr></table></figure>
+<p>&#x2F;dev 的创建有3种方法。</p>
+<ol>
+<li>手动创建<br>在制作根文件系统的时候，就在&#x2F;dev目录下创建好要使用的设备文件，比如ttySAC0等。系统挂接根文件系统后就可以使用&#x2F;dev下的设备文件了。</li>
+<li>使用devfs文件系统（这种方法已经过时）<br>以前的内核中有一个配置选项CONFIG_DEVFS_FS，它用来将虚拟文件系统devfs挂接在&#x2F;dev目录上，各个驱动程序注册时会在&#x2F;dev下目录下自动生成各种设备文件。就免去了手动创建设备文件的麻烦，在制作根文件系统时，&#x2F;dev目录可以为空。<br>使用devfs比手动创建设备节点更便利，但是它仍有一些无法克服的缺点<br>①不确定的设备映射<br>比如USB接口连接两台打印机A、B。都开机的情况下以&#x2F;dev&#x2F;usb&#x2F;lp0访问A，以&#x2F;dev&#x2F;usb&#x2F;lp1访问B。但是假如A没有上电，则系统启动时会根据扫描到的设备的顺序，以&#x2F;dev&#x2F;usb&#x2F;lp0访问B。<br>②没有足够的主&#x2F;次设备号<br>主次设备号是两个8位的数字，它们不足以与日益增加的外设一一对应。<br>③命名不够灵活<br>由于devfs由内核创建设备节点，当想重新修改某个设备的名字时需要修改编译内核。<br>④devfs消耗大量内存<br>由于上述缺点，Linux在2.3.46引入devfs之后，又在Linux2.6.13后面版本移除了devfs，而使用udev机制代替。</li>
+<li>udev<br>udev是个用户程序（userspace device），它能够根据系统中硬件设备的状态动态的更新设备文件，包括设备文件的创建和删除等。<br>使用udev机制也不需要在&#x2F;dev目录下创建设备节点，他需要一些用户程序的支持，并且内核要支持sysfs文件系统。它的操作相对复杂，但是灵活性很高。</li>
+</ol>
+<h3 id="x2F-etc-目录"><a href="#x2F-etc-目录" class="headerlink" title="&#x2F;etc 目录"></a>&#x2F;etc 目录</h3>]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>嵌入式Linux应用完全开发手册</category>
+        <category>第1篇第17章 构建Linux根文件系统</category>
+      </categories>
+      <tags>
+        <tag>Linux 应用开发</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>设备与模块</title>
     <url>/2022/08/02/%E8%AE%BE%E5%A4%87%E4%B8%8E%E6%A8%A1%E5%9D%97/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《Linux内核设计与实现》第17章总结归纳</p>
