@@ -28,6 +28,7 @@
 <meta property="og:description" content="嵌入式Linux系统移植之构建Linux根文件系统 《嵌入式Linux应用完全开发手册》第1篇第17章总结归纳">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/2022/09/16/%E6%9E%84%E5%BB%BALinux%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/1.jpeg">
+<meta property="og:image" content="http://example.com/2022/09/16/%E6%9E%84%E5%BB%BALinux%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/2.jpeg">
 <meta property="article:published_time" content="2022-09-16T06:25:23.000Z">
 <meta property="article:modified_time" content="2022-09-16T06:25:23.000Z">
 <meta property="article:author" content="Nibil">
@@ -148,7 +149,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%AC%E7%AB%A0%E7%9B%AE%E6%A0%87"><span class="nav-number">1.</span> <span class="nav-text">本章目标</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0"><span class="nav-number">2.</span> <span class="nav-text">Linux文件系统概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E7%89%B9%E7%82%B9"><span class="nav-number">2.1.</span> <span class="nav-text">Linux文件系统的特点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="nav-number">2.2.</span> <span class="nav-text">Linux根文件系统目录结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-bin-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.1.</span> <span class="nav-text">&#x2F;bin 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-sbin%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.2.</span> <span class="nav-text">&#x2F;sbin目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-dev%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.3.</span> <span class="nav-text">&#x2F;dev目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-etc-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.4.</span> <span class="nav-text">&#x2F;etc 目录</span></a></li></ol></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%AC%E7%AB%A0%E7%9B%AE%E6%A0%87"><span class="nav-number">1.</span> <span class="nav-text">本章目标</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0"><span class="nav-number">2.</span> <span class="nav-text">Linux文件系统概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E7%89%B9%E7%82%B9"><span class="nav-number">2.1.</span> <span class="nav-text">Linux文件系统的特点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="nav-number">2.2.</span> <span class="nav-text">Linux根文件系统目录结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-bin-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.1.</span> <span class="nav-text">&#x2F;bin 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-sbin%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.2.</span> <span class="nav-text">&#x2F;sbin目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-dev%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.3.</span> <span class="nav-text">&#x2F;dev目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-etc-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.4.</span> <span class="nav-text">&#x2F;etc 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-lib-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.5.</span> <span class="nav-text">&#x2F;lib 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-home-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.6.</span> <span class="nav-text">&#x2F;home 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-root-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.7.</span> <span class="nav-text">&#x2F;root 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-usr-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.8.</span> <span class="nav-text">&#x2F;usr 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-var-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.9.</span> <span class="nav-text">&#x2F;var 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-proc"><span class="nav-number">2.2.10.</span> <span class="nav-text">&#x2F;proc</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-mnt-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.11.</span> <span class="nav-text">&#x2F;mnt 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-tmp-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.12.</span> <span class="nav-text">&#x2F;tmp 目录</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux-%E6%96%87%E4%BB%B6%E5%B1%9E%E6%80%A7%E4%BB%8B%E7%BB%8D"><span class="nav-number">2.3.</span> <span class="nav-text">Linux 文件属性介绍</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%A7%BB%E6%A4%8D-Busybox"><span class="nav-number">3.</span> <span class="nav-text">移植 Busybox</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Busybox-%E6%A6%82%E8%BF%B0"><span class="nav-number">3.1.</span> <span class="nav-text">Busybox 概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#init%E8%BF%9B%E7%A8%8B%E4%BB%8B%E7%BB%8D%E5%8F%8A%E7%94%A8%E6%88%B7%E7%A8%8B%E5%BA%8F%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B"><span class="nav-number">3.2.</span> <span class="nav-text">init进程介绍及用户程序启动过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E5%A6%82%E4%BD%95%E5%90%AF%E5%8A%A8init%E8%BF%9B%E7%A8%8B"><span class="nav-number">3.2.1.</span> <span class="nav-text">内核如何启动init进程</span></a></li></ol></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -310,14 +311,14 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>2.8k</span>
+      <span>9.2k</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
         <i class="far fa-clock"></i>
       </span>
       <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>3 分钟</span>
+      <span>8 分钟</span>
     </span>
 </div>
 
@@ -351,7 +352,210 @@
 <li>使用devfs文件系统（这种方法已经过时）<br>以前的内核中有一个配置选项CONFIG_DEVFS_FS，它用来将虚拟文件系统devfs挂接在&#x2F;dev目录上，各个驱动程序注册时会在&#x2F;dev下目录下自动生成各种设备文件。就免去了手动创建设备文件的麻烦，在制作根文件系统时，&#x2F;dev目录可以为空。<br>使用devfs比手动创建设备节点更便利，但是它仍有一些无法克服的缺点<br>①不确定的设备映射<br>比如USB接口连接两台打印机A、B。都开机的情况下以&#x2F;dev&#x2F;usb&#x2F;lp0访问A，以&#x2F;dev&#x2F;usb&#x2F;lp1访问B。但是假如A没有上电，则系统启动时会根据扫描到的设备的顺序，以&#x2F;dev&#x2F;usb&#x2F;lp0访问B。<br>②没有足够的主&#x2F;次设备号<br>主次设备号是两个8位的数字，它们不足以与日益增加的外设一一对应。<br>③命名不够灵活<br>由于devfs由内核创建设备节点，当想重新修改某个设备的名字时需要修改编译内核。<br>④devfs消耗大量内存<br>由于上述缺点，Linux在2.3.46引入devfs之后，又在Linux2.6.13后面版本移除了devfs，而使用udev机制代替。</li>
 <li>udev<br>udev是个用户程序（userspace device），它能够根据系统中硬件设备的状态动态的更新设备文件，包括设备文件的创建和删除等。<br>使用udev机制也不需要在&#x2F;dev目录下创建设备节点，他需要一些用户程序的支持，并且内核要支持sysfs文件系统。它的操作相对复杂，但是灵活性很高。</li>
 </ol>
-<h3 id="x2F-etc-目录"><a href="#x2F-etc-目录" class="headerlink" title="&#x2F;etc 目录"></a>&#x2F;etc 目录</h3>
+<h3 id="x2F-etc-目录"><a href="#x2F-etc-目录" class="headerlink" title="&#x2F;etc 目录"></a>&#x2F;etc 目录</h3><p>如下表所示，该目录下存放各种配置文件。对于PC上的Linux系统，&#x2F;etc目录下目录、文件非常多。这些目录、文件都是可选的，它们依赖于系统中所拥有的应用程序，依赖于这些程序是否需要配置文件。在嵌入式系统中，这些内容可以大为精减。</p>
+<table>
+<thead>
+<tr>
+<th>目录</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>opt</td>
+<td>用来配置&#x2F;opt下的程序 （可选）</td>
+</tr>
+<tr>
+<td>X11</td>
+<td>用来配置X Window （可选）</td>
+</tr>
+<tr>
+<td>sgml</td>
+<td>用来配置SGML （可选）</td>
+</tr>
+<tr>
+<td>xml</td>
+<td>用来配置XML （可选）</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>export</td>
+<td>用来配置NFS文件系统 （可选）</td>
+</tr>
+<tr>
+<td><code>fstab</code></td>
+<td>用来指明当执行“mount -a”时，需要挂接的文件系统 （可选）</td>
+</tr>
+<tr>
+<td>mtab</td>
+<td>用来显示已经加载的文件系统，通常是&#x2F;proc&#x2F;mounts的链接文件 （可选）</td>
+</tr>
+<tr>
+<td>ftpusers</td>
+<td>启动FTP服务时，用来配置用户的访问权限 （可选）</td>
+</tr>
+<tr>
+<td>group</td>
+<td>用户的组文件 （可选）</td>
+</tr>
+<tr>
+<td>inittab</td>
+<td>init进程的配置文件 （可选）</td>
+</tr>
+<tr>
+<td>ld.so.conf</td>
+<td>其他共享库的路径 （可选）</td>
+</tr>
+<tr>
+<td>passwd</td>
+<td>密码文件 （可选）</td>
+</tr>
+</tbody></table>
+<h3 id="x2F-lib-目录"><a href="#x2F-lib-目录" class="headerlink" title="&#x2F;lib 目录"></a>&#x2F;lib 目录</h3><p>该目录下存放共享库和可加载模块（驱动程序），共享库用于启动系统、运行根文件系统中的可执行程序，比如&#x2F;bin、&#x2F;sbin目录下的程序。其他不是根文件系统所必须的库文件可以放在其他目录，比如&#x2F;usr&#x2F;bin、&#x2F;usr&#x2F;X11R6&#x2F;lib、、var&#x2F;lib等。</p>
+<table>
+<thead>
+<tr>
+<th>目录&#x2F;文件</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>libc.so.*</td>
+<td>动态连接C库（可选）</td>
+</tr>
+<tr>
+<td>ld*</td>
+<td>连接器、加载器（可选）</td>
+</tr>
+<tr>
+<td>modules</td>
+<td>内核可加载模块存放的目录（可选）</td>
+</tr>
+</tbody></table>
+<h3 id="x2F-home-目录"><a href="#x2F-home-目录" class="headerlink" title="&#x2F;home 目录"></a>&#x2F;home 目录</h3><p>用户目录，它是可选的。对于每个普通用户，在&#x2F;home目录下都有一个以用户命名的子目录，里面存放用户相关的配置文件。</p>
+<h3 id="x2F-root-目录"><a href="#x2F-root-目录" class="headerlink" title="&#x2F;root 目录"></a>&#x2F;root 目录</h3><p>根用户（用户名为root）的目录，与此对应，普通用户的目录是&#x2F;home下的某个子目录。</p>
+<h3 id="x2F-usr-目录"><a href="#x2F-usr-目录" class="headerlink" title="&#x2F;usr 目录"></a>&#x2F;usr 目录</h3><p>&#x2F;usr 目录的内容可以存放在另一个分区中，在系统启动后再挂接到根文件系统的&#x2F;usr目录下。里面存放的是共享、只读的程序和数据，这表明&#x2F;usr目录下的内容可以在多个主机间共享，这些主机也符合FHS标准，&#x2F;usr中的文件应该也是只读的，其他相关、可变的文件也应该保存在其他目录下，比如&#x2F;var。</p>
+<table>
+<thead>
+<tr>
+<th>目录</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>bin</td>
+<td>很多用户命令存放在这个目录下</td>
+</tr>
+<tr>
+<td>include</td>
+<td>C程序的头文件，这在PC下进行开发时才用到，在嵌入式系统中不需要</td>
+</tr>
+<tr>
+<td>lib</td>
+<td>库文件</td>
+</tr>
+<tr>
+<td>local</td>
+<td>本地目录</td>
+</tr>
+<tr>
+<td>sbin</td>
+<td>非必需的系统命令（必需的系统命令放在&#x2F;sbin目录下）</td>
+</tr>
+<tr>
+<td>share</td>
+<td>架构无关的数据</td>
+</tr>
+<tr>
+<td>X11R6</td>
+<td>XWindows系统</td>
+</tr>
+<tr>
+<td>games</td>
+<td>游戏</td>
+</tr>
+<tr>
+<td>src</td>
+<td>源代码</td>
+</tr>
+</tbody></table>
+<h3 id="x2F-var-目录"><a href="#x2F-var-目录" class="headerlink" title="&#x2F;var 目录"></a>&#x2F;var 目录</h3><p>与&#x2F;usr目录相反，&#x2F;var目录下存放可变的数据，比如&#x2F;spool目录，log文件、临时文件。</p>
+<h3 id="x2F-proc"><a href="#x2F-proc" class="headerlink" title="&#x2F;proc"></a>&#x2F;proc</h3><p>这是一个空目录，常作为proc文件系统的挂接点。proc文件系统是个虚拟的文件系统，它没有实际的存储设备，里面的目录、文件都是由内核临时生成的，用来表示系统的运行状态，也可以操作里面的文件控制系统。<br>系统启动后，使用以下命令挂接proc文件系统（常在&#x2F;etc&#x2F;fstab进行设置以自动挂接）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># mount -t proc none /proc</span><br></pre></td></tr></table></figure>
+
+<h3 id="x2F-mnt-目录"><a href="#x2F-mnt-目录" class="headerlink" title="&#x2F;mnt 目录"></a>&#x2F;mnt 目录</h3><p>用于临时挂接某个文件系统的挂接点，通常是空目录；也可以在里面创建一些空的子目录，比如&#x2F;mnt&#x2F;cdram、&#x2F;mnt&#x2F;hda1等，用来临时挂接光盘、硬盘。</p>
+<h3 id="x2F-tmp-目录"><a href="#x2F-tmp-目录" class="headerlink" title="&#x2F;tmp 目录"></a>&#x2F;tmp 目录</h3><p>用于存放临时文件，通常是空目录。一些需要临时生成文件的程序要用到&#x2F;tmp目录，所以&#x2F;tmp目录必须存在并可以访问。<br>为减少对Flash的操作，当在&#x2F;tmp目录上挂接内存文件系统时，如下所示：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># mount -t tmpfs none /tmp</span><br></pre></td></tr></table></figure>
+
+<h2 id="Linux-文件属性介绍"><a href="#Linux-文件属性介绍" class="headerlink" title="Linux 文件属性介绍"></a>Linux 文件属性介绍</h2><table>
+<thead>
+<tr>
+<th>文件类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>普通文件</td>
+<td>最常见的文件类型</td>
+</tr>
+<tr>
+<td>目录文件</td>
+<td>目录也是文件</td>
+</tr>
+<tr>
+<td>字符设备文件</td>
+<td>用来访问字符设备</td>
+</tr>
+<tr>
+<td>块设备文件</td>
+<td>用来访问块设备</td>
+</tr>
+<tr>
+<td>FIFO</td>
+<td>用于进程间通信，也称为命名管道</td>
+</tr>
+<tr>
+<td>套接字</td>
+<td>用于进程间的网络通信</td>
+</tr>
+<tr>
+<td>连接文件</td>
+<td>指向另一个文件，有软连接、硬连接</td>
+</tr>
+</tbody></table>
+<p>使用“ls -lih”命令可以看到各个文件的具体信息，下面选取这几种文件，列出它们的信息。<br><img src="/2022/09/16/%E6%9E%84%E5%BB%BALinux%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/2.jpeg" alt="img not found"><br>除设备文件ttySAC0、mtdblock0外，这些信息都分为8个字段，比如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">228883  -rw-r--r--  2   root    root    6   Sep 27  22:10   readme.txt</span><br><span class="line">字段1       2       3     4       5      6       7           8</span><br></pre></td></tr></table></figure>
+<ol>
+<li>字段1：文件的索引节点inode<br>索引节点存放一个文件的上述信息，比如文件大小、属主、归属的用户组、读写权限等，并指明文件的实际数据存放的位置。</li>
+<li>字段2：文件种类和权限<br>这字段共分10位，格式如下：<br>文件类型有7种，“-”表示普通文件，“d”表示目录，“c”表示字符设备，“b”表示块设备，“p”表示FIFO，“l”表示软连接，“s”表示套接字。<br>没有专门的符号来表示“硬连接”类型，硬连接也是普通文件，只不过文件的实际内容只有一个副本，连接文件、被连接文件都指向它。比如上面的ln_hard文件时是使用命令“ln readme.txt ln_hard”创建出来的到readme.txt文件的硬连接，readme.txt和ln_hard的地位完全一致，它们都指向文件系统中的同一位置，它们的“硬连接个数”都是2，表示这个文件的实际内容被引用两次，可以看到这两个文件的inode都是228883。<br>硬连接文件的引入的另一个作用是使得可以用别名来引用一个文件，避免文件被误删—只有当硬链接个数为1时，对一个文件执行删除操作时才会真正删除文件的副本。它的缺点是不能创建到目录的连接，被连接的文件和连接文件都必须在同一个文件系统中。对此，引入软连接，也称符号连接，软连接只是简单的指向一个文件（可以是目录），并不增加它的硬连接个数。比如上面的ln_soft文件就是使用命令“ln -s readme.txt ln_hard”创建出来的到readme.txt文件的软连接，它使用另一个inode。<br>剩下的9位分为3组，分别表示文件拥有者、同一个群组的用户、其他用户对这个文件的访问权限。每组权限由rwx三位组成，表示可读、可写、可执行。如果某一位被设为“-”，则表示没有相应的权限，比如“rw-”表示只有读写权限，没有可执行权限。</li>
+<li>字段3：硬链接个数</li>
+<li>字段4：文件拥有者</li>
+<li>字段5：所属群组</li>
+<li>字段6：文件或目录大小</li>
+<li>字段7：最后访问或修改时间</li>
+<li>字段8：文件名</li>
+</ol>
+<p>对于设备文件，字段6表示主设备号，字段7表示次设备号。</p>
+<h1 id="移植-Busybox"><a href="#移植-Busybox" class="headerlink" title="移植 Busybox"></a>移植 Busybox</h1><p>所谓制作根文件系统，就是创建各种目录，并且在里面创建各种文件，比如在&#x2F;bin、&#x2F;sbin目录下存放各种可执行程序，在&#x2F;etc目录下存放配置文件，在&#x2F;lib目录下存放库文件。这节讲述如何使用Busybox来创建&#x2F;bin、&#x2F;sbin等目录下的可执行文件。</p>
+<h2 id="Busybox-概述"><a href="#Busybox-概述" class="headerlink" title="Busybox 概述"></a>Busybox 概述</h2><p>Busybox是一个遵循GPL v2协议的开源项目。Busybox将众多的UNIX命令集合进一个很小的可执行程序中，可以用来替换GNU fileutils、shellutils等工具集。Busybox中各种命令与相应的GNU工具相比，所能提供的选项较少，但是能够满足一般应用。Busybox为各种小型的或者嵌入式系统提供了一个比较完全的工具集。<br>Busybox在编写过程中对文件大小进行优化，并考虑了系统有限的资源的情况。与一般的GNU工具集动辄几MB的体积相比，动态连接的Busybox只有几百KB，即使静态链接也只有几MB左右。Busybox按模块进行设计，可以很容易的加入、去除某些命令，或增减命令的某些选项。<br>在创建一个最小的根文件系统时，使用Busybox的话，只需要在&#x2F;dev目录下创建必要的设备节点、在&#x2F;etc目录下创建一些配置文件就可以了，如果Busybox使用动态连接，还要在&#x2F;lib目录下包含库文件。<br>Busybox支持uClibc库和glibc库，对Linux 2.2.x之后的内核支持良好。<br>Busybox的官方网站时 <code>http://www.busybox.net/</code>，源码可以从<code>http://www.busybox.net/downloads</code>下载。</p>
+<h2 id="init进程介绍及用户程序启动过程"><a href="#init进程介绍及用户程序启动过程" class="headerlink" title="init进程介绍及用户程序启动过程"></a>init进程介绍及用户程序启动过程</h2><p>init进程是由内核启动的第一个用户进程，进程ID为1，它根据配置文件决定启动哪些程序，比如执行脚本、启动shell、运行用户指定的程序等。init进程是后续所有进程的发起者，比如init进程启动&#x2F;bin&#x2F;sh之后，才能够在控制台输入各种命令。<br><code>init进程的执行程序通常是/sbin/init</code>，上面讲述的init进程的作用只不过是&#x2F;sbin&#x2F;init这个程序的功能。我们完全可以编写自己的&#x2F;sbin&#x2F;init程序，或者传入命令行参数“init&#x3D;xxxxx”指定某个程序作为init进程运行。<br>一般而言，在Linux系统中有两种init程序：BSD init和System V init。BSD和System V 是两种版本的UNIX系统。这两种init程序各有优缺点，现在大多数Linux的发行版本使用System V init。但是在嵌入式领域，通常使用Busybox集成init程序。</p>
+<h3 id="内核如何启动init进程"><a href="#内核如何启动init进程" class="headerlink" title="内核如何启动init进程"></a>内核如何启动init进程</h3><p>内核启动的最后一步就是启动init进程，代码在<code>init/main.c</code>文件中，如下所示：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> noinline <span class="title function_">init_post</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">...</span><br><span class="line">	<span class="keyword">if</span> (sys_open((<span class="type">const</span> <span class="type">char</span> __user *) <span class="string">&quot;/dev/console&quot;</span>, O_RDWR, <span class="number">0</span>) &lt; <span class="number">0</span>)</span><br><span class="line">		printk(KERN_WARNING <span class="string">&quot;Warning: unable to open an initial console.\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">	(<span class="type">void</span>) sys_dup(<span class="number">0</span>);</span><br><span class="line">	(<span class="type">void</span>) sys_dup(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (ramdisk_execute_command) &#123;</span><br><span class="line">		run_init_process(ramdisk_execute_command);</span><br><span class="line">		printk(KERN_WARNING <span class="string">&quot;Failed to execute %s\n&quot;</span>,</span><br><span class="line">				ramdisk_execute_command);</span><br><span class="line">	&#125;</span><br><span class="line">...</span><br><span class="line">	<span class="keyword">if</span> (execute_command) &#123;</span><br><span class="line">		run_init_process(execute_command);</span><br><span class="line">		printk(KERN_WARNING <span class="string">&quot;Failed to execute %s.  Attempting &quot;</span></span><br><span class="line">					<span class="string">&quot;defaults...\n&quot;</span>, execute_command);</span><br><span class="line">	&#125;</span><br><span class="line">	run_init_process(<span class="string">&quot;/sbin/init&quot;</span>);</span><br><span class="line">	run_init_process(<span class="string">&quot;/etc/init&quot;</span>);</span><br><span class="line">	run_init_process(<span class="string">&quot;/bin/init&quot;</span>);</span><br><span class="line">	run_init_process(<span class="string">&quot;/bin/sh&quot;</span>);</span><br><span class="line"></span><br><span class="line">	panic(<span class="string">&quot;No init found.  Try passing init= option to kernel.&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>代码不复杂，其中的run_init_process函数使用它的参数所指定的程序来创建一个用户进程。需要注意，一旦run_init_process函数创建进程成功，它将不会返回。<br>内核启动init进程的过程如下：</p>
+<ol>
+<li>打开标准输入、标准输出、标准错误设备。<br>Linux最先打开的3个文件分别称为标准输入（stdin）、标准输出（stdout）、标准错误（stderr），它们对应的文件描述符分别为0、1、2。所谓标准输入就是在使用scanf()、fscan()获取数据时，从哪个文件（设备）读取数据；标准输出、标准错误都是输出设备，前者对应printf()、fprintf(stdout)，后者对应发fprintf(stderr)。<br>第[4]行尝试打开&#x2F;dev&#x2F;console设备文件，如果成功，它就是init进程标准输入设备。<br>第[7]、[8]行将文件描述符0复制给文件描述符1、2，所以标准输入、标准输出、标准错误都对应同一个文件（设备）。<br>在移植Linux内核时，如果发现打印出“Warning：unable to open an initial console.”，其原因大多是：根文件系统虽然被正确挂接了，但是里面的内容不正确，要么就是没有&#x2F;dev&#x2F;console这个文件，要么它没有对应的设备。</li>
+<li>如果ramdisk_execute_command变量指定了要运行的程序，启动它。<br>ramdisk_execute_command的取值（代码也在init&#x2F;main.c中）分3种情况。<br>①如果命令行参数指定了“rdinit&#x3D;…”，则ramdisk_execute_command等于这个参数指定的程序。<br>②否则，如果&#x2F;init程序存在，ramdisk_execute_command就等于“&#x2F;init”。<br>③否则，ramdisk_execute_command为空。<br>本书所用的命令行没有设定“rdinit&#x3D;…”，根文件系统中也没有&#x2F;init程序，所以ramdisk_execute_command为空,所以第[11]-[13]行代码不执行。</li>
+<li>如果execute_command变量指定了要运行的程序，启动它。<br>如果命令行参数中指定了“init&#x3D;…”，则execute_command等于这个参数指定的程序，否则为空。<br>本书所用的命令行没有设定“init&#x3D;…”，所以第[17]-[19]行代码不执行。</li>
+<li>依次尝试执行&#x2F;sbin&#x2F;init、&#x2F;etc&#x2F;init、&#x2F;bin&#x2F;init、&#x2F;bin&#x2F;sh。<br>第[21]行执行&#x2F;sbin&#x2F;init程序，这个程序在我们的根文件系统中是存在的，所以init进程所用的程序就是&#x2F;sbin&#x2F;init。从此系统的控制器交给&#x2F;sbin&#x2F;init，不再返回init_post函数中。<br>run_init_process函数也在init&#x2F;main.c中，代码如下：<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">char</span> * argv_init[MAX_INIT_ARGS+<span class="number">2</span>] = &#123; <span class="string">&quot;init&quot;</span>, <span class="literal">NULL</span>, &#125;;</span><br><span class="line"><span class="type">char</span> * envp_init[MAX_INIT_ENVS+<span class="number">2</span>] = &#123; <span class="string">&quot;HOME=/&quot;</span>, <span class="string">&quot;TERM=linux&quot;</span>, <span class="literal">NULL</span>, &#125;;</span><br><span class="line">...</span><br><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">run_init_process</span><span class="params">(<span class="type">char</span> *init_filename)</span></span><br><span class="line">&#123;</span><br><span class="line">	argv_init[<span class="number">0</span>] = init_filename;</span><br><span class="line">	kernel_execve(init_filename, argv_init, envp_init);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+所以执行&#x2F;sbin&#x2F;init程序时，它的环境参数为“HOME&#x3D;&#x2F;”，“TERM&#x3D;linux”。</li>
+</ol>
+
     </div>
 
     
@@ -403,13 +607,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="站点总字数">274k</span>
+    <span title="站点总字数">280k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">4:09</span>
+    <span title="站点阅读时长">4:15</span>
   </span>
 </div>
 <div class="busuanzi-count">
