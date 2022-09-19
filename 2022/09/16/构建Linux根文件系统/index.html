@@ -29,6 +29,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/2022/09/16/%E6%9E%84%E5%BB%BALinux%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/1.jpeg">
 <meta property="og:image" content="http://example.com/2022/09/16/%E6%9E%84%E5%BB%BALinux%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/2.jpeg">
+<meta property="og:image" content="http://example.com/2022/09/16/%E6%9E%84%E5%BB%BALinux%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/3.jpeg">
 <meta property="article:published_time" content="2022-09-16T06:25:23.000Z">
 <meta property="article:modified_time" content="2022-09-16T06:25:23.000Z">
 <meta property="article:author" content="Nibil">
@@ -149,7 +150,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%AC%E7%AB%A0%E7%9B%AE%E6%A0%87"><span class="nav-number">1.</span> <span class="nav-text">本章目标</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0"><span class="nav-number">2.</span> <span class="nav-text">Linux文件系统概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E7%89%B9%E7%82%B9"><span class="nav-number">2.1.</span> <span class="nav-text">Linux文件系统的特点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="nav-number">2.2.</span> <span class="nav-text">Linux根文件系统目录结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-bin-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.1.</span> <span class="nav-text">&#x2F;bin 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-sbin%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.2.</span> <span class="nav-text">&#x2F;sbin目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-dev%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.3.</span> <span class="nav-text">&#x2F;dev目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-etc-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.4.</span> <span class="nav-text">&#x2F;etc 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-lib-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.5.</span> <span class="nav-text">&#x2F;lib 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-home-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.6.</span> <span class="nav-text">&#x2F;home 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-root-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.7.</span> <span class="nav-text">&#x2F;root 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-usr-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.8.</span> <span class="nav-text">&#x2F;usr 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-var-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.9.</span> <span class="nav-text">&#x2F;var 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-proc"><span class="nav-number">2.2.10.</span> <span class="nav-text">&#x2F;proc</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-mnt-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.11.</span> <span class="nav-text">&#x2F;mnt 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-tmp-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.12.</span> <span class="nav-text">&#x2F;tmp 目录</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux-%E6%96%87%E4%BB%B6%E5%B1%9E%E6%80%A7%E4%BB%8B%E7%BB%8D"><span class="nav-number">2.3.</span> <span class="nav-text">Linux 文件属性介绍</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%A7%BB%E6%A4%8D-Busybox"><span class="nav-number">3.</span> <span class="nav-text">移植 Busybox</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Busybox-%E6%A6%82%E8%BF%B0"><span class="nav-number">3.1.</span> <span class="nav-text">Busybox 概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#init%E8%BF%9B%E7%A8%8B%E4%BB%8B%E7%BB%8D%E5%8F%8A%E7%94%A8%E6%88%B7%E7%A8%8B%E5%BA%8F%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B"><span class="nav-number">3.2.</span> <span class="nav-text">init进程介绍及用户程序启动过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E5%A6%82%E4%BD%95%E5%90%AF%E5%8A%A8init%E8%BF%9B%E7%A8%8B"><span class="nav-number">3.2.1.</span> <span class="nav-text">内核如何启动init进程</span></a></li></ol></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%AC%E7%AB%A0%E7%9B%AE%E6%A0%87"><span class="nav-number">1.</span> <span class="nav-text">本章目标</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0"><span class="nav-number">2.</span> <span class="nav-text">Linux文件系统概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E7%89%B9%E7%82%B9"><span class="nav-number">2.1.</span> <span class="nav-text">Linux文件系统的特点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="nav-number">2.2.</span> <span class="nav-text">Linux根文件系统目录结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-bin-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.1.</span> <span class="nav-text">&#x2F;bin 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-sbin%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.2.</span> <span class="nav-text">&#x2F;sbin目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-dev%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.3.</span> <span class="nav-text">&#x2F;dev目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-etc-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.4.</span> <span class="nav-text">&#x2F;etc 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-lib-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.5.</span> <span class="nav-text">&#x2F;lib 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-home-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.6.</span> <span class="nav-text">&#x2F;home 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-root-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.7.</span> <span class="nav-text">&#x2F;root 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-usr-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.8.</span> <span class="nav-text">&#x2F;usr 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-var-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.9.</span> <span class="nav-text">&#x2F;var 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-proc"><span class="nav-number">2.2.10.</span> <span class="nav-text">&#x2F;proc</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-mnt-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.11.</span> <span class="nav-text">&#x2F;mnt 目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#x2F-tmp-%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.12.</span> <span class="nav-text">&#x2F;tmp 目录</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux-%E6%96%87%E4%BB%B6%E5%B1%9E%E6%80%A7%E4%BB%8B%E7%BB%8D"><span class="nav-number">2.3.</span> <span class="nav-text">Linux 文件属性介绍</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%A7%BB%E6%A4%8D-Busybox"><span class="nav-number">3.</span> <span class="nav-text">移植 Busybox</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Busybox-%E6%A6%82%E8%BF%B0"><span class="nav-number">3.1.</span> <span class="nav-text">Busybox 概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#init%E8%BF%9B%E7%A8%8B%E4%BB%8B%E7%BB%8D%E5%8F%8A%E7%94%A8%E6%88%B7%E7%A8%8B%E5%BA%8F%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B"><span class="nav-number">3.2.</span> <span class="nav-text">init进程介绍及用户程序启动过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E5%A6%82%E4%BD%95%E5%90%AF%E5%8A%A8init%E8%BF%9B%E7%A8%8B"><span class="nav-number">3.2.1.</span> <span class="nav-text">内核如何启动init进程</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Busybox-init-%E8%BF%9B%E7%A8%8B%E7%9A%84%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B"><span class="nav-number">3.3.</span> <span class="nav-text">Busybox init 进程的启动过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E8%AF%91-x2F-%E5%AE%89%E8%A3%85-Busybox"><span class="nav-number">3.4.</span> <span class="nav-text">编译&#x2F;安装 Busybox</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-Busybox"><span class="nav-number">3.4.1.</span> <span class="nav-text">配置 Busybox</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E5%92%8C%E5%AE%89%E8%A3%85-Busybox"><span class="nav-number">3.4.2.</span> <span class="nav-text">编译和安装 Busybox</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-glibc-%E5%BA%93"><span class="nav-number">4.</span> <span class="nav-text">使用 glibc 库</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#glibc-%E5%BA%93%E7%9A%84%E7%BB%84%E6%88%90"><span class="nav-number">4.1.</span> <span class="nav-text">glibc 库的组成</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85glibc-%E5%BA%93"><span class="nav-number">4.2.</span> <span class="nav-text">安装glibc 库</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9E%84%E5%BB%BA%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">5.</span> <span class="nav-text">构建根文件系统</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E5%BB%BAetc%E7%9B%AE%E5%BD%95"><span class="nav-number">5.1.</span> <span class="nav-text">构建etc目录</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BAetc-x2F-inittab%E6%96%87%E4%BB%B6"><span class="nav-number">5.1.1.</span> <span class="nav-text">创建etc&#x2F;inittab文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BAetc-x2F-init-d-x2F-rcS%E6%96%87%E4%BB%B6"><span class="nav-number">5.1.2.</span> <span class="nav-text">创建etc&#x2F;init.d&#x2F;rcS文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BAetc-x2F-fstab%E6%96%87%E4%BB%B6"><span class="nav-number">5.1.3.</span> <span class="nav-text">创建etc&#x2F;fstab文件</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E5%BB%BAdev%E7%9B%AE%E5%BD%95"><span class="nav-number">5.2.</span> <span class="nav-text">构建dev目录</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9D%99%E6%80%81%E5%88%9B%E5%BB%BA%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6"><span class="nav-number">5.2.1.</span> <span class="nav-text">静态创建设备文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8mdev%E5%88%9B%E5%BB%BA%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6"><span class="nav-number">5.2.2.</span> <span class="nav-text">使用mdev创建设备文件</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E5%BB%BA%E5%85%B6%E4%BB%96%E7%9B%AE%E5%BD%95"><span class="nav-number">5.3.</span> <span class="nav-text">构建其他目录</span></a></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -311,14 +312,14 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>9.2k</span>
+      <span>21k</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
         <i class="far fa-clock"></i>
       </span>
       <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>8 分钟</span>
+      <span>19 分钟</span>
     </span>
 </div>
 
@@ -555,7 +556,272 @@
 <li>依次尝试执行&#x2F;sbin&#x2F;init、&#x2F;etc&#x2F;init、&#x2F;bin&#x2F;init、&#x2F;bin&#x2F;sh。<br>第[21]行执行&#x2F;sbin&#x2F;init程序，这个程序在我们的根文件系统中是存在的，所以init进程所用的程序就是&#x2F;sbin&#x2F;init。从此系统的控制器交给&#x2F;sbin&#x2F;init，不再返回init_post函数中。<br>run_init_process函数也在init&#x2F;main.c中，代码如下：<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">char</span> * argv_init[MAX_INIT_ARGS+<span class="number">2</span>] = &#123; <span class="string">&quot;init&quot;</span>, <span class="literal">NULL</span>, &#125;;</span><br><span class="line"><span class="type">char</span> * envp_init[MAX_INIT_ENVS+<span class="number">2</span>] = &#123; <span class="string">&quot;HOME=/&quot;</span>, <span class="string">&quot;TERM=linux&quot;</span>, <span class="literal">NULL</span>, &#125;;</span><br><span class="line">...</span><br><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">run_init_process</span><span class="params">(<span class="type">char</span> *init_filename)</span></span><br><span class="line">&#123;</span><br><span class="line">	argv_init[<span class="number">0</span>] = init_filename;</span><br><span class="line">	kernel_execve(init_filename, argv_init, envp_init);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 所以执行&#x2F;sbin&#x2F;init程序时，它的环境参数为“HOME&#x3D;&#x2F;”，“TERM&#x3D;linux”。</li>
 </ol>
+<h2 id="Busybox-init-进程的启动过程"><a href="#Busybox-init-进程的启动过程" class="headerlink" title="Busybox init 进程的启动过程"></a>Busybox init 进程的启动过程</h2><p>Busybox init 程序对应的代码在<code>init/init.c</code>文件中，下面以busybox-1.7.0为例进行讲解。<br>先概述其流程，再结合一个&#x2F;etc&#x2F;inittab文件讲述init进程的启动过程。</p>
+<ol>
+<li>Busybox init程序流程<br>流程图如下所示，其中与构建根文件系统关系密切的是控制台的初始化、对inittab文件的解释和执行。<br><img src="/2022/09/16/%E6%9E%84%E5%BB%BALinux%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/3.jpeg" alt="img not found"><br>内核启动init进程时已经打开“dev&#x2F;console”设备作为控制台，一般情况下Busybox init 程序就使用&#x2F;dev&#x2F;console。但是如果内核启动init进程的同时设置了环境变量CONSOLE或console，则使用环境变量所指的的设备。在Busybox init 程序中，还会检查这个设备是否可以打开，如果不能打开则使用“&#x2F;dev&#x2F;null”。<br>Busybox init 只是作为其他进程的发起者和控制者，并不需要控制台与用户交互，所以init进程会把它关掉，系统启动后运行命令“ls &#x2F;proc&#x2F;1&#x2F;fd”可以看到该目录为空。init进程创建其他子进程时，如果没有在&#x2F;etc&#x2F;inittab中指明它的控制台，则使用前面确定的控制台。<br>&#x2F;etc&#x2F;inittab文件的相关文档和示例代码都在Busybox的example&#x2F;inittab文件中。<br>如果存在&#x2F;etc&#x2F;inittab文件，Busybox init程序解析它，然后按照它的指示创建各种子进程；否则使用默认的配置创建子进程。<br>&#x2F;etc&#x2F;inittab文件中每个条目用来定义一个子进程，并确定它的启动方法，格式如下：<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;id&gt;:&lt;runlevels&gt;:&lt;action&gt;:&lt;process&gt;</span><br></pre></td></tr></table></figure>
+例如：<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ttySAC0::askfirst:-/bin/sh</span><br></pre></td></tr></table></figure>
+对于Busybox init 程序，上述字段作用如下。<br>①<id>：表示这个子进程要使用的控制台（即标准输入、标准输出、标准错误设备）。如果省略，则使用与init进程一样的控制台。<br>②<runlevels>：对于Busybox init 程序，这个字段没有意义。<br>③<action>：表示init进程如何控制这个子进程，有如下8种取值。<br>④<process>：要执行的程序，它可以是可执行程序，也可以是脚本。<br>如果<process>字段前面有“-”字符，这个程序被称为“交互的”。<table>
+<thead>
+<tr>
+<th>action名称</th>
+<th>执行条件</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>sysinit</td>
+<td>系统启动后最先执行</td>
+<td>只执行一次，init进程等待它结束才继续执行其他动作</td>
+</tr>
+<tr>
+<td>wait</td>
+<td>系统执行完sysinit进程后</td>
+<td>只执行一次，init进程等待它结束才继续执行其他动作</td>
+</tr>
+<tr>
+<td>once</td>
+<td>系统执行完wait进程后</td>
+<td>只执行一次，init进程不等待它结束</td>
+</tr>
+<tr>
+<td>respawn</td>
+<td>启动完once进程后</td>
+<td>init进程检测发现子进程退出时，重新启动它</td>
+</tr>
+<tr>
+<td>askfirst</td>
+<td>启动完respawn进程后</td>
+<td>与respawn类似，不过init进程先输出“Please press Enter to activate this console.”，等用户输入回车键之后才启动子进程</td>
+</tr>
+<tr>
+<td>shutdown</td>
+<td>当系统关机时</td>
+<td>即重启、关闭系统命令时</td>
+</tr>
+<tr>
+<td>restart</td>
+<td>Busybox中配置了CONFIG_FEATURE_USE_INITTAB，并且init进程接收到SIGHUP信号时</td>
+<td>先重新读取、解析&#x2F;etc&#x2F;inittab文件，再执行restart程序</td>
+</tr>
+<tr>
+<td>ctrlaltdel</td>
+<td>按下Ctrl + Alt + Del组合键时</td>
+<td>—</td>
+</tr>
+</tbody></table>
+</process></process></action></runlevels></id></li>
+</ol>
+<p>在&#x2F;etc&#x2F;inittab文件的控制下，init进程的行为总结如下。<br>①在系统启动前期，init进程首先启动<action>为sysinit、wait、once的3类子进程。<br>②在系统正常运行期间，init进程首先启动<action>为respawn、askfirst的两类子进程，并监视他们，发现某个子进程退出时重新启动它们。<br>③在系统退出时，执行<action>为shutdown、restart、ctrlaltdel的3类子进程<br>如果根文件系统中没有&#x2F;etc&#x2F;inittab文件，Busybox init程序将使用如下默认的inittab条目。</action></action></action></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">::sysinit:/etc/init.d/rcS</span><br><span class="line">::askfirst:/bin/sh</span><br><span class="line">ttys2::askfirst:/bin/sh</span><br><span class="line">ttys3::askfirst:/bin/sh</span><br><span class="line">ttys4::askfirst:/bin/sh</span><br><span class="line">::ctrlaltdel:/sbin/swapoff -a</span><br><span class="line">::shutdown:/bin/umount -a -r</span><br><span class="line">::restart:/sbin/init</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>&#x2F;etc&#x2F;inittab 实例<br>仿照Busybox的example的examples&#x2F;inittab文件，创建一个inittab文件，内容如下：<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"># /etc/inittab</span><br><span class="line"># 这是init进程启动的第一个子进程，它是一个脚本，可以在里面指定用户想执行的操作</span><br><span class="line"># 比如挂接其他文件系统、配置网络等</span><br><span class="line">::sysinit:/etc/init.d/rcS</span><br><span class="line"></span><br><span class="line"># 启动shell，以/dev/ttySAC0作为控制台</span><br><span class="line">ttySAC0:askfirst:-/bin/sh</span><br><span class="line"></span><br><span class="line"># 按下Ctrl + Alt + Del之后执行的程序</span><br><span class="line">::ctrlaltdel:/sbin/reboot</span><br><span class="line"></span><br><span class="line"># 重启、关机前执行的程序</span><br><span class="line">::shutdown:/bin/umount -a -r</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="编译-x2F-安装-Busybox"><a href="#编译-x2F-安装-Busybox" class="headerlink" title="编译&#x2F;安装 Busybox"></a>编译&#x2F;安装 Busybox</h2><p>从<code>http://www.busybox.net/downloads</code>下载busybox-1.7.0.tar.bz2。<br>使用如下命令解压得到busubux-1.7.0目录。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar xjf busybox-1.7.0.tar.bz2</span><br></pre></td></tr></table></figure>
+<p>Busybox 集合了几百个命令，在一般系统中并不需要全部使用。可以通过配置Busybox来选择这些命令、定制某些命令的功能（选项）、指定Busybox的连接方法、指定Busybox的安装路径。</p>
+<h3 id="配置-Busybox"><a href="#配置-Busybox" class="headerlink" title="配置 Busybox"></a>配置 Busybox</h3><p>在 busybox-1.7.0 目录下执行“make menuconfig”命令即可进入配置界面。Busybox将所有配置项分类存放，如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>配置项类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Busybox Settings —&gt; <br> General Configuration</td>
+<td>一些通用的设置，一般不需要理会</td>
+</tr>
+<tr>
+<td>Busybox Settings —&gt; <br> Build Options</td>
+<td>连接方式、编译选项等</td>
+</tr>
+<tr>
+<td>Busybox Settings —&gt; <br> Debugging Options</td>
+<td>调试选项，使用Busybox时将打印一些调试信息，一般不选</td>
+</tr>
+<tr>
+<td>Busybox Settings —&gt; <br> Installation Options</td>
+<td>Busybox的安装路径，不需要设置，可以在命令行中指定</td>
+</tr>
+<tr>
+<td>Busybox Settings —&gt; <br> Busybox Library Tuning</td>
+<td>Busybox的性能微调，比如设置在控制台上可以输入的最大字符个数，一般使用默认值</td>
+</tr>
+<tr>
+<td>Archival Utilities</td>
+<td>各种压缩、解压缩工具，根据需要选择相关命令</td>
+</tr>
+<tr>
+<td>Coreutils</td>
+<td>核心的命令，比如ls、cp等</td>
+</tr>
+<tr>
+<td>Console Utilities</td>
+<td>控制台相关的命令，比如清屏命令clear等。</td>
+</tr>
+<tr>
+<td>Debian Utilities</td>
+<td>Debian（Linux的一种发行版本）命令</td>
+</tr>
+<tr>
+<td>Editors</td>
+<td>编辑命令，一般都选中Vi</td>
+</tr>
+<tr>
+<td>Finding Utilities</td>
+<td>查找命令</td>
+</tr>
+<tr>
+<td>Init Utilities</td>
+<td>init程序的配置选项，比如是否读取inittab文件</td>
+</tr>
+<tr>
+<td>Login&#x2F;Password Management Utilities</td>
+<td>登录、用户账号&#x2F;密码等方面的命令</td>
+</tr>
+<tr>
+<td>Linux Ext2 FS Progs</td>
+<td>Ext2文件系统的一些工具</td>
+</tr>
+<tr>
+<td>Linux Module Utilities</td>
+<td>加载&#x2F;卸载模块的命令</td>
+</tr>
+<tr>
+<td>Linux System Utilities</td>
+<td>一些系统命令，比如打印内核信息的dmesg、分区命令fdisk</td>
+</tr>
+<tr>
+<td>Miscellaneous Utilities</td>
+<td>一些不好分类的命令</td>
+</tr>
+<tr>
+<td>Networking Utilities</td>
+<td>网络方面的命令，可以选择一些方便调试的命令，比如telnetd、ping、tftp等</td>
+</tr>
+<tr>
+<td>Process Utilities</td>
+<td>进程相关的命令，如ps、free、kill、top等</td>
+</tr>
+<tr>
+<td>Shells</td>
+<td>有多种shell，比如msh、ash等，一般选择ash</td>
+</tr>
+<tr>
+<td>System Logging Utilities</td>
+<td>系统记录方面的命令</td>
+</tr>
+<tr>
+<td>ipsvd Utilities</td>
+<td>监听TCP、DPB端口</td>
+</tr>
+</tbody></table>
+<ol>
+<li>Busybox的性能微调<br>设置“TAB”键补全，如下配置：<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Busybox Settings ---&gt;</span><br><span class="line">    Busybox Library Tuning ---&gt;</span><br><span class="line">        [*] Tab completion</span><br></pre></td></tr></table></figure></li>
+<li>连接&#x2F;编译选项<br>以下选项指定是否使用静态连接：<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Build Options ---&gt;</span><br><span class="line">    [] Build Busybox as a static binary (no shared libs)</span><br></pre></td></tr></table></figure>
+使用glibc时，如果静态编译Busybox 会提示以下警告信息，表示会出现一些奇怪的问题。<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># warning Static linking against glibc produces buggy executable</span><br></pre></td></tr></table></figure>
+所以，本书使用动态连接的Busybox，在构造根文件系统时需要在&#x2F;lib目录下放置glibc库文件。</li>
+<li>Archival Utilities 选项<br>选择tar命令：<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Archival Utilities ---&gt;</span><br><span class="line">    [*] tar</span><br><span class="line">    [*] Enable archive creation</span><br><span class="line">    [*] Enable -j option to handle .tar.bz2 files</span><br><span class="line">    [*] Enable -X and -T options</span><br><span class="line">    [*] Enable -z option</span><br><span class="line">    [*] Enable -Z option</span><br><span class="line">    [*] Enable support for old tar  header format</span><br><span class="line">    [*] Enable support for some GNU tar extensions</span><br><span class="line">    [*] Enable long options</span><br></pre></td></tr></table></figure></li>
+<li>Linux Module Utilities 选项<br>要使用可加载模块，下面的配置选上。<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Linux Module Utilities ---&gt;</span><br><span class="line">    [*] insmode</span><br><span class="line">    [*] Module version checking</span><br><span class="line">    [*] Add module symbols to kernel symbol table</span><br><span class="line">    [*] In kernel memory optimization (uClinux only)</span><br><span class="line">    [*] Enable load map (-m) option</span><br><span class="line">    [*] Symbols in load map</span><br><span class="line">    [*] rmmod</span><br><span class="line">    [*] lsmod</span><br><span class="line">    [*] Support version 2.6.x Linux kernels</span><br></pre></td></tr></table></figure></li>
+<li>Linux System Utilities 选项<br>支持mdev，这可以很方便的构造&#x2F;dev目录，并且可以支持热插拔设备。另外，为方便调试，选中mount、unmount 命令，并让mount命令支持NFS。<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Linux System Utilities ---&gt;</span><br><span class="line">    [*] mdev</span><br><span class="line">    [*] Support /etc/mdev.conf</span><br><span class="line">    [*] Support command execution at device addtion/removal</span><br><span class="line">    [*] mount</span><br><span class="line">    [*] Suuport mounting NFS file system</span><br><span class="line">    [*] unmount</span><br><span class="line">    [*] unmount -a option</span><br></pre></td></tr></table></figure></li>
+<li>Networking Utilities 选项<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Linux System Utilities ---&gt;</span><br><span class="line">    [*] ifconfig</span><br><span class="line">    [*] Enable status reporting output (+7k)</span><br><span class="line">    [] Enable slip-specific options &quot;keepalive&quot; and &quot;outfill&quot;</span><br><span class="line">    [] Enable options &quot;mem_start&quot;,&quot;io_addr&quot; and &quot;irq&quot;</span><br><span class="line">    [*] Enable option &quot;hw&quot; (ether only)</span><br><span class="line">    [*] Enable set the broadcast automatically</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h3 id="编译和安装-Busybox"><a href="#编译和安装-Busybox" class="headerlink" title="编译和安装 Busybox"></a>编译和安装 Busybox</h3><p>编译之前，先修改Busybox根目录的Makefile，使用交叉编译器。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">修改前：</span><br><span class="line">ARCH ?= $(SUBARCH)</span><br><span class="line">CROSS_COMPILE ?= </span><br><span class="line">修改后：</span><br><span class="line">ARCH ?= arm</span><br><span class="line">CROSS_COMPILE ?= arm-linux-</span><br></pre></td></tr></table></figure>
+<p>然后执行“make”命令编译Busybox。<br>最后是安装，执行“make CONFIG_PREFIX&#x3D;dir_path install”就可以将Busybox安装在dir_name指定的目录下。执行以下命令在&#x2F;work&#x2F;nfs_root&#x2F;fs_mini目录下安装Busybox。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ make CONFIG_PREFIX=/work/nfs_root/fs_mini install</span><br></pre></td></tr></table></figure>
+<p>一切完成后，将在&#x2F;work&#x2F;nfs_root&#x2F;fs_mini目录下生成如下文件、目录。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">drwxr-xr-x  2   book    book    4096    2008-01-22  06:56   bin </span><br><span class="line">lrwxrwxrwx  1   book    book    11      2008-01-22  06:56   linuxrc -&gt;  bin/busybox</span><br><span class="line">drwxr-xr-x  2   book    book    4096    2008-01-22  06:56   sbin </span><br><span class="line">drwxr-xr-x  4   book    book    4096    2008-01-22  06:56   usr</span><br></pre></td></tr></table></figure>
+<p>其中linuxrc和上面分析的&#x2F;sbin&#x2F;init程序功能完全一样；其他目录下是各种命令，不过它们都是到&#x2F;bin&#x2F;busybox的符号链接，比如&#x2F;work&#x2F;nfs_root&#x2F;fs_mini&#x2F;sbin目录下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">lrwxrwxrwx  1   book    book    14        2008-01-22  06:56   halt -&gt;  ../bin/busybox</span><br><span class="line">lrwxrwxrwx  1   book    book    14        2008-01-22  06:56   ifconfig -&gt;  ../bin/busybox</span><br><span class="line">lrwxrwxrwx  1   book    book    14        2008-01-22  06:56   init -&gt;  ../bin/busybox</span><br><span class="line">lrwxrwxrwx  1   book    book    14        2008-01-22  06:56   insmod -&gt;  ../bin/busybox</span><br><span class="line">lrwxrwxrwx  1   book    book    14        2008-01-22  06:56   klogd -&gt;  ../bin/busybox</span><br></pre></td></tr></table></figure>
+<p>除bin&#x2F;busybox外，其他文件都是到bin&#x2F;busybox的符号链接。busybox是所有命令的集合体，这些符号链接文件可以直接运行。在开发板上，运行“ls”和“busybox ls”是一样的。</p>
+<h1 id="使用-glibc-库"><a href="#使用-glibc-库" class="headerlink" title="使用 glibc 库"></a>使用 glibc 库</h1><p>在制作交叉编译工具链时，已经生成了glibc库，可以直接使用它来构建根文件系统。</p>
+<h2 id="glibc-库的组成"><a href="#glibc-库的组成" class="headerlink" title="glibc 库的组成"></a>glibc 库的组成</h2><p>glibc库的位置是&#x2F;work&#x2F;tools&#x2F;gcc-3.4.5-glibc-2.3.6&#x2F;arm-linux&#x2F;lib。<br>这个目录下的文件并非属于glibc库，比如crtl.o、libstdc++.a等文件是GCC工具本身生成的。本书不区分它们的来源，统一处理。<br>里面的目录、文件可以分为8类。<br>①加载器ld-2.3.6.so、ld-linux.so.2。<br>动态程序启动前，它们被用来加载动态库。<br>②目标文件(.o)<br>比如crtl.o、crti.o、crtn.o、gcrtl.o、Mcrtl.o、Scrtl.o等。在生成应用程序时，这些文件像一般的目标一样被连接。<br>③静态库文件(.a)<br>比如静态数学库libm.a、静态c++库libstdc++.a等，编译静态程序时会连接它们。<br>④动态库文件(.so，.so.[0-9]*)<br>比如动态数学库libm.so、动态c++库libstdc++.so等，它们可能是一个链接文件。编译动态库时会用到这些文件，但是不会连接它们，运行时才连接。<br>⑤libtool库文件(.a)<br>在连接库文件时，这些文件会被用到，比如它们列出了当前库文件所依赖的其他库文件。程序运行时无需这些文件。<br>⑥gconv目录<br>里面是有头字符集的动态库，比如ISO8859-l.o、GB18030.so等。<br>⑦ldscripts目录<br>里面是各种连接脚本，在编译应用程序时，它们被用于指定程序的运行地址、各段的位置等。<br>⑧其他目录及文件</p>
+<h2 id="安装glibc-库"><a href="#安装glibc-库" class="headerlink" title="安装glibc 库"></a>安装glibc 库</h2><p>在开发板上只需要加载器和动态库，假设要构建的根文件系统目录为&#x2F;work&#x2F;nfs_root&#x2F;fs_mini，操作如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /work/nfs_root/fs_mini/lib</span><br><span class="line">cd /work/tools/gcc-3.4.5-glibc-2.3.6/arm-linux/lib</span><br><span class="line">cp *.so* /work/nfs_root/fs_mini/lib -d</span><br></pre></td></tr></table></figure>
+<p>上面复制的库文件不是每个都会用到，可以根据应用程序对库的依赖关系保留需要用到的。通过ldd命令查看一个程序会用到哪些库，主机自带的ldd命令不能查看交叉编译出来的文件。有以下两种替代方法。<br>①如果有uClibc-0.9.28的代码，可以进入utils子目录生成ldd.host工具。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd uClibc-0.9.28/utils</span><br><span class="line">make ldd.host</span><br></pre></td></tr></table></figure>
+<p>然后将生成的ldd.host放到主机&#x2F;usr&#x2F;local&#x2F;bin目录下即可使用。<br>比如对于动态连接的Busybox，它的库的依赖关系如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ldd.host busybox</span><br><span class="line">    libcrypto.so.1  =&gt;  /lib/libcrypto.so.1 (0x00000000)</span><br><span class="line">    libm.so.6   =&gt;  /lib/libm.so.6  (0x00000000)</span><br><span class="line">    libc.so.6   =&gt;  /lib/libc.so.6  (0x00000000)</span><br><span class="line">    /lib/ld-linux.so.2  =&gt;  /lib/ld-linux.so.2  (0x00000000)</span><br></pre></td></tr></table></figure>
+<p>这表示Busybox要使用的要使用的库文件有libcrypto.so.1、libm.so.6、libc.so.6，加载器为&#x2F;lib&#x2F;ld-linux.so.2。上面的“not found”表示主机上没有这个条件，这么关系，开发板的根文件系统上有就行。<br>②可以使用以下命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">arm-linux-readelf -a &quot;your binary&quot; | grep &quot;Shared&quot;</span><br></pre></td></tr></table></figure>
+<p>比如对于动态连接的Busybox，它的库依赖如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">arm-linux-readelf -a ./busybox | grep &quot;Shared&quot;</span><br><span class="line">0x00000001 (NEEDED)                 Shared library:[libcrypto.so.1]</span><br><span class="line">0x00000001 (NEEDED)                 Shared library:[libm.so.6]</span><br><span class="line">0x00000001 (NEEDED)                 Shared library:[libc.so.6]</span><br></pre></td></tr></table></figure>
 
+<h1 id="构建根文件系统"><a href="#构建根文件系统" class="headerlink" title="构建根文件系统"></a>构建根文件系统</h1><p>前面在介绍了如何安装Busybox、C库，建立了bin&#x2F;、sbin&#x2F;、usr&#x2F;bin、usr&#x2F;sbin、lib&#x2F;等目录，最小根文件系统的大部分目录、文件已经建立好。</p>
+<h2 id="构建etc目录"><a href="#构建etc目录" class="headerlink" title="构建etc目录"></a>构建etc目录</h2><p>init进程根据&#x2F;etc&#x2F;inittab来创建其他子进程，比如调用脚本配置文件配置IP地址、挂接其他文件分系统，最后启动shell等。<br>etc目录下的内容取决于要运行的程序，本节只需要3个文件：etc&#x2F;inittab、etc&#x2F;init.d&#x2F;rcS、etc&#x2F;fstab。</p>
+<h3 id="创建etc-x2F-inittab文件"><a href="#创建etc-x2F-inittab文件" class="headerlink" title="创建etc&#x2F;inittab文件"></a>创建etc&#x2F;inittab文件</h3><p>仿照Busybox的examples&#x2F;inittab文件，在&#x2F;work&#x2F;nfs_root&#x2F;fs_mini&#x2F;etc目录下创建一个inittab文件，内容如下。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># /etc/inittab</span><br><span class="line">::sysinit:/etc/init.d/rcS</span><br><span class="line">ttySAC0::askfirst:-/bin/sh</span><br><span class="line">::ctrlaltdel:/sbin/reboot</span><br><span class="line">::shutdown:/bin/unmount -a -r</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建etc-x2F-init-d-x2F-rcS文件"><a href="#创建etc-x2F-init-d-x2F-rcS文件" class="headerlink" title="创建etc&#x2F;init.d&#x2F;rcS文件"></a>创建etc&#x2F;init.d&#x2F;rcS文件</h3><p>这是一个脚本文件，可以在里面添加想自动执行的命令。以下命令配置IP地址、挂接&#x2F;etc&#x2F;fstab指定的文件系统。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/sh</span><br><span class="line">ifconfig eth0 192.168.1.17</span><br><span class="line">mount -a</span><br></pre></td></tr></table></figure>
+<p>第一行表示这是一个脚本文件，运行时使用&#x2F;bin&#x2F;sh解析。<br>第一行用来配置IP地址。<br>第三行挂接&#x2F;etc&#x2F;fstab文件指定的所有文件系统。<br>最后还要改变它的属性，使它能够执行。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chmod +x etc/init.d/rcS</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建etc-x2F-fstab文件"><a href="#创建etc-x2F-fstab文件" class="headerlink" title="创建etc&#x2F;fstab文件"></a>创建etc&#x2F;fstab文件</h3><p>内容如下，表示执行“mount -a”命令后将挂接proc、tmpfs文件系统。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># device        mount-point        type        options      dump        fsck        order</span><br><span class="line">  proc          /proc               proc        defaults    0           0</span><br><span class="line">  tmpfs         /tmp                tmpfs       defaults    0           0</span><br></pre></td></tr></table></figure>
+<p>&#x2F;etc&#x2F;fstab文件被用来定义文件系统的“静态信息”，这些信息被用来控制mount命令的行为。文件中各字段的意义如下。<br>①device：要挂接的设备<br>比如&#x2F;dev&#x2F;hda2、&#x2F;dev&#x2F;mtdblock1等设备文件；也可以是其他格式，比如对于proc文件系统这个字段没有意义，可以是任意值；对于NFS文件系统，这个字段为<code>&lt;host&gt;:&lt;dir&gt;</code>。<br>②mount-point：挂接点<br>③type：文件系统类型<br>比如proc、jffs2、yaffs、ext2、nfs等；也可以是auto，表示自动检测文件系统类型。<br>④options：挂接参数，以逗号隔开。<br>&#x2F;etc&#x2F;fstab的作用不仅仅是用来控制“mount -a”的行为，即使是一般的mount命令也受它控制，这可以从下表的参数看出。除与文件系统类型相关的参数外，常用的有以下几种取值。</p>
+<table>
+<thead>
+<tr>
+<th>参数名</th>
+<th>说明</th>
+<th>默认值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>auto<br>noauto</td>
+<td>决定执行“mount -a”时是否自动挂接 <br> auto：挂接 noauto：不挂接</td>
+<td>auto</td>
+</tr>
+<tr>
+<td>user<br>nouser</td>
+<td>user：运行普通用户挂接设备<br>nouser：只允许root用户挂接设备</td>
+<td>nouser</td>
+</tr>
+<tr>
+<td>exec<br>noexec</td>
+<td>exec：允许所挂接设备上的文件<br>noexec：不允许允许所挂接设备上的程序</td>
+<td>exec</td>
+</tr>
+<tr>
+<td>Ro</td>
+<td>以只读方式挂接文件系统</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Rw</td>
+<td>以读写方式挂接文件系统</td>
+<td>-</td>
+</tr>
+<tr>
+<td>sync<br>async</td>
+<td>sync：修改文件时，它会同步写入设备中<br>async：不会同步写入</td>
+<td>sync</td>
+</tr>
+<tr>
+<td>default</td>
+<td>rw、suid、dev、exec、auto、nouser、async等的组合</td>
+<td>-</td>
+</tr>
+</tbody></table>
+<p>⑤dump和fsck order：用来决定控制dump、fsck程序的行为。<br>dump是一个用来备份文件的程序，fsck是一个用来检查磁盘的程序。<br>dump程序程序根据dump字段的值来决定这个文件系统是否需要备份，如果没有这个字段，或者其值为0，则dump忽略这个文件系统。<br>fsck程序根据fsck order字段来决定磁盘的检查顺序，一般来说对于根据根文件系统这个字段设为1，其他文件系统设为2。如果设为0，则fsck忽略这个文件系统。</p>
+<h2 id="构建dev目录"><a href="#构建dev目录" class="headerlink" title="构建dev目录"></a>构建dev目录</h2><p>使用两种方式创建dev目录。</p>
+<h3 id="静态创建设备文件"><a href="#静态创建设备文件" class="headerlink" title="静态创建设备文件"></a>静态创建设备文件</h3><p>为简单起见，本书先使用最原始的方法处理设备：在&#x2F;dev目录下静态创建各种节点。<br>从系统启动过程可知，涉及的设备有：&#x2F;dev&#x2F;mtdblock<em>、&#x2F;dev&#x2F;ttySAC</em>、&#x2F;dev&#x2F;console、dev&#x2F;null，只要建立以下设备就可以启动系统。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /work/nfs_root/fs_mini/dev</span><br><span class="line">cd /work/nfs_root/fs_mini/dev</span><br><span class="line">sudo mknod console c 5 1</span><br><span class="line">sudo mknod null c 1 3</span><br><span class="line">sudo mknod ttySAC0 c 204 64</span><br><span class="line">sudo mknod mtdblock0 b 31 0</span><br><span class="line">sudo mknod mtdblock1 b 31 1</span><br><span class="line">sudo mknod mtdblock2 b 31 2</span><br></pre></td></tr></table></figure>
+<p>其他设备文件可以当系统启动后，使用“cat &#x2F;proc&#x2F;devices”命令查看内核中注册了哪些设备，然后一一创建相应的设备文件。</p>
+<h3 id="使用mdev创建设备文件"><a href="#使用mdev创建设备文件" class="headerlink" title="使用mdev创建设备文件"></a>使用mdev创建设备文件</h3><p>mdev是udev的简化版本，也是通过读取内核信息来创建设备文件。<br>mdev的用途主要有两个：初始化&#x2F;dev目录、动态更新。动态更新不仅是更新&#x2F;dev目录，还支持热插拔。<br>要使用mdev，需要内核支持sysfs文件系统，为了减少对Flash的读写，还要支持tmpfs文件系统。先确保内核已经设置了CONFIG_SYSFS、CONFIG_TMPFS配置项。<br>使用mdev的命令如下，请参考它们的注释以了解其作用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">mount -t tmpfs mdev /dev                    //使用内存文件系统，减少对Flash的读写</span><br><span class="line">mkdir /dev/pts                              //devpts用来支持外部网络连接的虚拟终端</span><br><span class="line">mount -t devpts devpts /dev/pts     </span><br><span class="line">mount -t sysfs sysfs /sys                   //mdev通过sysfs文件系统获得设备信息</span><br><span class="line">echo /bin/mdev&gt;/proc/sys/kernel/hotplug     //设置内核，当有设备拔插时调用/bin/mdev程序</span><br><span class="line">mdev -s                                     //在/dev目录下生成内核支持的所有设备节点</span><br></pre></td></tr></table></figure>
+<p>要在内核启动时，自动运行mdev。这要修改&#x2F;work&#x2F;nfs_root&#x2F;fs_mini中的两个文件：修改etc&#x2F;fstab来自动挂载文件系统、修改etc&#x2F;init.d&#x2F;rcS加入要自动运行的命令。修改后如下所示：<br>①etc&#x2F;fstab</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># device        mount-point        type        options      dump        fsck        order</span><br><span class="line">  proc          /proc               proc        defaults    0           0</span><br><span class="line">  tmpfs         /tmp                tmpfs       defaults    0           0</span><br><span class="line">  sysfs         /sys                sysfs       defaults    0           0</span><br><span class="line">  tmpfs         /dev                tmpfs       defaults    0           0</span><br></pre></td></tr></table></figure>
+<p>②etc&#x2F;init.d&#x2F;rcS：加入下面几行</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">mount -a</span><br><span class="line">mkdir /dev/pts</span><br><span class="line">mount -t devpts devpts /dev/pts</span><br><span class="line">echo /sbin/mdev &gt; /proc/sys/kernel/hotplug</span><br><span class="line">mdev -s</span><br></pre></td></tr></table></figure>
+<p>需要注意的是，开发板上通过mdev生成的&#x2F;dev目录中，S3C2410、S3C2440的串口名是s3c2410_serial0、s3c2410_serial1、s3c2410_serial2，不是ttySAC0、ttySAC1、ttySAC2。需要修改etc&#x2F;inittab文件。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">修改前：</span><br><span class="line">ttySAC0: askfirst:-/bin/sh</span><br><span class="line">修改后：</span><br><span class="line">s3c2410_serial0::askfirst:-/bin/sh</span><br></pre></td></tr></table></figure>
+<p>另外，mdev是通过init进程来启动的，在使用mdev构造&#x2F;dev目录之前，init进程至少要用到设备文件&#x2F;dev&#x2F;console、&#x2F;dev&#x2F;nul，所以要建立这两个设备文件。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /work/nfs_root/fs_mini/dev</span><br><span class="line">cd /work/nfd_root/fs_mini/dev</span><br><span class="line">sudo mknod console c 5 1 </span><br><span class="line">sudo mknod null c 1 3 </span><br></pre></td></tr></table></figure>
+
+<h2 id="构建其他目录"><a href="#构建其他目录" class="headerlink" title="构建其他目录"></a>构建其他目录</h2>
     </div>
 
     
@@ -607,13 +873,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="站点总字数">280k</span>
+    <span title="站点总字数">292k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">4:15</span>
+    <span title="站点阅读时长">4:25</span>
   </span>
 </div>
 <div class="busuanzi-count">
