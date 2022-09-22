@@ -27,12 +27,14 @@
 <meta property="og:site_name" content="Laugh Tale">
 <meta property="og:description" content="嵌入式Linux设备驱动开发之字符设备驱动程序 《嵌入式Linux应用完全开发手册》第4篇第19章总结归纳">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2022/09/22/%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F/1.jpeg">
 <meta property="article:published_time" content="2022-09-22T08:09:17.000Z">
 <meta property="article:modified_time" content="2022-09-22T08:09:17.000Z">
 <meta property="article:author" content="Nibil">
 <meta property="article:tag" content="嵌入式Linux">
 <meta property="article:tag" content="Linux Driver">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2022/09/22/%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F/1.jpeg">
 
 
 <link rel="canonical" href="http://example.com/2022/09/22/%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F/">
@@ -147,7 +149,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%AC%E7%AB%A0%E7%9B%AE%E6%A0%87"><span class="nav-number">1.</span> <span class="nav-text">本章目标</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%AC%E7%AB%A0%E7%9B%AE%E6%A0%87"><span class="nav-number">1.</span> <span class="nav-text">本章目标</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E5%BC%80%E5%8F%91%E6%A6%82%E8%BF%B0"><span class="nav-number">2.</span> <span class="nav-text">Linux驱动程序开发概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E3%80%81%E5%BA%93%E3%80%81%E5%86%85%E6%A0%B8%E3%80%81%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="nav-number">2.1.</span> <span class="nav-text">应用程序、库、内核、驱动程序的关系</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux-%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E7%9A%84%E5%88%86%E7%B1%BB%E5%92%8C%E5%BC%80%E5%8F%91%E6%AD%A5%E9%AA%A4"><span class="nav-number">2.2.</span> <span class="nav-text">Linux 驱动程序的分类和开发步骤</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux-%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E5%88%86%E7%B1%BB"><span class="nav-number">2.2.1.</span> <span class="nav-text">Linux 驱动程序分类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux-%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E5%BC%80%E5%8F%91%E6%AD%A5%E9%AA%A4"><span class="nav-number">2.2.2.</span> <span class="nav-text">Linux 驱动程序开发步骤</span></a></li></ol></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -309,14 +311,14 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>107</span>
+      <span>2.1k</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
         <i class="far fa-clock"></i>
       </span>
       <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>1 分钟</span>
+      <span>2 分钟</span>
     </span>
 </div>
 
@@ -335,7 +337,22 @@
 <li>了解驱动程序开发的一般流程</li>
 <li>掌握简单的字符设备驱动程序的开发方法</li>
 </ol>
-
+<h1 id="Linux驱动程序开发概述"><a href="#Linux驱动程序开发概述" class="headerlink" title="Linux驱动程序开发概述"></a>Linux驱动程序开发概述</h1><h2 id="应用程序、库、内核、驱动程序的关系"><a href="#应用程序、库、内核、驱动程序的关系" class="headerlink" title="应用程序、库、内核、驱动程序的关系"></a>应用程序、库、内核、驱动程序的关系</h2><p>从上到下，一个软件系统可以分为：应用程序、库、操作系统、驱动程序。开发人员可以专注于自己熟悉的部分，对于相邻层，只需要了解它的接口，无需关注它的实现细节。<br>以点亮一个LED为例，这4层软件的协作关系如下：<br><img src="/2022/09/22/%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F/1.jpeg" alt="img not found"></p>
+<ol>
+<li>应用程序使用库提供的open函数打开代表LED的设备文件。</li>
+<li>库根据open函数传入的参数执行“swi”指令，这条指令会引起CPU异常，进入内核。</li>
+<li>内核的异常处理函数根据这些参数找到相应的驱动程序，返回一个句柄给库，进而返回给应用程序。</li>
+<li>应用程序得到文件句柄后，使用库提供的write或ioctl函数发出控制命令。</li>
+<li>库根据write或ioctl函数传入的参数执行“swi”指令，这条指令会引起CPU异常，进入内核。</li>
+<li>内核的异常处理函数根据这些参数调用驱动程序的相关函数，点亮LED。</li>
+</ol>
+<p>库（例如glic）给应用程序提供的open、read、write、ioctl、mmap函数等接口函数称为系统调用，它们都是设置好相关寄存器后，执行某条指令引发异常进入内核。对于ARM架构的CPU，这条指令为swi。除系统调用接口之外，库还提供其他函数，比如字符串处理函数，输入输出函数，数学库，还有应用程序的启动代码。<br>在异常处理函数中，内核会根据传入的参数执行各种操作，比如根据设备文件找到对应的驱动程序，调用驱动程序的相关函数等。<br>一般来说，当应用程序调用open、read、write、ioctl、mmap等函数后，将会使用驱动程序中的open、read、write、ioctl、mmap函数来进行相关操作。比如初始化、读、写等。<br>实际上，内核和驱动程序之间并没有界限，因为驱动程序最终要编进内核去的：通过静态链接或动态加载。<br>从上面操作LED的过程可以知道，与应用程序不同，驱动程序从不主动进行，它是被动的：根据应用程序的要求进行初始化，根据应用程序的要求进行读写。驱动程序加载进内核时，只是告诉内核“我这这里，我能做这些工作”，至于“工作”何时开始，取决于应用程序。当然，这不是绝对的，比如用户完全可以写一个由系统时钟触发的驱动程序，让它自己点亮LED。<br>在Linux系统中，应用程序运行于“用户空间”，拥有MMU的系统能够限制应用程序的权限（比如将它限制在某一块内存中），这可以避免应用程序的错误使整个操作系统崩溃。而驱动程序运行于内核空间，它是系统信任的一部分，驱动程序的错误可能导致整个操作系统崩溃。</p>
+<h2 id="Linux-驱动程序的分类和开发步骤"><a href="#Linux-驱动程序的分类和开发步骤" class="headerlink" title="Linux 驱动程序的分类和开发步骤"></a>Linux 驱动程序的分类和开发步骤</h2><h3 id="Linux-驱动程序分类"><a href="#Linux-驱动程序分类" class="headerlink" title="Linux 驱动程序分类"></a>Linux 驱动程序分类</h3><p>Linux的外设可以分为3类：字符设备、块设备和网络接口。<br>字符设备是能够像字节流一样被访问的设备，就是说对它的读写是以字节为单位的。比如串口在进行收发数据时就是一个一个字节进行的，我们可以在驱动程序内部使用缓冲区来存放数据以提高效率，但是串口本身对这并没有要求。字符设备的驱动程序中实现了open、close、read、write等系统调用，应用程序可以通过设备文件（比如&#x2F;dev&#x2F;ttySAC0等）来访问字符设备。<br>块设备上的数据以块的形式存放，比如NAND Flash上的数据就是以页为单位存放的。块设备驱动程序向用户层提供的接口与字符设备一样，应用程序也可以通过相应的设备文件（&#x2F;dev&#x2F;mtdblock0、&#x2F;dev&#x2F;hda1）来调用open、close、read、write等系统调用，与块设备传送任意字节的数据。对用户而言，字符设备和块设备的访问方式没有差别。块设备驱动程序的特别之处如下：</p>
+<ol>
+<li>操作硬件的接口实现方式不一样。<br>块设备驱动程序先将用户发来的数据组织成块，在写入设备；或从设备中读出若干块数据，再从中挑出用户需要的。</li>
+<li>数据块上的数据可以有一定的格式<br>通常在块设备上按照一定的格式存放数据，不同文件系统类型就是用来定义这些格式的。内核中，文件系统的层次位于块设备块驱动程序上面，这意味着块设备驱动程序除了向用户层提供像字符设备一样的接口之外，还要向内核其他部件提供一些接口，这些接口用户是看不到的。这些接口使得可以在块设备上存放文件系统，挂接块设备。<br>网络设备同时具有字符设备、块设备的部分特点，无法将它归入两类中：如果说它是字符设备，它的输入输出确是有结构的、成块的（报文、包、帧）；如果说它是块设备，它的块又不是固定大小的，大到几百几千字节，小到几字节。UNIX式的操作系统访问网络接口的方法是给它们分配一个唯一的名字（eth0），但这个名字在文件系统中不存在对应的文件节点。应用程序、内核和网络驱动程序之间的通信完全不同于字符设备、块设备。库、内核还提供了一套和数据包传输相关的函数，而不是open、read、write等。</li>
+</ol>
+<h3 id="Linux-驱动程序开发步骤"><a href="#Linux-驱动程序开发步骤" class="headerlink" title="Linux 驱动程序开发步骤"></a>Linux 驱动程序开发步骤</h3>
     </div>
 
     
@@ -388,13 +405,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="站点总字数">313k</span>
+    <span title="站点总字数">315k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">4:44</span>
+    <span title="站点阅读时长">4:46</span>
   </span>
 </div>
 <div class="busuanzi-count">
