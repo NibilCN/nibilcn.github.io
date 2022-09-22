@@ -71,7 +71,7 @@
         <category>第1篇第1章 嵌入式Linux开发概述</category>
       </categories>
       <tags>
-        <tag>Linux 应用开发</tag>
+        <tag>嵌入式Linux</tag>
       </tags>
   </entry>
   <entry>
@@ -144,7 +144,8 @@
         <category>第1篇第5章 GPIO接口</category>
       </categories>
       <tags>
-        <tag>Linux 应用开发</tag>
+        <tag>嵌入式Linux</tag>
+        <tag>裸机</tag>
       </tags>
   </entry>
   <entry>
@@ -172,6 +173,7 @@
         <tag>C++</tag>
         <tag>面向对象编程</tag>
         <tag>设计模式</tag>
+        <tag>应用开发</tag>
       </tags>
   </entry>
   <entry>
@@ -206,6 +208,7 @@
         <tag>C++</tag>
         <tag>面向对象编程</tag>
         <tag>设计模式</tag>
+        <tag>应用开发</tag>
       </tags>
   </entry>
   <entry>
@@ -234,6 +237,7 @@
         <tag>C++</tag>
         <tag>面向对象编程</tag>
         <tag>设计模式</tag>
+        <tag>应用开发</tag>
       </tags>
   </entry>
   <entry>
@@ -429,7 +433,75 @@
         <category>第1篇第11章 通用异步收发器UART</category>
       </categories>
       <tags>
-        <tag>Linux 应用开发</tag>
+        <tag>嵌入式Linux</tag>
+        <tag>UART总线</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Oops信息解析</title>
+    <url>/2022/09/22/Oops%E4%BF%A1%E6%81%AF%E8%A7%A3%E6%9E%90/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>内核的Oops信息对于做嵌入式Linux开发的来说非常常见，在此单独划作一章。</p>
+<span id="more"></span>
+
+<h1 id="Oops信息及栈回溯"><a href="#Oops信息及栈回溯" class="headerlink" title="Oops信息及栈回溯"></a>Oops信息及栈回溯</h1><h2 id="Oops信息来源及格式"><a href="#Oops信息来源及格式" class="headerlink" title="Oops信息来源及格式"></a>Oops信息来源及格式</h2><p>Oops这个单词含义为“惊讶”，当内核出错时（比如访问非法地址）打印出来的信息被称为Oops信息。<br>Oops信息包含以下几部分内容。</p>
+<ol>
+<li>一段文本描述信息<br>比如类似<code>“Unable to handle kernel NULL pointer dereference at virtual address 00000000”</code>的信息，它说明了发生的是哪类错误。</li>
+<li>Oops信息的序号。<br>比如是第1次、第2次等。这些信息与下面类似，中括号内的数据表示序号。<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Internal error: Oops:805 [#1]</span><br></pre></td></tr></table></figure></li>
+<li>内核中加载的模块名称，也可能没有，以下面字样开头。<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Modules linked in:</span><br></pre></td></tr></table></figure></li>
+<li>发生错误的CPU序号，对于单处理器的系统，序号为0，比如：<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CPU: 0 Not tainted (2.6.22.6 #36)</span><br></pre></td></tr></table></figure></li>
+<li>发生错误时CPU的各个寄存器的值。</li>
+<li>当前进程的名字及进程ID，比如：<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Process swapper (pid:1,stack limit = 0xc0480258)</span><br></pre></td></tr></table></figure>
+并不是说发生错误的是这个进程，而是表示发生错误时，当前进程是它。错误可能发生在内核代码、驱动程序，也可能就是这个进程的错误。</li>
+<li>栈信息</li>
+<li>栈回溯信息，可以从中看出函数调用关系，形式如下：<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Backstrace:</span><br><span class="line">[&lt;c001a6f4&gt;] (s3c2410fb_probe + 0x0/0x560) from [&lt;c01bf4e8&gt;] (platform_drv_probe + 0x20/0x24)</span><br><span class="line">...</span><br></pre></td></tr></table></figure></li>
+<li>出错指令附近的指令的机器码，比如（出错指令在小括号里）：<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Code : e24cb004 e24dd010 e59f34e0 e3a07000 (e5873000)</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="配置内核使Oops信息的栈回溯信息更直观"><a href="#配置内核使Oops信息的栈回溯信息更直观" class="headerlink" title="配置内核使Oops信息的栈回溯信息更直观"></a>配置内核使Oops信息的栈回溯信息更直观</h2><p>Linux 2.6.22自身具备的调试功能，可以使得打印出的Oops信息更直观。通过Oops信息中PC寄存器的值可以知道出错指令的地址，通过栈回溯信息可以知道出错时的函数调用关系，根据这两点可以快速定位错误。<br>要让内核出错时能够快速打印栈回溯信息，<code>编译内核要增加“-fno-omit-frame-pointer”选项</code>，这可以通过<code>配置CONFIG_FRAME_POINTER</code>来实现。查看内核目录下的配置文件.config，确保CONFIG_FRAME_POINTER已经被定义，如果没有，执行“make menuconfig”命令重新配置内核。CONFIG_FRAME_POINTER有可能已经被其他配置项自动选上。</p>
+<h2 id="使用Oops信息调试内核的实例"><a href="#使用Oops信息调试内核的实例" class="headerlink" title="使用Oops信息调试内核的实例"></a>使用Oops信息调试内核的实例</h2><h3 id="获得Oops信息"><a href="#获得Oops信息" class="headerlink" title="获得Oops信息"></a>获得Oops信息</h3><p>刻意修改LCD驱动程序<code>drivers/video/s3c2410fb.c</code>，加入错误代码：在<code>s3c2410fb_probe</code>函数开头增加如下两行代码：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">int *ptest = NULL;</span><br><span class="line">*ptest = 0x1234;</span><br></pre></td></tr></table></figure>
+<p>重新编译内核，启动后会出错并打印如下Oops信息：<br><img src="/2022/09/22/Oops%E4%BF%A1%E6%81%AF%E8%A7%A3%E6%9E%90/1.jpeg" alt="img not found"><br><img src="/2022/09/22/Oops%E4%BF%A1%E6%81%AF%E8%A7%A3%E6%9E%90/2.jpeg" alt="img not found"></p>
+<h3 id="分析Oops信息"><a href="#分析Oops信息" class="headerlink" title="分析Oops信息"></a>分析Oops信息</h3><ol>
+<li><p>明确出错原因<br>由出错信息<code>“Unable to handle kernel NULL pointer dereference at virtual address 00000000”</code>可知内核是因为<code>非法地址访问出错，使用了空指针</code>。</p>
+</li>
+<li><p>根据栈回溯信息找出函数调用关系<br>内核崩溃时，可以从pc寄存器得知崩溃发生时的函数、出错指令。但是很多情况下，错误有可能是它的调用者引入的，所以找出函数的调用关系也很重要。<br>部分栈回溯信息如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">[&lt;c001a6f4&gt;] (s3c2410fb_probe + 0x0/0x560) from [&lt;c01bf4e8&gt;] (platform_drv_probe + 0x20/0x24)</span><br></pre></td></tr></table></figure>
+<p>这行信息分为两部分，表示后面的<code>platform_drv_probe</code>函数调用了前面的<code>s3c2410fb_probe</code>函数。<br>前半部分含义为：“c001a6f4”是<code>s3c2410fb_probe</code>函数首地址偏移0的地址，这个函数大小为0x560。<br>后半部分含义为：“c01bf4e8”是<code>paltform_drv_probe</code>函数首地址偏移0x20的地址，这个函数大小为0x24。<br>另外，后半部的“[<c01bf4e8>]”表示<code>s3c2410fb_probe</code>执行后的返回地址。<br>对于类似下面的栈回溯信息，其中r8-r4表示<code>driver_probe_device</code>函数刚被调用时这些寄存器的值。</c01bf4e8></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">[&lt;c01bd4c0&gt;] (driver_probe_device + 0x0/0x18c) from [&lt;c01bd788&gt;] (__driver_attach + 0x80/0xe0)</span><br><span class="line">r8:00000000 r7:c0389a3c r6:c01bd708 r5:c036256c r4:c0362644</span><br></pre></td></tr></table></figure>
+<p>从上面的栈回溯信息可以知道内核出错时的函数调用关系如下，最后在<code>s3c2410fb_probe</code>函数内部崩溃。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">do_exit -&gt;</span><br><span class="line">    kernel_init -&gt;</span><br><span class="line">        s3c2410fb_init -&gt;</span><br><span class="line">            platform_driver_register -&gt;</span><br><span class="line">                driver_register -&gt;</span><br><span class="line">                    bus_add_driver -&gt;</span><br><span class="line">                        driver_attch -&gt;</span><br><span class="line">                            bus_for_each_dev -&gt;</span><br><span class="line">                                __driver_attach -&gt;</span><br><span class="line">                                    driver_probe_device -&gt;</span><br><span class="line">                                        platform_drv_probe -&gt;</span><br><span class="line">                                            s3c2410fb_probe</span><br></pre></td></tr></table></figure></li>
+<li><p>根据pc寄存器的值确定出错位置<br>上述Oops信息中出错时的寄存器值如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">PC is at s3c2410fb_probe+0x18/0x560</span><br><span class="line">LR is at platform_drv_probe+0x20/0x24</span><br><span class="line">pc : [&lt;c001a70c&gt;] lr : [&lt;c01bf4e8&gt;] psr : a0000013</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p><code>“PC is at s3c2410fb_probe+0x18/0x560”表示出错指令为s3c2410fb_probe函数中偏移为0x18的指令。</code><br>“pc : [<c001a70c>]”表示出错指令的地址为c001a70c（十六进制）。</c001a70c></p>
+</li>
+<li><p>结合内核源代码和反汇编代码定位问题<br>先生成内核的反汇编代码<code>vmlinux.dis</code>，执行以下命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cd /work/system/linux-2.6.22.6</span><br><span class="line">arm-linux-objdump -D vmlinux &gt; vmlinux.dis</span><br></pre></td></tr></table></figure>
+<p>出错地址c001a70c附近的部分汇编代码如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">c001a6f4: &lt;s3c2410fb_probe&gt;:</span><br><span class="line">c001a6f4: e1a0c00d  mov ip, sp</span><br><span class="line">c001a6f8: e92ddff0  stmdb sp!, &#123;r4,r5,r6,r7,r8,r9,sl,fp,ip,lr,pc&#125;</span><br><span class="line">c001a6fc: e24cb004  sub fp, ip, #4; 0x4</span><br><span class="line">c001a700: e24dd010  sub sp, sp, #16; 0x10</span><br><span class="line">c001a704: e59f34e0  ldr r3, [pc, #1248]; c001abec&lt;.init + 0x1284c&gt;</span><br><span class="line">c001a708: e3a07000  mov r7, #0; 0x0</span><br><span class="line">c001a70c: e5873000  str r3, [r7] &lt;=========出错指令</span><br><span class="line">c001a710: e59030fc  ldr r3, [r0, #252]</span><br></pre></td></tr></table></figure>
+<p>出错指令为<code>“str r3, [r7]”</code>，它把r3寄存器的值放到内存中，内存地址为r7寄存器的值。根据Oops信息中的寄存器值可知：<code>r3为0x00001234，r7为0。0地址不可访问，所以出错</code>。<br><code>s3c2410fb_probe</code>函数的部分c代码如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">static int __init s3c2410fb_probe(struct platform_device *pdev)</span><br><span class="line">&#123;</span><br><span class="line">    struct s3c2410fb_info *info;</span><br><span class="line">    struct fb_info  *fb_info;</span><br><span class="line">    struct s3c2410fb_hw *mregs;</span><br><span class="line">    int ret;</span><br><span class="line">    int irq;</span><br><span class="line">    int i;</span><br><span class="line">    u32 lcdcon1;</span><br><span class="line"></span><br><span class="line">    int *ptest = NULL;</span><br><span class="line">    *ptest = 0x1234;</span><br><span class="line"></span><br><span class="line">    mach_info = pdev-&gt;dev.paltform_data;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>结合反汇编代码，很容易知道是“*ptest &#x3D; 0x1234;”导致错误，其中的ptest为空。<br>对于大多数情况，从反汇编代码定位到C代码并不容易，这需要较强的汇编程序阅读能力。通过栈回溯信息知道函数的调用关系，这已经可以帮助定位很多问题了。</p>
+</li>
+</ol>
+<h2 id="使用Oops的栈信息手工进行栈回溯"><a href="#使用Oops的栈信息手工进行栈回溯" class="headerlink" title="使用Oops的栈信息手工进行栈回溯"></a>使用Oops的栈信息手工进行栈回溯</h2><p>前面说过，从Oops信息的pc寄存器值可得知崩溃发生时的函数、出错指令。但是错误有可能是它的调用者引入的，所以还是要找出函数的调用关系。<br>由于内核配置了CONFIG_FRAME_POINTER，当出现Oops信息时，会打印栈回溯信息。如果内核没有配置CONFIG_FRAME_POINTER，这时可以自己分析栈信息，找到函数的调用关系。</p>
+<h3 id="栈的作用"><a href="#栈的作用" class="headerlink" title="栈的作用"></a>栈的作用</h3><p>一个程序包含代码段、数据段、BSS段、堆、栈；其中数据段用来存储初始值不为0的全局数据，BSS段用来存储初始值为0的全局数据，堆用于动态内存分配，栈用于实现函数调用、存储局部变量。<br>被调用函数在执行之前，它会将一些寄存器的值保存在栈中,其中包括返回地址寄存器lr。如果知道了所保存的lr寄存器的值，那就可以知道它的调用者是谁。在栈信息中，一个函数一个函数地往上找出所有保存的lr值，就可以知道各个调用函数，这就是栈回溯的原理。</p>
+<h3 id="栈回溯实例分析"><a href="#栈回溯实例分析" class="headerlink" title="栈回溯实例分析"></a>栈回溯实例分析</h3><p>仍以前面的LCD驱动程序为例，使用上面的Oops信息的栈信息进行分析，栈信息如下：<br><img src="/2022/09/22/Oops%E4%BF%A1%E6%81%AF%E8%A7%A3%E6%9E%90/3.jpeg" alt="img not found"></p>
+<ol>
+<li>根据pc寄存器值找到第一个函数，确定它的栈大小，确定调用函数。<br>从Oops信息可知pc值为c001a70c，使用它在内核反汇编程序<code>vmlinux.dis</code>中可以知道它位于<code>s3c2410fb_probe</code>函数内。<br>根据这个函数开始部分的汇编代码可以在知道栈的大小、lr返回值在栈中保存的位置，代码如下：<br><img src="/2022/09/22/Oops%E4%BF%A1%E6%81%AF%E8%A7%A3%E6%9E%90/4.jpeg" alt="img not found"><br>{r4,r5,r6,r7,r8,r9,sl,fp,ip,lr,pc}这11个寄存器都保存在栈中，指令“sub sp, sp, #16”又使得栈向下扩展了16字节，所以本函数的大小为（11 x 4 + 16）字节，即15个双字。<br>栈信息开始部分的15个数据就是本函数的栈内容，下面列出了它们所保存的寄存器。<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1e60:           c02b1f70  00000020  c03625d4  c036256c  c036256c  00000000  c0389a3c</span><br><span class="line">                                                        r4        r5        r6</span><br><span class="line">1e80: c0389a3c  c03c420c  c0024864  00000000  c0481eac  c0481ea0  c01bf4e8  c001a704</span><br><span class="line">      r7        r8        r9        sl        fp        ip        lr        pc</span><br></pre></td></tr></table></figure>
+其中lr值为c01bf4e8，表示函数s3c2410fb_probe执行完后的返回地址，它是调用函数中的地址。下面使用lr值再次重复本步骤的回溯过程。</li>
+<li>根据lr寄存器值找到调用函数，确定它的栈大小，确定上一级调用函数。<br>根据上步得到的lr值（c01bf4e8）， 在内核反汇编程序vmlinux.dis中可以知道它位于<code>platform_drv_probe</code>函数内。<br>根据这个函数开始部分的反汇编代码可以知道栈的大小、lr返回值在栈中保存的位置。代码如下：<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">c01bf4c8  &lt;platform_drv_probe&gt;:</span><br><span class="line">c01bf4c8:   e1a0c00d    mov ip, sp</span><br><span class="line">c01bf4cc:   e92dd800    stmdb sp!,  &#123;fp,ip,lr,pc&#125;</span><br><span class="line">...   </span><br><span class="line">c01bf4e8:   e89da800    ldmia sp!,  &#123;fp,sp,pc&#125;      //lr值（c01bf4e8）对应的指令</span><br></pre></td></tr></table></figure>
+{fp,ip,lr,pc}这4个寄存器都保存在栈中，本函数的栈大小为4个双字。Oops栈信息中，前一个函数s3c2410fb_probe的栈下面的4个数据就是函数platform_drv_probe的栈内容，如下所示：<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">lea0:   c0481ed0  c0481eb0  c01bd5a8  c01bf4d8</span><br><span class="line">        fp        ip        lr        pc  </span><br></pre></td></tr></table></figure>
+其中lr值为c01bd5a8，表示函数<code>platform_drv_probe</code>执行完后的返回地址，它是上一级调用函数中的地址。使用lr值，重复本步骤的查找过程，知道栈信息分析完毕或者再也无法分析，这样就可以找出所有的函数调用关系。<br>有些函数很简单，没有使用栈（sp在这个函数中没有吧变化），或者没有在栈中保存lr值。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>DEBUG</category>
+        <category>Linux Kernel</category>
+        <category>Oops信息解析</category>
+      </categories>
+      <tags>
+        <tag>嵌入式Linux</tag>
+        <tag>bug定位</tag>
       </tags>
   </entry>
   <entry>
@@ -592,6 +664,7 @@
       </categories>
       <tags>
         <tag>Linux Kernel</tag>
+        <tag>设备驱动</tag>
       </tags>
   </entry>
   <entry>
@@ -891,7 +964,8 @@ SDRAM K4S561632不支持CL&#x3D;1的情况，所以位[6:4]取值为0b010(CL &#x
         <category>第1篇第6章 存储控制器</category>
       </categories>
       <tags>
-        <tag>Linux 应用开发</tag>
+        <tag>嵌入式Linux</tag>
+        <tag>存储控制器</tag>
       </tags>
   </entry>
   <entry>
@@ -1344,7 +1418,8 @@ SDRAM K4S561632不支持CL&#x3D;1的情况，所以位[6:4]取值为0b010(CL &#x
         <category>第1篇第8章 NAND Flash控制器</category>
       </categories>
       <tags>
-        <tag>Linux 应用开发</tag>
+        <tag>嵌入式Linux</tag>
+        <tag>Flash</tag>
       </tags>
   </entry>
   <entry>
@@ -1562,7 +1637,8 @@ SDRAM K4S561632不支持CL&#x3D;1的情况，所以位[6:4]取值为0b010(CL &#x
         <category>第1篇第9章 中断体系结构</category>
       </categories>
       <tags>
-        <tag>Linux 应用开发</tag>
+        <tag>嵌入式Linux</tag>
+        <tag>中断</tag>
       </tags>
   </entry>
   <entry>
@@ -1741,7 +1817,8 @@ SDRAM K4S561632不支持CL&#x3D;1的情况，所以位[6:4]取值为0b010(CL &#x
         <category>第1篇第10章 系统时钟和定时器</category>
       </categories>
       <tags>
-        <tag>Linux 应用开发</tag>
+        <tag>嵌入式Linux</tag>
+        <tag>时钟</tag>
       </tags>
   </entry>
   <entry>
@@ -1974,7 +2051,8 @@ SDRAM K4S561632不支持CL&#x3D;1的情况，所以位[6:4]取值为0b010(CL &#x
         <category>第1篇第12章 IIC</category>
       </categories>
       <tags>
-        <tag>Linux 应用开发</tag>
+        <tag>嵌入式Linux</tag>
+        <tag>IIC总线</tag>
       </tags>
   </entry>
   <entry>
@@ -2246,7 +2324,9 @@ SDRAM K4S561632不支持CL&#x3D;1的情况，所以位[6:4]取值为0b010(CL &#x
         <category>第1篇第14章 ADC和TP接口</category>
       </categories>
       <tags>
-        <tag>Linux 应用开发</tag>
+        <tag>嵌入式Linux</tag>
+        <tag>ADC数模转化</tag>
+        <tag>Touchscreen</tag>
       </tags>
   </entry>
   <entry>
@@ -2341,30 +2421,6 @@ kgdb_io_opsj结构将在<code>kernel/kgdb.c</code>中被用到，这个结构封
 现在就可以使用GDB的命令控制内核的执行、进行调试了。比如输入n命令执行下一条指令，输入c命令全速运行，输出q命令退出。<br>为了避免每次启动arm-linux-gdb时手工设置串口、连接目标板，可以在内核目录建立一个名为“.gdbinit”文件，内容如下：<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set remotebaud 115200</span><br><span class="line">target remote /dev/ttyS0</span><br></pre></td></tr></table></figure></li>
 </ol>
 <h3 id="通过DDD调用arm-linux-gdb来调试内核（图形界面）"><a href="#通过DDD调用arm-linux-gdb来调试内核（图形界面）" class="headerlink" title="通过DDD调用arm-linux-gdb来调试内核（图形界面）"></a>通过DDD调用arm-linux-gdb来调试内核（图形界面）</h3><p>略</p>
-<h1 id="Oops信息及栈回溯"><a href="#Oops信息及栈回溯" class="headerlink" title="Oops信息及栈回溯"></a>Oops信息及栈回溯</h1><h2 id="Oops信息来源及格式"><a href="#Oops信息来源及格式" class="headerlink" title="Oops信息来源及格式"></a>Oops信息来源及格式</h2><p>Oops这个单词含义为“惊讶”，当内核出错时（比如访问非法地址）打印出来的信息被称为Oops信息。<br>Oops信息包含以下几部分内容。</p>
-<ol>
-<li>一段文本描述信息<br>比如类似“Unable to handle kernel NULL pointer dereference at virtual address 00000000”的信息，它说明了发生的是哪类错误。</li>
-<li>Oops信息的序号。<br>比如是第1次、第2次等。这些信息与下面类似，中括号内的数据表示序号。<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Internal error: Oops:805 [#1]</span><br></pre></td></tr></table></figure></li>
-<li>内核中加载的模块名称，也可能没有，以下面字样开头。<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Modules linked in:</span><br></pre></td></tr></table></figure></li>
-<li>发生错误的CPu序号，对于单处理器的系统，序号为0，比如：<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CPU: 0 Not tainted (2.6.22.6 #36)</span><br></pre></td></tr></table></figure></li>
-<li>发生错误时CPU的各个寄存器的值。</li>
-<li>当前进程的名字及进程ID，比如：<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Process swapper (pid:1,stack limit = 0xc0480258)</span><br></pre></td></tr></table></figure>
-并不是说发生错误的是这个进程，而是表示发生错误时，当前进程是它。错误可能发生在内核代码、驱动程序，也可能就是这个进程的错误。</li>
-<li>栈信息</li>
-<li>栈回溯信息，可以从中看出函数调用关系，形式如下：<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Backstrace:</span><br><span class="line">[&lt;c001a6f4&gt;] (s3c2410fb_probe + 0x0/0x560) from [&lt;c01bf4e8&gt;] (platform_drv_probe + 0x20/0x24)</span><br><span class="line">...</span><br></pre></td></tr></table></figure></li>
-<li>出错指令附近的指令的机器码，比如（出错指令在小括号里）：<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Code : e24cb004 e24dd010 e59f34e0 e3a07000 (e5873000)</span><br></pre></td></tr></table></figure></li>
-</ol>
-<h2 id="配置内核使Oops信息的栈回溯信息更直观"><a href="#配置内核使Oops信息的栈回溯信息更直观" class="headerlink" title="配置内核使Oops信息的栈回溯信息更直观"></a>配置内核使Oops信息的栈回溯信息更直观</h2><p>Linux 2.6.22自身具备的调试功能，可以使得打印出的Oops信息更直观。通过Oops信息中PC寄存器的值可以知道出错指令的地址，通过栈回溯信息可以知道出错时的函数调用关系，根据这两点可以快速定位错误。<br>要让内核出错时能够快速打印栈回溯信息，编译内核要增加“-fno-omit-frame-pointer”选项，这可以通过配置CONFIG_FRAME_POINTER来实现。查看内核目录下的配置文件.config，确保CONFIG_FRAME_POINTER已经被定义，如果没有，执行“make menuconfig”命令重新配置内核。CONFIG_FRAME_POINTER有可能已经被其他配置项自动选上。</p>
-<h2 id="使用Oops信息调试内核的实例"><a href="#使用Oops信息调试内核的实例" class="headerlink" title="使用Oops信息调试内核的实例"></a>使用Oops信息调试内核的实例</h2><h3 id="获得Oops信息"><a href="#获得Oops信息" class="headerlink" title="获得Oops信息"></a>获得Oops信息</h3><p>刻意修改LCD驱动程序<code>drivers/video/s3c2410fb.c</code>，加入错误代码：在s3c2410fb_probe函数开头增加如下两行代码：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">int *ptest = NULL;</span><br><span class="line">*ptest = 0x1234;</span><br></pre></td></tr></table></figure>
-<p>重新编译内核，启动后会出错并打印如下Oops信息：<br><img src="/2022/09/20/Linux%E5%86%85%E6%A0%B8%E8%B0%83%E8%AF%95%E6%8A%80%E6%9C%AF/2.jpeg" alt="img not found"><br><img src="/2022/09/20/Linux%E5%86%85%E6%A0%B8%E8%B0%83%E8%AF%95%E6%8A%80%E6%9C%AF/3.jpeg" alt="img not found"></p>
-<h3 id="分析Oops信息"><a href="#分析Oops信息" class="headerlink" title="分析Oops信息"></a>分析Oops信息</h3><ol>
-<li>明确出错原因<br>由出错信息“Unable to handle kernel NULL pointer dereference at virtual address 00000000”可知内核是因为非法地址访问出错，使用了空指针。</li>
-<li>根据栈回溯信息找出函数调用关系<br>内核崩溃时，可以从pc寄存器得知崩溃发生时的函数、出错指令。但是很多情况下，错误有可能是它的调用者引入的，所以找出函数的调用关系也很重要。<br>部分栈回溯信息如下：<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">[&lt;c001a6f4&gt;] (s3c2410fb_probe + 0x0/0x560) from [&lt;c01bf4e8&gt;] (platform_drv_probe + 0x20/0x24)</span><br></pre></td></tr></table></figure>
-这行信息分为两部分，表示后面的platform_drv_probe函数调用了前面的s3c2410fb_probe函数。<br>前半部分含义为：“c001a6f4”是s3c2410fb_probe函数首地址偏移0的地址，这个函数大小为0x560。<br>后半部分含义为：“c01bf4e8”是paltform_drv_probe函数首地址偏移0x20的地址，这个函数大小为0x24。<br>另外，后半部的“[<c01bf4e8>]”表示s3c2410fb_probe执行后的返回地址。<br>对于类似下面的栈回溯信息，其中r8-r4表示driver_probe_device函数刚被调用时这些寄存器的值。<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">[&lt;c01bd4c0&gt;] (driver_probe_device + 0x0/0x18c) from [&lt;c01bd788&gt;] (__driver_attach + 0x80/0xe0)</span><br><span class="line">r8:00000000 r7:c0389a3c r6:c01bd708 r5:c036256c r4:c0362644</span><br></pre></td></tr></table></figure>
-从上面的栈回溯信息可以知道内核出错时的函数调用关系如下，最后在s3c2410fb_probe函数内部崩溃。<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">do_exit -&gt;</span><br><span class="line">    kernel_init -&gt;</span><br><span class="line">        s3c2410fb_init -&gt;</span><br><span class="line">            platform_driver_register -&gt;</span><br><span class="line">                driver_register -&gt;</span><br><span class="line">                    bus_add_driver -&gt;</span><br><span class="line">                        driver_attch -&gt;</span><br><span class="line">                            bus_for_each_dev -&gt;</span><br><span class="line">                                __driver_attach -&gt;</span><br><span class="line">                                    driver_probe_device -&gt;</span><br><span class="line">                                        platform_drv_probe -&gt;</span><br><span class="line">                                            s3c2410fb_probe</span><br></pre></td></tr></table></figure></c01bf4e8></li>
-<li>根据pc寄存器的值确定出错位置</li>
-</ol>
 ]]></content>
       <categories>
         <category>学习</category>
@@ -2373,7 +2429,8 @@ kgdb_io_opsj结构将在<code>kernel/kgdb.c</code>中被用到，这个结构封
         <category>第1篇第18章 Linux内核调试技术</category>
       </categories>
       <tags>
-        <tag>Linux 应用开发</tag>
+        <tag>嵌入式Linux</tag>
+        <tag>Linux Debug</tag>
       </tags>
   </entry>
   <entry>
@@ -2860,7 +2917,7 @@ ldm和stm属于批量内存访问指令，只用一条指令就可以读写多�
         <category>第1篇第3章 嵌入式编程基础知识</category>
       </categories>
       <tags>
-        <tag>Linux 应用开发</tag>
+        <tag>嵌入式Linux</tag>
       </tags>
   </entry>
   <entry>
@@ -3138,7 +3195,8 @@ mmu_tlb_base被定义为unsigned long 指针，所指向的内存为4字节，�
         <category>第1篇第7章 MMU</category>
       </categories>
       <tags>
-        <tag>Linux 应用开发</tag>
+        <tag>嵌入式Linux</tag>
+        <tag>MMU</tag>
       </tags>
   </entry>
   <entry>
@@ -3986,7 +4044,8 @@ mmu_tlb_base被定义为unsigned long 指针，所指向的内存为4字节，�
         <category>第1篇第13章 LCD控制器</category>
       </categories>
       <tags>
-        <tag>Linux 应用开发</tag>
+        <tag>嵌入式Linux</tag>
+        <tag>LCD</tag>
       </tags>
   </entry>
   <entry>
@@ -4513,7 +4572,9 @@ mmu_tlb_base被定义为unsigned long 指针，所指向的内存为4字节，�
         <category>第1篇第17章 构建Linux根文件系统</category>
       </categories>
       <tags>
-        <tag>Linux 应用开发</tag>
+        <tag>嵌入式Linux</tag>
+        <tag>根文件系统</tag>
+        <tag>Rootfs移植</tag>
       </tags>
   </entry>
   <entry>
@@ -5206,7 +5267,8 @@ mmu_tlb_base被定义为unsigned long 指针，所指向的内存为4字节，�
         <category>第1篇第16章 移植Linux内核</category>
       </categories>
       <tags>
-        <tag>Linux 应用开发</tag>
+        <tag>嵌入式Linux</tag>
+        <tag>Linux移植</tag>
       </tags>
   </entry>
   <entry>
@@ -5753,7 +5815,8 @@ APPEND维持原值“no”，所以config.h被重新建立，它的内容如下�
         <category>第1篇第15章 移植U-Boot</category>
       </categories>
       <tags>
-        <tag>Linux 应用开发</tag>
+        <tag>嵌入式Linux</tag>
+        <tag>U-Boot移植</tag>
       </tags>
   </entry>
 </search>
