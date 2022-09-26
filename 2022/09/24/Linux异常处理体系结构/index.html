@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":false,"version":"8.12.2","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"mac"},"bookmark":{"enable":true,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="嵌入式Linux设备驱动开发之Linux异常处理体系结构 《嵌入式Linux应用完全开发手册》第4篇第20章总结归纳">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux异常处理体系结构">
+<meta property="og:url" content="http://example.com/2022/09/24/Linux%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/index.html">
+<meta property="og:site_name" content="Laugh Tale">
+<meta property="og:description" content="嵌入式Linux设备驱动开发之Linux异常处理体系结构 《嵌入式Linux应用完全开发手册》第4篇第20章总结归纳">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2022/09/24/Linux%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/1.jpeg">
+<meta property="og:image" content="http://example.com/2022/09/24/Linux%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/2.jpeg">
+<meta property="article:published_time" content="2022-09-24T02:08:23.000Z">
+<meta property="article:modified_time" content="2022-09-24T02:08:23.000Z">
+<meta property="article:author" content="Nibil">
+<meta property="article:tag" content="嵌入式Linux">
+<meta property="article:tag" content="Linux Driver">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2022/09/24/Linux%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/1.jpeg">
+
+
+<link rel="canonical" href="http://example.com/2022/09/24/Linux%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":"","permalink":"http://example.com/2022/09/24/Linux%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/","path":"2022/09/24/Linux异常处理体系结构/","title":"Linux异常处理体系结构"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Linux异常处理体系结构 | Laugh Tale</title>
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+  <!--pjax：防止跳转页面音乐暂停-->
+  <script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.js"></script>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Laugh Tale</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">A Nibil's Sharing Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%AC%E7%AB%A0%E7%9B%AE%E6%A0%87"><span class="nav-number">1.</span> <span class="nav-text">本章目标</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0"><span class="nav-number">2.</span> <span class="nav-text">Linux异常处理体系结构概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E7%9A%84%E5%B1%82%E6%AC%A1%E7%BB%93%E6%9E%84"><span class="nav-number">2.1.</span> <span class="nav-text">Linux异常处理的层次结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%82%E5%B8%B8%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="nav-number">2.1.1.</span> <span class="nav-text">异常的作用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux%E5%86%85%E6%A0%B8%E5%AF%B9%E5%BC%82%E5%B8%B8%E7%9A%84%E8%AE%BE%E7%BD%AE"><span class="nav-number">2.1.2.</span> <span class="nav-text">Linux内核对异常的设置</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#trap-init%E5%87%BD%E6%95%B0%E5%88%86%E6%9E%90"><span class="nav-number">2.1.2.1.</span> <span class="nav-text">trap_init函数分析</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#init-IRQ-%E5%87%BD%E6%95%B0%E5%88%86%E6%9E%90"><span class="nav-number">2.1.2.2.</span> <span class="nav-text">init_IRQ 函数分析</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E7%9A%84%E5%BC%82%E5%B8%B8"><span class="nav-number">2.2.</span> <span class="nav-text">常见的异常</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux-%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84"><span class="nav-number">3.</span> <span class="nav-text">Linux 中断处理体系结构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">3.1.</span> <span class="nav-text">中断处理体系结构的初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84"><span class="nav-number">3.1.1.</span> <span class="nav-text">中断处理体系结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96-1"><span class="nav-number">3.1.2.</span> <span class="nav-text">中断处理体系结构的初始化</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%A8%E6%88%B7%E6%B3%A8%E5%86%8C%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86%E5%87%BD%E6%95%B0%E7%9A%84%E8%BF%87%E7%A8%8B"><span class="nav-number">3.2.</span> <span class="nav-text">用户注册中断处理函数的过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%AD%E6%96%AD%E7%9A%84%E5%A4%84%E7%90%86%E8%BF%87%E7%A8%8B"><span class="nav-number">3.3.</span> <span class="nav-text">中断的处理过程</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Nibil</p>
+  <div class="site-description" itemprop="description">A Nibil's Sharing Blog</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/NibilCN" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;NibilCN" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-inner">
+      <!-- require APlayer -->
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css">
+      <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
+      <!-- require MetingJS -->
+      <script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+      <!--网易云-->   
+      <meting-js
+        server="netease"
+        id="7593069088"
+        type="playlist" 
+        mini="false"
+        fixed="false"
+        list-folded="true"
+        autoplay="true"
+        volume="0.4"
+        theme="#FADFA3"
+        order="random"
+        loop="all"
+        preload="auto"
+        mutex="true">
+      </meting-js>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/NibilCN" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/09/24/Linux%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Nibil">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Laugh Tale">
+      <meta itemprop="description" content="A Nibil's Sharing Blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Linux异常处理体系结构 | Laugh Tale">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux异常处理体系结构
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-09-24 10:08:23" itemprop="dateCreated datePublished" datetime="2022-09-24T10:08:23+08:00">2022-09-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">学习</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/" itemprop="url" rel="index"><span itemprop="name">书籍</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BA%94%E7%94%A8%E5%AE%8C%E5%85%A8%E5%BC%80%E5%8F%91%E6%89%8B%E5%86%8C/" itemprop="url" rel="index"><span itemprop="name">嵌入式Linux应用完全开发手册</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BA%94%E7%94%A8%E5%AE%8C%E5%85%A8%E5%BC%80%E5%8F%91%E6%89%8B%E5%86%8C/%E7%AC%AC4%E7%AF%87%E7%AC%AC20%E7%AB%A0-Linux%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/" itemprop="url" rel="index"><span itemprop="name">第4篇第20章 Linux异常处理体系结构</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>9.7k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>9 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>嵌入式Linux设备驱动开发之Linux异常处理体系结构</p>
+<p>《嵌入式Linux应用完全开发手册》第4篇第20章总结归纳</p>
+<span id="more"></span>
+
+<h1 id="本章目标"><a href="#本章目标" class="headerlink" title="本章目标"></a>本章目标</h1><ol>
+<li>了解Linux异常处理体系结构</li>
+<li>掌握Linux中断处理体系结构，了解几种重要的数据结构</li>
+<li>学习中断处理函数的注册、处理、卸载流程</li>
+<li>掌握在驱动程序中使用中断的方法</li>
+</ol>
+<h1 id="Linux异常处理体系结构概述"><a href="#Linux异常处理体系结构概述" class="headerlink" title="Linux异常处理体系结构概述"></a>Linux异常处理体系结构概述</h1><h2 id="Linux异常处理的层次结构"><a href="#Linux异常处理的层次结构" class="headerlink" title="Linux异常处理的层次结构"></a>Linux异常处理的层次结构</h2><p>内核的中断处理结构有很好的扩充性，并适当屏蔽了一些实现细节。但是开发人员一个深入“黑盒子”了解其中的实现原理。</p>
+<h3 id="异常的作用"><a href="#异常的作用" class="headerlink" title="异常的作用"></a>异常的作用</h3><p>异常，就是可以打断CPU正常运行流程的一些事情，比如外部中断、未定义的指令、视图修改只读的数据、执行swi（软中断）指令等。当这些事情发生时，CPU暂停当前的程序，先处理异常事件，然后再继续执行被中断地程序。操作系统中经常通过异常来完成一些特定地功能。</p>
+<ol>
+<li>当CPU执行未定义的机器指令将触发“未定义指令异常”，操作系统可以利用这个特点使用一些自定义的机器指令，它们在异常处理函数中实现。</li>
+<li>可以将一块数据设为只读的，然后提供给多个进程使用，这样可以节省内存。当某个进程视图修改其中的数据时，将触发“数据访问中止异常”，在异常处理函数中将这块数据复制出一份可写的副本，提供给这个进程使用。</li>
+<li>当用户程序试图读写的数据或执行的指令不在内存中，也会触发一个“数据访问中止异常”或“指令预取中止异常”，在异常处理函数中将这些数据或指令读入内存（内存不足时还可以将不使用的数据、指令换出内存），然后重新执行被中断的程序。这样可以节省内存，还使得操作系统可以运行这类程序：它们使用的内存远大于实际的物理内存。</li>
+<li>当程序使用不对齐的地址访问内存时，也会触发“数据访问中止异常”，在异常处理程序中先使用多个对齐的地址读出数据；对于读操作，从中选取数据组合好后返回给被中断的程序；对于写操作，修改其中的部分数据后再写入内存。这使得程序（特别是应用程序）不用考虑地址对齐的问题。</li>
+<li>应用程序可以通过“swi”指令触发“swi异常”，操作系统在swi异常处理函数中实现各种系统调用。</li>
+</ol>
+<h3 id="Linux内核对异常的设置"><a href="#Linux内核对异常的设置" class="headerlink" title="Linux内核对异常的设置"></a>Linux内核对异常的设置</h3><p>内核在<code>start_kernel</code>函数中调用<code>trap_init</code>、<code>init_IRQ</code>两个函数来设置异常的处理函数。</p>
+<h4 id="trap-init函数分析"><a href="#trap-init函数分析" class="headerlink" title="trap_init函数分析"></a>trap_init函数分析</h4><p><code>trap_init</code>函数（<code>arch/arm/kernel/trap.c</code>）被用来设置各种异常的处理向量，包括中断向量。所谓向量，就是一些被安放在固定位置的代码，当发生异常时，CPU会自动执行这些固定位置上的指令。ARM架构的CPU的异常向量基址可以是0x00000000，也可以是0xffff0000，Linux内核使用后者。<code>trap_init</code>函数将异常向量复制到0xffff0000处，部分代码如下:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> __init <span class="title function_">trap_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">...</span><br><span class="line">    <span class="built_in">memcpy</span>((<span class="type">void</span> *)vectors,__vectors_start,__vectors_end - __vectors-start);</span><br><span class="line">    <span class="built_in">memcpy</span>((<span class="type">void</span> *)vectors + <span class="number">0x200</span>,__stubs_start,__stubs_end - __stubs_start);</span><br><span class="line">...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>第4行中，vectors等于0xffff0000。地址__vectors_start-_vectors_end之间的代码就是异常向量，在<code>arch/arm/kernel/entry-armv.S</code>中定义，它们被复制到地址0xffff0000处。<br>异常向量的代码很简单，它们只是一些跳转指令。发生异常时，CPU自动执行这些指令，跳转去执行更复杂的代码，比如保存被中断程序的执行环境，调用异常处理函数，恢复被中断程序的执行环境并重新运行。这些“更复杂的代码”在地址__stubs_start-__stubs_end之间，它们在<code>arch/arm/kernel/entry-armv.S</code>中定义。第5行将它们复制到地址0xffff0000+0x200处。<br>异常向量跳去执行的代码都是使用汇编写的，为给读者一个形象概念，下面讲解部分代码，他们在<code>arch/zarm/kernel/entry-armv.S</code>中。<br>异常向量的代码如下，其中的“stubs_offset”用来重新定位跳转的位置（向量被复制到地址0xffff0000处，跳转的目的代码被复制到地址0xffff0000+0x200处）。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">	.equ	stubs_offset, __vectors_start + 0x200 - __stubs_start</span><br><span class="line"></span><br><span class="line">	.globl	__vectors_start</span><br><span class="line">__vectors_start:</span><br><span class="line">	swi	SYS_ERROR0                              //复位时，CPU将执行这条指令</span><br><span class="line">	b	vector_und + stubs_offset               //未定义异常时，CPU将执行这条指令</span><br><span class="line">	ldr	pc, .LCvswi + stubs_offset              //swi异常</span><br><span class="line">	b	vector_pabt + stubs_offset              //指令预取中止</span><br><span class="line">	b	vector_dabt + stubs_offset              //数据访问中止</span><br><span class="line">	b	vector_addrexcptn + stubs_offset        //没有用到</span><br><span class="line">	b	vector_irq + stubs_offset               //irq异常</span><br><span class="line">	b	vector_fiq + stubs_offset               //fiq异常</span><br><span class="line"></span><br><span class="line">	.globl	__vectors_end</span><br><span class="line">__vectors_end:</span><br></pre></td></tr></table></figure>
+<p>其中的vector_und、vector_pabt等表示要跳转去执行的代码。以vector_und为例，它仍在<code>arch/arm/kernel/entry-armv.S</code>中，通过vector_stub宏来定义，代码如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">vector_stub	und, UND_MODE</span><br><span class="line"></span><br><span class="line">.long	__und_usr			    @  0 (USR_26 / USR_32) 在用户模式执行了未定义的指令</span><br><span class="line">.long	__und_invalid			@  1 (FIQ_26 / FIQ_32) 在FIQ模式执行了未定义的指令</span><br><span class="line">.long	__und_invalid			@  2 (IRQ_26 / IRQ_32) 在IRQ模式执行了未定义的指令</span><br><span class="line">.long	__und_svc			    @  3 (SVC_26 / SVC_32) 在管理模式执行了未定义的指令</span><br><span class="line">.long	__und_invalid			@  4</span><br><span class="line">.long	__und_invalid			@  5</span><br><span class="line">.long	__und_invalid			@  6</span><br><span class="line">.long	__und_invalid			@  7</span><br><span class="line">.long	__und_invalid			@  8</span><br><span class="line">.long	__und_invalid			@  9</span><br><span class="line">.long	__und_invalid			@  a</span><br><span class="line">.long	__und_invalid			@  b</span><br><span class="line">.long	__und_invalid			@  c</span><br><span class="line">.long	__und_invalid			@  d</span><br><span class="line">.long	__und_invalid			@  e</span><br><span class="line">.long	__und_invalid			@  f</span><br></pre></td></tr></table></figure>
+<p>第1行的vector_stub是一个宏，它根据后面的参数“und,UND_MODE”定义了以“vector_und”为标号的一段代码。vector_stub宏的功能为：计算处理完异常后的返回地址、保存一些寄存器（比如r0、lr、spsr），然后进入管理模式，最后根据被中断的工作模式调用第3-18行中的某个跳转分支。当发生异常时，CPU会根据异常的类型进入某个工作模式，但是很快vector_stub宏又会强制CPU进入管理模式，在管理模式下进行后续处理，这种方法简化了程序设计，使得异常发生前的工作模式要么是用户模式，要么是管理模式。<br>第3-18行中的代码表示在各个工作模式中执行未定义指令时，发生的异常的处理分支。比如第3行的<code>__und_usr</code>表示在用户模式下执行未定义指令时，所发生的未定义异常将由它来处理；第6行的<code>__und_svc</code>表示在管理模式下执行未定义指令，所发生的异常将由它来处理。在其他工作模式下不可能发生未定义指令异常，否则使用<code>__und_invalid</code>来处理错误。ARM架构CPU中使用4位数据表示工作模式（目前只有7种工作模式），所有共有16个跳转分支。<br>不同的跳转分支（比如<code>__und_usr</code>、<code>__und_svc</code>）只是在它们的入口处（比如保存被中断程序的寄存器）稍有差别，后续的处理大体相同，都是调用相应的C函数。比如未定义指令异常发生时，最终会调用C函数<code>do_undefinstr</code>函数进行处理。各种的异常C处理函数可以分为5类，它们分布在不同的文件种。</p>
+<ol>
+<li>在<code>arch/arm/kernel/traps.c</code>中<br>未定义指令异常的C处理函数在这个文件中定义，总入口函数为<code>do_undefinstr</code>。</li>
+<li>在<code>arch/arm/mm/fault.c</code>中<br>与内存访问相关的异常的C处理函数在这个文件中定义，比如数据访问中止异常、指令预取中止异常。总入口函数为<code>do_DataAbort</code>、<code>do_PrefetchAbort</code>。</li>
+<li>在<code>arch/arm/mm/irq.c</code>中<br>中断处理函数的这个文件中定义，总入口函数为<code>asm_do_IRQ</code>，它调用其他文件注册的中断处理函数。</li>
+<li>在<code>arch/arm/kernel/calls.S</code>中<br>在这个文件中，swi异常的处理函数被组织成一个表格；swi指令机器码的位[23:0]被用来作为索引。这样，通过不同的“swi index”指令就可以调用不同的swi异常处理函数，它们被称为系统调用，比如<code>sys_open、sys_read、sys_write</code>。</li>
+<li>没有使用的异常<br>在Linux 2.6.22.6中没有使用FIQ异常。<br><code>trap_init</code>函数搭建了各类异常的处理框架。当发生异常时，各种C处理函数会被调用。这些C函数还要进一步细分异常发生的情况，分别调用更具体的处理函数。比如未定义指令异常的C处理函数总入口为<code>do_undefinstr</code>，这个函数里还要根据具体的未定义指令调用它的模拟函数。<br>除了中断外，内核已经为各类异常准备了细致而完备的处理函数，比如swi异常处理函数为每一种系统调用都准备了一个<code>sys_</code>开头函数，数据访问中止异常的处理函数为对齐错误、页权限错误、段翻译错误等具体异常都准备了相应的处理函数。这些异常的处理函数与开发板的配置无关，基本不用修改。</li>
+</ol>
+<h4 id="init-IRQ-函数分析"><a href="#init-IRQ-函数分析" class="headerlink" title="init_IRQ 函数分析"></a>init_IRQ 函数分析</h4><p>中断也是一种异常，之所以把它单独提出来，是因为中断的处理与具体开发板密切相关，除一些必须、共用的中断（系统时钟中断、片内外设UART中断）外，必须由驱动开发者提供处理函数。内核提炼出中断处理的共性，搭建了一个非常容易扩充的中断处理体系。<br>init_IRQ函数（代码在<code>arch/arm/kernel/irq.c</code>中）被用来初始化中断的处理框架，设置各种中断的默认处理函数。当发生中断时，中断总入口函数<code>asm_do_IRQ</code>就可以调用这些函数作进一步处理。<br>下图为异常处理体结构：<br><img src="/2022/09/24/Linux%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/1.jpeg" alt="img not found"></p>
+<h2 id="常见的异常"><a href="#常见的异常" class="headerlink" title="常见的异常"></a>常见的异常</h2><p>ARM架构Linux内核中，只用到了5种异常，在它们的处理函数中进一步细分发生这些异常的原因。</p>
+<table>
+<thead>
+<tr>
+<th>异常总类</th>
+<th>异常细分</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>未定义指令异常</td>
+<td>ARM 指令break <br> Thumb 指令break<br>ARM 指令mrc</td>
+</tr>
+<tr>
+<td>指令预取中止异常</td>
+<td>取值时地址翻译错误（translation fault），系统中还没有为这个指令建立映射关系</td>
+</tr>
+<tr>
+<td>数据访问中止异常</td>
+<td>访问数据时段地址翻译错误（section translation fault）<br>访问数据时页地址翻译错误（page translation fault）<br>地址对齐错误<br>段权限错误（section permission fault）<br>页权限错误（page permission fault）<br>…</td>
+</tr>
+<tr>
+<td>中断异常</td>
+<td>GPIO中断、WDT中断、定时器中断、USB中断、UART中断等</td>
+</tr>
+<tr>
+<td>swi异常</td>
+<td>各类下图调用 <code>sys_open、sys_read、sys_write</code>等</td>
+</tr>
+</tbody></table>
+<h1 id="Linux-中断处理体系结构"><a href="#Linux-中断处理体系结构" class="headerlink" title="Linux 中断处理体系结构"></a>Linux 中断处理体系结构</h1><h2 id="中断处理体系结构的初始化"><a href="#中断处理体系结构的初始化" class="headerlink" title="中断处理体系结构的初始化"></a>中断处理体系结构的初始化</h2><h3 id="中断处理体系结构"><a href="#中断处理体系结构" class="headerlink" title="中断处理体系结构"></a>中断处理体系结构</h3><p>Linux内核将所有的中断统一编号，使用一个irq_desc结构数组来描述这些中断：每个数组项对应一个中断（也有可能是一组中断，它们共用相同的中断号），里面记录了中断的名称、中断状态、中断标记（比如中断类型、是否共享中断等），并提供了中断的底层硬件访问函数（清除、屏蔽、使能中断），提供了这个中断的处理函数入口，通过它可以调用用户注册的中断处理函数。<br>通过irq_desc结构数组就可以了解中断处理体系结构，irq_desc结构的数组类型在<code>include/linux/irq.h</code>中定义，如下所示：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">irq_desc</span> &#123;</span></span><br><span class="line">	<span class="type">irq_flow_handler_t</span>	handle_irq; <span class="comment">//当前中断的处理函数入口</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">irq_chip</span>		*<span class="title">chip</span>;</span>      <span class="comment">//底层的硬件访问</span></span><br><span class="line">...</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">irqaction</span>	*<span class="title">action</span>;</span>	<span class="comment">/* 用户提供的中断处理函数链表 */</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span>		status;		<span class="comment">/* IRQ状态 */</span></span><br><span class="line">...</span><br><span class="line">	<span class="type">const</span> <span class="type">char</span>		*name;          <span class="comment">//中断名称</span></span><br><span class="line">&#125; ____cacheline_internodealigned_in_smp;</span><br></pre></td></tr></table></figure>
+<p>第2行的<code>handle_irq</code>是这个或这组中断的处理函数入口。发生中断时，总入口函数<code>asm_do_IRQ</code>将根据中断号调用相应<code>irq_desc</code>数组项中的<code>handle_irq</code>。<code>handle_irq</code>使用chip结构中的函数来清除、屏蔽或者重新使能中断，还一一调用用户在actions链表中注册的中断处理函数。<br>第3行的irq_chip结构类型也是在<code>include/linux/irq.h</code>中定义，其中的成员大多用于操作底层硬件，比如设置寄存器以屏蔽中断、使能中断、清除中断等。这个结构的部分成员如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">irq_chip</span> &#123;</span></span><br><span class="line">	<span class="type">const</span> <span class="type">char</span>	*name;</span><br><span class="line">	<span class="type">unsigned</span> <span class="title function_">int</span>	<span class="params">(*startup)</span><span class="params">(<span class="type">unsigned</span> <span class="type">int</span> irq)</span>;           <span class="comment">//启动中断，如果不设置，缺省为“enable”</span></span><br><span class="line">	<span class="type">void</span>		(*shutdown)(<span class="type">unsigned</span> <span class="type">int</span> irq);              <span class="comment">//关闭中断，如果不设置，缺省为“disable”</span></span><br><span class="line">	<span class="type">void</span>		(*enable)(<span class="type">unsigned</span> <span class="type">int</span> irq);                <span class="comment">//使能中断，如果不设置，缺省为“unmask”</span></span><br><span class="line">	<span class="type">void</span>		(*disable)(<span class="type">unsigned</span> <span class="type">int</span> irq);               <span class="comment">//禁止中断，如果不设置，缺省为“mask”</span></span><br><span class="line"></span><br><span class="line">	<span class="type">void</span>		(*ack)(<span class="type">unsigned</span> <span class="type">int</span> irq);                   <span class="comment">//响应中断，通常是清除当前中断使得可以接收下一个中断</span></span><br><span class="line">	<span class="type">void</span>		(*mask)(<span class="type">unsigned</span> <span class="type">int</span> irq);                  <span class="comment">//屏蔽中断源</span></span><br><span class="line">	<span class="type">void</span>		(*mask_ack)(<span class="type">unsigned</span> <span class="type">int</span> irq);              <span class="comment">//屏蔽和响应中断</span></span><br><span class="line">	<span class="type">void</span>		(*unmask)(<span class="type">unsigned</span> <span class="type">int</span> irq);                <span class="comment">//开启中断源</span></span><br><span class="line">...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>irq_desc结构中第5行的irqaction结构类型在<code>include/linux/interrupt.h</code>中定义。用户注册的每个中断处理函数用一个irqaction结构来表示，一个中断（比如共享中断）可以有多个处理函数，它们的irqaction结构链接成一个链表，以action为表头。irq_desc结构定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">irqaction</span> &#123;</span></span><br><span class="line">	<span class="type">irq_handler_t</span> handler;              <span class="comment">//用户注册的中断处理函数</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> flags;                <span class="comment">//中断标志，比如是否共享中断、电平触发还是边沿触发</span></span><br><span class="line">	<span class="type">cpumask_t</span> mask;                     <span class="comment">//用于SMP（对称多处理系统）</span></span><br><span class="line">	<span class="type">const</span> <span class="type">char</span> *name;                   <span class="comment">//用户注册的中断名字，“cat /proc/interrupts”时可以看到</span></span><br><span class="line">	<span class="type">void</span> *dev_id;                       <span class="comment">//用户传给上面的handler的参数，还可以用来区分共享中断</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">irqaction</span> *<span class="title">next</span>;</span>             </span><br><span class="line">	<span class="type">int</span> irq;                            <span class="comment">//中断号</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">proc_dir_entry</span> *<span class="title">dir</span>;</span>         </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>irq_desc结构数组、它的成员<code>struct irq_chip  *chip</code>、<code>struct irqaction   *action</code>，这3种数据结构成了中断处理体系的框架。这3者的关系如图所示：<br><img src="/2022/09/24/Linux%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/2.jpeg" alt="img not found"><br>中断的处理流程如下：</p>
+<ol>
+<li>发生中断时，CPU执行异常向量vector_irq的代码</li>
+<li>在vector_irq里面，最终会调用中断处理的总入口函数的代码</li>
+<li><code>asm_do_IRQ</code>根据中断号调用irq_desc数组项中的<code>handle_irq</code></li>
+<li><code>handle_irq</code>会使用chip成员中的函数来设置硬件，比如清除中断、禁止中断、重新使能中断。</li>
+<li><code>handle_irq</code>逐个调用用户在action链表中注册的处理函数<br>可见，中断体系结构的初始化就是构造这些数据结构，比如irq_desc数组项中的<code>handle_irq</code>、chip等成员；用户注册中断时就是构造action链表；用户卸载中断时就是从action链表中去除不需要的项。</li>
+</ol>
+<h3 id="中断处理体系结构的初始化-1"><a href="#中断处理体系结构的初始化-1" class="headerlink" title="中断处理体系结构的初始化"></a>中断处理体系结构的初始化</h3><p><code>init_IRQ</code>函数被用来初始化中断处理体系结构，代码在<code>arch/arm/kernel/irq.c</code>中。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> __init <span class="title function_">init_IRQ</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">int</span> irq;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (irq = <span class="number">0</span>; irq &lt; NR_IRQS; irq++)</span><br><span class="line">		irq_desc[irq].status |= IRQ_NOREQUEST | IRQ_NOPROBE;</span><br><span class="line">...</span><br><span class="line">	init_arch_irq();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>第5-6行初始化irq_desc结构数组中每一项的中断状态。<br>第8行调用架构相关的中断初始化函数。对于S3C2410、S3C2440开发板，这个函数就是s3c24xx_init_irq，移植Linux内核时讲述的machine_desc结构中的init_irq成员就是指向这个函数。<br>s3c24xx_init_irq函数在<code>arch/arm/plat-s3c24xx/irq.c</code>中定义，它为所有的中断设置了芯片相关的数据结构（<code>irq_desc[irq].chip</code>），设置了处理函数入口（<code>irq_desc[irq].handle_irq</code>）。以外部中断EINT4-EINT23为例，用来设置它们的代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span>(irqno = IRQ_EINT4; irqno &lt;= IRQ_EINT23; irqno++) &#123;</span><br><span class="line">    irqdbf(<span class="string">&quot;registering irq %d (extended s3c irq)\n&quot;</span>,irqno);</span><br><span class="line">    set_irq_chip(irqno, &amp;s3c_irqext_chip);</span><br><span class="line">    set_irq_handler(irqno, handle_edge_irq);</span><br><span class="line">    set_irq_flags(irqno, IRQF_VALID);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>set_irq_chip</code>的作用就是<code>irq_desc[irqno].chip = &amp;s3c_irqext_chip</code>。以后就可以通过<code>irq_desc[irqno].chip</code>结构中的函数指针设置这些外部中断的触发方式（电平触发、边沿触发等）、使能中断、禁止中断等。<br>第4行设置这些中断的处理函数入口为<code>handle_edge_irq</code>，即<code>irq_desc[irqno].handle_irq = handle_edge_irq</code>。发生中断时，<code>handle_edge_irq</code>函数会调用用户注册的具体处理函数。<br>第5行设置中断标志为“IRQF_VALID”，表示可以使用它们。</p>
+<h2 id="用户注册中断处理函数的过程"><a href="#用户注册中断处理函数的过程" class="headerlink" title="用户注册中断处理函数的过程"></a>用户注册中断处理函数的过程</h2><p>用户（即驱动程序）通过<code>request_irq</code>函数向内核注册中断处理函数，<code>request_irq</code>函数根据中断号找到irq_desc数组项，然后在它的action链表中添加一个表项。<br><code>request_irq</code>函数在<code>kernel/irq/manage.c</code>中定义，函数原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">request_irq</span><span class="params">(<span class="type">unsigned</span> <span class="type">int</span> irq, <span class="type">irq_handle_t</span> handler, <span class="type">unsigned</span> <span class="type">long</span> irqflags, <span class="type">const</span> <span class="type">char</span> *devname, <span class="type">void</span> *dev_id)</span></span><br></pre></td></tr></table></figure>
+<p><code>request_irq</code>函数首先使用这4个参数构造一个irqaction结构，然后调用<code>setup_irq</code>函数将它链入链表中，代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">	action = kmalloc(<span class="keyword">sizeof</span>(<span class="keyword">struct</span> irqaction), GFP_ATOMIC);</span><br><span class="line">...</span><br><span class="line">	action-&gt;handler = handler;</span><br><span class="line">	action-&gt;flags = irqflags;</span><br><span class="line">	cpus_clear(action-&gt;mask);</span><br><span class="line">	action-&gt;name = devname;</span><br><span class="line">	action-&gt;next = <span class="literal">NULL</span>;</span><br><span class="line">	action-&gt;dev_id = dev_id;</span><br><span class="line">...</span><br><span class="line">	retval = setup_irq(irq, action);</span><br></pre></td></tr></table></figure>
+<p><code>setup_irq</code>函数也是在<code>kernel/irq/manage.c</code>中定义，它完成如下3个功能</p>
+<ol>
+<li>将新建的irqaction结构链入irq_desc[irq]结构的action链表中，有两种可能。<br> ①如果action链表为空，则直接链入。<br> ②否则先判断新建的irqaction结构和链表中的irqaction结构所表示的中断类型是否一致，即是否都声明为“可共享的”（IRQF_SHARED）、是否都使用相同的触发方式（电平、边沿、极性），如果一致，则将新建的irqaction结构链入。</li>
+<li>设置irq_desc[irq]结构中chip成员的还没设置的指针，让它们指向一些默认函数<br>这通过<code>irq_chip_set_defaults</code>函数来完成，它在<code>kernel/irq/chip.c</code>中定义。<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">irq_chip_set_defaults</span><span class="params">(<span class="keyword">struct</span> irq_chip *chip)</span></span><br><span class="line"> &#123;</span><br><span class="line">     <span class="keyword">if</span> (!chip-&gt;enable)</span><br><span class="line">         chip-&gt;enable = default_enable;          <span class="comment">//它调用chip-&gt;unmask</span></span><br><span class="line">     <span class="keyword">if</span> (!chip-&gt;disable)</span><br><span class="line">         chip-&gt;disable = default_disable;        <span class="comment">//此函数为空</span></span><br><span class="line">     <span class="keyword">if</span> (!chip-&gt;startup)</span><br><span class="line">         chip-&gt;startup = default_startup;        <span class="comment">//它调用chip-&gt;enable</span></span><br><span class="line">     <span class="keyword">if</span> (!chip-&gt;shutdown)</span><br><span class="line">         chip-&gt;shutdown = chip-&gt;disable;</span><br><span class="line">     <span class="keyword">if</span> (!chip-&gt;name)</span><br><span class="line">         chip-&gt;name = chip-&gt;typename;</span><br><span class="line">     <span class="keyword">if</span> (!chip-&gt;end)</span><br><span class="line">         chip-&gt;end = dummy_irq_chip.end;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure></li>
+<li>设置中断的触发方式<br>如果<code>request_irq</code>函数中传入的irqflags参数表示中断的触发方式为高电平触发、低电平触发、上升沿触发或下降沿触发，则调用irq_desc[irq]结构中的chip-&gt;set_type成员函数来进行设置：设置引脚功能为外部中断，设置中断触发方式。</li>
+<li>启动中断<br>如果irq_desc[irq]结构中status成员没有指明为IRQ_NOAUTOEN（表示注册中断时不要使能中断），还要调用chip-&gt;startup或chip-&gt;enable来启动中断。所谓启动中断通常就是使能中断。</li>
+</ol>
+<p>一般来说，只有那些“可以自动使能的”中断对应irq_desc[irq].status才会被指明为IRQ_NOAUTOEN。所以，无论哪种情况，执行request_irq注册中断之后，这个中断就已经被使能了，在编写驱动程序时要注意这点。<br>总结一下使用<code>request_irq</code>函数注册中断后的“成果”。<br>①irq_desc[irq]结构中的action链表中已经链入了用户注册的中断处理函数<br>②中断的触发方式已经被设置好<br>③中断已经被使能<br>总之，执行<code>irq_request</code>函数之后，中断就可以发生并能够被处理了。</p>
+<h2 id="中断的处理过程"><a href="#中断的处理过程" class="headerlink" title="中断的处理过程"></a>中断的处理过程</h2>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8FLinux/" rel="tag"># 嵌入式Linux</a>
+              <a href="/tags/Linux-Driver/" rel="tag"># Linux Driver</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/09/22/%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F/" rel="prev" title="字符设备驱动程序">
+                  <i class="fa fa-chevron-left"></i> 字符设备驱动程序
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Nibil</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">334k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">5:03</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.0/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+</body>
+</html>
