@@ -2631,7 +2631,7 @@ kgdb_io_opsj结构将在<code>kernel/kgdb.c</code>中被用到，这个结构封
     <title>网卡驱动移植</title>
     <url>/2022/09/29/%E7%BD%91%E5%8D%A1%E9%A9%B1%E5%8A%A8%E7%A7%BB%E6%A4%8D/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>嵌入式Linux设备驱动开发之网卡驱动移植</p>
-<p>《嵌入式Linux应用完全开发手册》第4篇第2章总结归纳</p>
+<p>《嵌入式Linux应用完全开发手册》第4篇第22章总结归纳</p>
 <span id="more"></span>
 
 <h1 id="本章目标"><a href="#本章目标" class="headerlink" title="本章目标"></a>本章目标</h1><ol>
