@@ -505,6 +505,39 @@
       </tags>
   </entry>
   <entry>
+    <title>IDE接口和SD卡驱动程序移植</title>
+    <url>/2022/10/14/IDE%E6%8E%A5%E5%8F%A3%E5%92%8CSD%E5%8D%A1%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E7%A7%BB%E6%A4%8D/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>嵌入式Linux设备驱动开发之IDE接口和SD卡驱动程序移植</p>
+<p>《嵌入式Linux应用完全开发手册》第4篇第23章总结归纳</p>
+<span id="more"></span>
+
+<h1 id="本章目标"><a href="#本章目标" class="headerlink" title="本章目标"></a>本章目标</h1><ol>
+<li>了解IDE接口驱动程序的框架，掌握移植方法</li>
+<li>了解硬盘、光盘等块设备的使用方法</li>
+<li>了解MMC&#x2F;SD卡驱动程序的框架</li>
+<li>掌握通过补丁文件移植驱动程序的方法</li>
+</ol>
+<h1 id="IDE接口驱动程序移植"><a href="#IDE接口驱动程序移植" class="headerlink" title="IDE接口驱动程序移植"></a>IDE接口驱动程序移植</h1><h2 id="IDE接口相关概念介绍"><a href="#IDE接口相关概念介绍" class="headerlink" title="IDE接口相关概念介绍"></a>IDE接口相关概念介绍</h2><p>IDE的英文全称为“Integrated Driver Electronics”，即“电子集成驱动器”，它的本意是指把“硬盘控制器”与“盘体（存储部件）”集成在一起的硬盘驱动器。IDE代表着硬盘的一种类型，但是实际的应用中，人们也习惯用IDE来称呼最早出现IDE类型的硬盘ATA-1，这种类型的接口随着技术的发展已经被淘汰了，而其后发展的ATA-2、ATA-3等更高版本的接口规范。<br>IDE硬盘又称为并口硬盘（与下面介绍的SATA接口硬盘相对），它的已经接口有两种：台式机中使用的40脚IDE接口、笔记本中使用的44脚接口（其中的40个引脚是一样的）。从外形看，台式机中的硬盘比较大，为3.5英寸，40个引脚的旁边还有4个很大的引脚，它们用来接12V、5V电源；笔记本中的硬盘比较小，为2.5英寸，电源等就在多出来的4个引脚中。<br>ATA：ATA（AT Attachment）是一个20世纪80年代由一些软硬件厂家制定的IDE驱动器接口规范，AT是指IBM PC&#x2F;AT个人电脑及其总线结构。通常人们也把ATA接口称为IDE接口，但是实际上两者有着细微的区别，ATA主要指硬盘驱动器与计算机的连接规范，而IDE则主要是指硬盘驱动器本身的技术规范。经过多年发展，ATA规范逐渐升级，访问硬盘的速度逐渐提高。它们的特点简要介绍如下：</p>
+<ol>
+<li>ATA-1: 这是最初的IDE标准，ATA-1主板上只有一个插口，支持1个主设备和1个从设备，每个设备的最大容量为504MB。ATA-1支持PIO-0、PIO-1和PIO-2共3种PIO模式，传输速率只有3.3MB&#x2F;s；另外还支持4种DMA模式。这种标准的硬盘在市场上基本已经看不到了。</li>
+<li>ATA-2：它是ATA-1的扩展，也称为EIDE（Enhanced IDE）或Fast ATA。它在ATA的基础上增加了两种PIO模式和两种DMA模式，最高传输速率达到16.7MB&#x2F;s。同时引进了LBA（Logical Block Address）地址转换方式，原来的地址转换方式为CHS（Cylinder Head Sector）。主板上有两个插口，每个插口可以连接1个主设备和1个从设备，共可以支持4个设备。</li>
+<li>ATA-3：它没有引进更高的传输模式，在传输速度上没有任何提升。最重要的是引入了一个划时代的技术–SMART技术（Self-Monitoring Analysis and Reporting Technology），自检测、分析和报告技术。</li>
+<li>AAT-4：也称Ultra DMA 33或ATA33，从它开始正式支持Ultra DMA数据传输模式，增加了PIO-4传输模式，传输速率达到33MB&#x2F;s。它首次采用了Double Data Rate技术，让接口在一个时钟周期内传输数据达到两次（上升沿和下降沿各一次），这样数据传输率从16.7MB&#x2F;s提升到33MB&#x2F;s。</li>
+<li></li>
+</ol>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>嵌入式Linux应用完全开发手册</category>
+        <category>第4篇第23章 IDE接口和SD卡驱动程序移植</category>
+      </categories>
+      <tags>
+        <tag>嵌入式Linux</tag>
+        <tag>Linux Driver</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>设备与模块</title>
     <url>/2022/08/02/%E8%AE%BE%E5%A4%87%E4%B8%8E%E6%A8%A1%E5%9D%97/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《Linux内核设计与实现》第17章总结归纳</p>
