@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":false,"version":"8.12.2","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"mac"},"bookmark":{"enable":true,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="嵌入式Linux系统应用开发之Linux应用程序调试技术 《嵌入式Linux应用完全开发手册》第4篇第27章总结归纳">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux应用程序调试技术">
+<meta property="og:url" content="http://example.com/2022/10/20/Linux%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E8%B0%83%E8%AF%95%E6%8A%80%E6%9C%AF/index.html">
+<meta property="og:site_name" content="Laugh Tale">
+<meta property="og:description" content="嵌入式Linux系统应用开发之Linux应用程序调试技术 《嵌入式Linux应用完全开发手册》第4篇第27章总结归纳">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2022/10/20/Linux%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E8%B0%83%E8%AF%95%E6%8A%80%E6%9C%AF/1.jpeg">
+<meta property="article:published_time" content="2022-10-20T09:14:27.000Z">
+<meta property="article:modified_time" content="2022-10-20T09:14:27.000Z">
+<meta property="article:author" content="Nibil">
+<meta property="article:tag" content="嵌入式Linux">
+<meta property="article:tag" content="Linux 应用程序">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2022/10/20/Linux%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E8%B0%83%E8%AF%95%E6%8A%80%E6%9C%AF/1.jpeg">
+
+
+<link rel="canonical" href="http://example.com/2022/10/20/Linux%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E8%B0%83%E8%AF%95%E6%8A%80%E6%9C%AF/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":"","permalink":"http://example.com/2022/10/20/Linux%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E8%B0%83%E8%AF%95%E6%8A%80%E6%9C%AF/","path":"2022/10/20/Linux应用程序调试技术/","title":"Linux应用程序调试技术"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Linux应用程序调试技术 | Laugh Tale</title>
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+  <!--pjax：防止跳转页面音乐暂停-->
+  <script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.js"></script>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Laugh Tale</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">A Nibil's Sharing Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%AC%E7%AB%A0%E7%9B%AE%E6%A0%87"><span class="nav-number">1.</span> <span class="nav-text">本章目标</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8strace%E5%B7%A5%E5%85%B7%E8%B7%9F%E8%B8%AA%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E5%92%8C%E4%BF%A1%E5%8F%B7"><span class="nav-number">2.</span> <span class="nav-text">使用strace工具跟踪系统调用和信号</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#strace%E4%BB%8B%E7%BB%8D%E5%8F%8A%E7%A7%BB%E6%A4%8D"><span class="nav-number">2.1.</span> <span class="nav-text">strace介绍及移植</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#strace%E4%BB%8B%E7%BB%8D"><span class="nav-number">2.1.1.</span> <span class="nav-text">strace介绍</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#strace%E7%A7%BB%E6%A4%8D"><span class="nav-number">2.1.2.</span> <span class="nav-text">strace移植</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8strace%E6%9D%A5%E8%B0%83%E8%AF%95%E7%A8%8B%E5%BA%8F"><span class="nav-number">2.2.</span> <span class="nav-text">使用strace来调试程序</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#strace%E7%9A%84%E7%94%A8%E6%B3%95"><span class="nav-number">2.2.1.</span> <span class="nav-text">strace的用法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#strace%E8%BE%93%E5%87%BA%E7%BB%93%E6%9E%9C%E5%88%86%E6%9E%90"><span class="nav-number">2.2.2.</span> <span class="nav-text">strace输出结果分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B0%83%E8%AF%95%E7%A8%8B%E5%BA%8F"><span class="nav-number">2.2.3.</span> <span class="nav-text">调试程序</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E8%B0%83%E8%AF%95%E5%B7%A5%E5%85%B7"><span class="nav-number">3.</span> <span class="nav-text">内存调试工具</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8memwatch%E8%BF%9B%E8%A1%8C%E5%86%85%E5%AD%98%E8%B0%83%E8%AF%95"><span class="nav-number">3.1.</span> <span class="nav-text">使用memwatch进行内存调试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#memwatch%E4%BB%8B%E7%BB%8D"><span class="nav-number">3.1.1.</span> <span class="nav-text">memwatch介绍</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#memwatch%E8%B0%83%E8%AF%95%E5%AE%9E%E4%BE%8B"><span class="nav-number">3.1.2.</span> <span class="nav-text">memwatch调试实例</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E5%86%85%E5%AD%98%E5%B7%A5%E5%85%B7%E4%BB%8B%E7%BB%8D%EF%BC%9Amtrace%E3%80%81dmalloc%E3%80%81yamd"><span class="nav-number">3.2.</span> <span class="nav-text">其他内存工具介绍：mtrace、dmalloc、yamd</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%AE%B5%E9%94%99%E8%AF%AF%E7%9A%84%E8%B0%83%E8%AF%95%E6%96%B9%E6%B3%95"><span class="nav-number">4.</span> <span class="nav-text">段错误的调试方法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%BA%93%E5%87%BD%E6%95%B0backtrace%E5%92%8Cbacktrace-symbols%E5%AE%9A%E4%BD%8D%E6%AE%B5%E9%94%99%E8%AF%AF"><span class="nav-number">4.1.</span> <span class="nav-text">使用库函数backtrace和backtrace_symbols定位段错误</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%AE%B5%E9%94%99%E8%AF%AF%E8%B0%83%E8%AF%95%E5%AE%9E%E4%BE%8B"><span class="nav-number">4.2.</span> <span class="nav-text">段错误调试实例</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Nibil</p>
+  <div class="site-description" itemprop="description">A Nibil's Sharing Blog</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">38</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">28</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/NibilCN" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;NibilCN" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-inner">
+      <!-- require APlayer -->
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css">
+      <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
+      <!-- require MetingJS -->
+      <script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+      <!--网易云-->   
+      <meting-js
+        server="netease"
+        id="7593069088"
+        type="playlist" 
+        mini="false"
+        fixed="false"
+        list-folded="true"
+        autoplay="true"
+        volume="0.4"
+        theme="#FADFA3"
+        order="random"
+        loop="all"
+        preload="auto"
+        mutex="true">
+      </meting-js>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/NibilCN" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/20/Linux%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E8%B0%83%E8%AF%95%E6%8A%80%E6%9C%AF/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Nibil">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Laugh Tale">
+      <meta itemprop="description" content="A Nibil's Sharing Blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Linux应用程序调试技术 | Laugh Tale">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux应用程序调试技术
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-10-20 17:14:27" itemprop="dateCreated datePublished" datetime="2022-10-20T17:14:27+08:00">2022-10-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">学习</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/" itemprop="url" rel="index"><span itemprop="name">书籍</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BA%94%E7%94%A8%E5%AE%8C%E5%85%A8%E5%BC%80%E5%8F%91%E6%89%8B%E5%86%8C/" itemprop="url" rel="index"><span itemprop="name">嵌入式Linux应用完全开发手册</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BA%94%E7%94%A8%E5%AE%8C%E5%85%A8%E5%BC%80%E5%8F%91%E6%89%8B%E5%86%8C/%E7%AC%AC4%E7%AF%87%E7%AC%AC27%E7%AB%A0-Linux%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E8%B0%83%E8%AF%95%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">第4篇第27章 Linux应用程序调试技术</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>9.7k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>9 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>嵌入式Linux系统应用开发之Linux应用程序调试技术</p>
+<p>《嵌入式Linux应用完全开发手册》第4篇第27章总结归纳</p>
+<span id="more"></span>
+
+<h1 id="本章目标"><a href="#本章目标" class="headerlink" title="本章目标"></a>本章目标</h1><ol>
+<li>掌握使用strace工具跟踪系统调用和信号的方法</li>
+<li>掌握各类内存测试工具，比如memwatch</li>
+<li>掌握使用库函数backtrace和backtrace_symbols来定位段错误</li>
+</ol>
+<h1 id="使用strace工具跟踪系统调用和信号"><a href="#使用strace工具跟踪系统调用和信号" class="headerlink" title="使用strace工具跟踪系统调用和信号"></a>使用strace工具跟踪系统调用和信号</h1><h2 id="strace介绍及移植"><a href="#strace介绍及移植" class="headerlink" title="strace介绍及移植"></a>strace介绍及移植</h2><h3 id="strace介绍"><a href="#strace介绍" class="headerlink" title="strace介绍"></a>strace介绍</h3><p>strace是一个很有用的诊断、学习、调试工具。使用时无需重新编译程序，这也使得可以用来跟踪没有源代码的程序。系统调用和信号是发生在用户空间和内核空间边界处的事件，检查这些边界事件有助于隔离错误、检查完整性、跟踪程序。<br>使用strace工具来执行程序时，它会记录程序执行过程中调用的系统调用、接收到的信号。通过查看记录结果，可以知道程序打开了哪些文件、是否打开成功、对文件进行了哪些读写操作、映射了哪些内存、向系统申请了多少内存等。</p>
+<h3 id="strace移植"><a href="#strace移植" class="headerlink" title="strace移植"></a>strace移植</h3><p>略</p>
+<h2 id="使用strace来调试程序"><a href="#使用strace来调试程序" class="headerlink" title="使用strace来调试程序"></a>使用strace来调试程序</h2><h3 id="strace的用法"><a href="#strace的用法" class="headerlink" title="strace的用法"></a>strace的用法</h3><p>直接运行strace可以看到它的用法，如下所示：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">strace</span><br><span class="line">usage：strace [-dffhiqrttTvVxx] [-a column] [-e expr] ... [-o file]</span><br><span class="line">            [-p pid] ... [-s strsize] [-u username] [-E val=val] ...</span><br><span class="line">            [command [arg ...]]</span><br><span class="line">    or: strace -c [-e expr] ... [-O overhead] [-S sortby] [-E var=val] ...</span><br><span class="line">        [command [arg ...]]</span><br></pre></td></tr></table></figure>
+<p>上面的“[command [arg …]]”表示要执行的程序及其参数；前面是各种选项。下面是几个常用的选项。<br>-f：除了跟踪当前进程外，还跟踪其子进程。<br>-o file：将输出信息写到文件file中，而不是显示到标准错误输出（stderr）。<br>-p pid：绑定到一个由pid对应的正在运行的进程。此参数常用来调试后台进程。<br>-t：打印各个系统调用被调用时的绝对时间，想观察程序的各部分的执行时间可以使用这个选项。<br>-tt：与选项t相似，打印时间精度为μs。<br>-r：与选项t相似，打印时间为相对时间</p>
+<h3 id="strace输出结果分析"><a href="#strace输出结果分析" class="headerlink" title="strace输出结果分析"></a>strace输出结果分析</h3><p>使用strace的最简单的例子为：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">strace cat /dev/null</span><br></pre></td></tr></table></figure>
+<p>它的输出结果如下，其中的省略号表示还有其他系统调用</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">execve(<span class="string">&quot;/bin/cat&quot;</span>,[<span class="string">&quot;cat&quot;</span>,<span class="string">&quot;/dev/null&quot;</span>],[<span class="comment">/*6 vars */</span>]) = <span class="number">0</span></span><br><span class="line">... ...</span><br><span class="line">open(<span class="string">&quot;/lib/librcypto.so.1&quot;</span>,O_RDONLY) = <span class="number">3</span></span><br><span class="line">... ...</span><br><span class="line">open(<span class="string">&quot;/lib/libm.so.6&quot;</span>,O_RDONLY) = <span class="number">3</span></span><br><span class="line">... ...</span><br><span class="line">open(<span class="string">&quot;/lib/libc.so.6&quot;</span>,O_RDONLY) = <span class="number">3</span></span><br><span class="line">... ...</span><br><span class="line">open(<span class="string">&quot;/dev/null&quot;</span>,O_RDONLY | O_LARGEFILE) = <span class="number">3</span></span><br><span class="line">read(<span class="number">3</span>,<span class="string">&quot;&quot;</span>,<span class="number">8192</span>) = <span class="number">0</span></span><br><span class="line">close(<span class="number">3</span>) = <span class="number">0</span></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>第1行表示通过系统调用execve来建立一个进程，他就是“cat &#x2F;dev&#x2F;null”对应的进程。在控制台中执行各种命令，比如“ls”、“cd”时，都是通过系统调用execv来建立它们进程的。通过strace，可以看到程序运行的细节。<br>第2-7行打开动态链接库，如果cat程序是静态链接的，这几个步骤将不需要。<br>第9-10行才是“cat &#x2F;dev&#x2F;null”命令的真正处理过程，首先打开“&#x2F;dev&#x2F;null”文件，然后读取它的内容。<br>在strace的输出过程中，每一行对应一个系统调用：左起是系统调用的名字，紧接着是被包含在括号中的参数，最后是它的返回值，比如上面输出结果的第7行。<br>系统调用出错时（返回值通常是-1），在返回值的后面会打印错误记号及其注释，比如：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">open(<span class="string">&quot;/foo/bar&quot;</span>,O_RDONLY) = <span class="number">-1</span> ENOENT (No such file or directory)</span><br></pre></td></tr></table></figure>
+<p>接收信号时会将信号记号及其注释打印出来，比如执行以下命令使用strace在后台开启一个sleep进程，然后向这个进程发送SIGINT信号。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">strace -o sleep.<span class="built_in">log</span> sleep <span class="number">100</span> &amp;</span><br><span class="line">kill -INT <span class="number">868</span>   <span class="comment">//假设sleep的进程号为868，可以使用ps命令查看</span></span><br></pre></td></tr></table></figure>
+<p>在sleep.log文件中可以发现如下字样，表示接收到SIGINT信号，它是“Interrupt”信号。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">--- SIGINT (Interrupt) @ <span class="number">0</span> (<span class="number">0</span>) ---</span><br><span class="line">+++ killed by SIGINT +++</span><br></pre></td></tr></table></figure>
+<p>对系统调用的参数，有多种打印格式，往往让人一目了然。下面是一些常见的格式：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">open(<span class="string">&quot;xyzzy&quot;</span>,O_WRONLY | O_APPEND | O_CREATE, <span class="number">0666</span>) = <span class="number">3</span></span><br><span class="line">lstat(<span class="string">&quot;/dev/null&quot;</span>,&#123;st_mode = S_IFCHR | <span class="number">0666</span>,st_rdev = makede(<span class="number">1</span>,<span class="number">3</span>),...&#125;) = <span class="number">0</span></span><br><span class="line">lstat(<span class="string">&quot;/foo/bar&quot;</span>,<span class="number">0xb004</span>) = <span class="number">-1</span> ENOENT (No such file or directory)</span><br><span class="line">read(<span class="number">3</span>,<span class="string">&quot;root::0:0:System Administrator:/&quot;</span>...,<span class="number">1024</span>) = <span class="number">422</span></span><br></pre></td></tr></table></figure>
+<p>第1行的系统调用open有3个参数，第一个为文件名，使用字符串格式表示；第二个为flag标志，它由3个按位相或的宏组成；第三个为mode参数，它使用八进制表示。<br>第2行系统调用lstat的第二个参数的数据类型为“struct stat”，它被展开了。lstat的第一个参数是输入参数，第二个参数是输出参数。如果系统调用失败，相应的输出参数不会被展开，比如第3行的第二个参数。<br>当参数是字符串指针时，这些字符串将被打印出来。默认只打印字符串的前32字节，其余字节使用省略号表示，这个省略号紧跟在双引号包含起来的被打印字符之后，比如第4行的第二个参数。<br>对于比较简单的指针或者数组，它们的内容被中括号包含起来，其中的各个元素使用逗号来分离，比如：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">getgroups(<span class="number">32</span>,[<span class="number">100</span>,<span class="number">0</span>]) = <span class="number">2</span></span><br></pre></td></tr></table></figure>
+<p>最后，位的集合（bit-sets）也是使用中括号包含起来的，其中的元素以空格分离，比如：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sigprocmask(SIG_BLOCK,[CHLD TTOU],[ ]) = <span class="number">0</span></span><br></pre></td></tr></table></figure>
+<p>上面代码的第二个参数是两个信号SIGCHLD和SIGTTOU的集合。有时候集合的元素很多，只打印出不使用的元素比较直观，这时可以加上前缀“&#96;”，比如下面语句中第二个参数表示信号的全集：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sigprocmask(SIG_UNBLOCK,`[],<span class="literal">NULL</span>) = <span class="number">0</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="调试程序"><a href="#调试程序" class="headerlink" title="调试程序"></a>调试程序</h3><p>在前面移植基于X的GUI程序时，就多次使用strace工具来跟踪程序，根据其中的出错信息建立一些必需的目录，复制字库到特定的目录等。当不了解一个程序依赖于哪些目录和文件时，可以使用strace工具来跟踪它。<br>下面举几个例子来说明如何使用strace来调试程序。</p>
+<ol>
+<li>使用strace来定位gtkboard的警告信息。<br>通过以下命令启动gtkboard。<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">strace -o gtkboard.log gtkboard &amp;   </span><br></pre></td></tr></table></figure>
+然后查看gtkboard.log文件，发现如下字样：<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">open(<span class="string">&quot;/usr/lib/gconv/gconv-modules.cache&quot;</span>,O_RDONLY) = <span class="number">-1</span> ENOENT (No such file or directory)</span><br><span class="line">open(<span class="string">&quot;/usr/lib/gconv/gconv-modules&quot;</span>,O_RDONLY) = <span class="number">-1</span> ENOENT (No such file or directory)</span><br><span class="line">write(<span class="number">2</span>,<span class="string">&quot;\n(gtkboard:855):GLib-WARNING **&quot;</span>...,<span class="number">82</span>) = <span class="number">82</span></span><br></pre></td></tr></table></figure>
+而交叉编译工具链中lib目录下刚好有gconv目录，把它复制到开发板根文件系统的&#x2F;usr&#x2F;lib目录后重新启动gtkboard，这些警告信息消失。</li>
+<li>使用strace来测量程序的执行时间<br>如果发现某个程序突然执行得很慢，通常需要找出其中哪部分代码执行得时间过长。使用strace工具可以轻松达到这个目的。<br>执行以下命令，可以发现第2行和第3行的时间相差2s左右，符合“sleep2”意图。<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">strace -r sleep <span class="number">2</span></span><br><span class="line">... ...</span><br><span class="line"><span class="number">01</span>   <span class="number">0.002608</span> rt_sigprocmask(SIG_SETMASK, [], <span class="literal">NULL</span>, <span class="number">8</span>) = <span class="number">0</span></span><br><span class="line"><span class="number">02</span>   <span class="number">0.002392</span> nanosleep(&#123;<span class="number">2</span>,<span class="number">0</span>&#125;, &#123;<span class="number">2</span>,<span class="number">0</span>&#125;) = <span class="number">0</span></span><br><span class="line"><span class="number">03</span>   <span class="number">2.005517</span> exit_group(<span class="number">0</span>) = ?</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h1 id="内存调试工具"><a href="#内存调试工具" class="headerlink" title="内存调试工具"></a>内存调试工具</h1><h2 id="使用memwatch进行内存调试"><a href="#使用memwatch进行内存调试" class="headerlink" title="使用memwatch进行内存调试"></a>使用memwatch进行内存调试</h2><h3 id="memwatch介绍"><a href="#memwatch介绍" class="headerlink" title="memwatch介绍"></a>memwatch介绍</h3><p>段错误与内存错误是C语言编程中经常碰到的问题，段错误的调试与解决在下节描述。所以内存错误是指使用动态分配的内存时出现的各种错误，比如内存泄漏（malloc分配的内存没有使用free释放掉）和缓冲区溢出（例如对越界存储动态分配的内存）是一些常见的问题。<br>memwatch是一个开放源代码的C语言内存错误检测工具。它可以跟踪程序中的内存泄露和错误，支持ANSI C，提供结果日志记录，能检测双重释放（double free）、错误释放（erroneous free）、没有释放的内存（unfreed memory）、溢出和下溢等。<br>memwatch并不是一个可以单独运行的程序，它提供一套实现动态内存管理、检测的代码，用它们来代替C库中的相关函数。它有两个文件：memwatch.h和memwatch.c。前者将malloc、free等库函数重新定义为在memwatch.c中实现的相应库函数，部分代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> malloc(n)       mwMalloc(n,__FILE__,__LINE__)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> strdup(n)       mwStrdup(p,__FILE__,__LINE__)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> realloc(p,n)    mwRealloc(p,n,__FILE__,__LINE__)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> calloc(n,m)     mwCalloc(n,m,__FILE__,__LINE__)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> free(n)         mwFree(p,__FILE__,__LINE__)</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="memwatch调试实例"><a href="#memwatch调试实例" class="headerlink" title="memwatch调试实例"></a>memwatch调试实例</h3><p>要使用memwatch，需要完成以下3点：</p>
+<ol>
+<li>在代码中加入头文件memwatch.h</li>
+<li>程序的代码与memwatch.c一起编译、链接</li>
+<li>使用gcc编译器进行编译时要定义宏MEMWATCH、MEMWATCH_STDIO，即在编译程序时增加“-DMEMWATCH -DMEMWATCH_STDIO”标志</li>
+</ol>
+<p>测试代码memtest.c代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;memwatch.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">char</span> *ptr1;</span><br><span class="line">    <span class="type">char</span> *ptr2;</span><br><span class="line"></span><br><span class="line">    ptr1 = <span class="built_in">malloc</span>(<span class="number">512</span>);</span><br><span class="line">    ptr2 = <span class="built_in">malloc</span>(<span class="number">512</span>);</span><br><span class="line"></span><br><span class="line">    ptr1[<span class="number">512</span>] = <span class="string">&#x27;A&#x27;</span>;</span><br><span class="line">    ptr2 = ptr1;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">free</span>(ptr2);</span><br><span class="line">    <span class="built_in">free</span>(ptr1);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其中第13行的错误为缓冲区溢出；第15行修改ptr2变量后的值，将导致第17、18行释放ptr1对应的内存两次（double-free），而原来的ptr2对应的内存没有被释放。<br>下面使用memwatch查看是否能检查出这些错误。</p>
+<ol>
+<li>源文件memtest.c在第3行中包含了头文件memwatch.h</li>
+<li>Makefile内容如下：<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">CC=arm-linux-gcc</span><br><span class="line">CFLAGS=-DMEMWATCH -DMEMWATCH_STDIO</span><br><span class="line"></span><br><span class="line">memtest: memtest.o memwatch.o</span><br><span class="line">     $(CC) -o $@ $^</span><br><span class="line"></span><br><span class="line">%.o:%.c</span><br><span class="line">     $(CC) $(CFLAGS) -c -o $@ $^</span><br><span class="line">clean:</span><br><span class="line">     rm -f   memtest *.o</span><br></pre></td></tr></table></figure>
+基于该Makefile生成的可执行文件memtest，将它复制到根文件系统下运行，会生成一个记录文件memwatch.log，其内容如下图：<br><img src="/2022/10/20/Linux%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E8%B0%83%E8%AF%95%E6%8A%80%E6%9C%AF/1.jpeg" alt="img not found"><br>第9行表示发生了缓冲区上溢，“memtest.c(17)”并不是表示在memtest.c是第17行发生了上溢，他表示这个错误是当程序执行到memtest.c的第17行“free(ptr2)”时才检测到的；“512 bytes alloc’d at &lt;1&gt; memtest.c(10)”表示这个出错的缓冲区大小为512字节，是在memtest.c的第10行分配的。根据这些信息查看代码，可以容易的发现是memtest.c的第13行代码导致这个错误。<br>第10行表示发生了双重释放（double-free）的错误，其中的“memtest.c(18)”表示这个错误是当程序执行到memtest.c的第18行“free(ptr1)”时才检测到的；“0x1a1fc was freed from memtest.c(17)”表示首地址为0x1a1fc的内存在memtest.c的第17行已经被释放过了。<br>第14行表示有一块内存没被释放（unfreed memory），“memtest.c(11),512 bytes at 0x1a42c”表示这块内存是在memtest.c的第11行分配，大小为512字节，首地址为0x1a42c。<br>第16-20行是一些统计信息：第17行表示了分配了两次内存，第18行表示程序结束时能够使用的最大动态内存，第19行表示总共分配的动态内存，第20行表示未释放的内存。</li>
+</ol>
+<h2 id="其他内存工具介绍：mtrace、dmalloc、yamd"><a href="#其他内存工具介绍：mtrace、dmalloc、yamd" class="headerlink" title="其他内存工具介绍：mtrace、dmalloc、yamd"></a>其他内存工具介绍：mtrace、dmalloc、yamd</h2><p>略</p>
+<h1 id="段错误的调试方法"><a href="#段错误的调试方法" class="headerlink" title="段错误的调试方法"></a>段错误的调试方法</h1><h2 id="使用库函数backtrace和backtrace-symbols定位段错误"><a href="#使用库函数backtrace和backtrace-symbols定位段错误" class="headerlink" title="使用库函数backtrace和backtrace_symbols定位段错误"></a>使用库函数backtrace和backtrace_symbols定位段错误</h2><p>访问没有权限或是不存在的内存时，会产生段错误（Segmentation fault），它很常见，比如访问空字符串等都会引起这类错误。<br>使用库函数backtrace和backtrace_symbols来进行栈回溯，可以知道发生错误时函数的调用关系，这不依赖于其他工具，这两个函数的原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">backtrace</span><span class="params">(<span class="type">void</span> **buffer,<span class="type">int</span> size)</span>;</span><br><span class="line"><span class="type">char</span> **<span class="title function_">backtrace_symbols</span><span class="params">(<span class="type">void</span> *<span class="type">const</span> buffer,<span class="type">int</span> size)</span>;</span><br></pre></td></tr></table></figure>
+<p>C语言中，A函数调用B函数时，会在栈中保存一个地址，当B函数执行完毕后，程序返回这个地址继续执行；而这个地址处于A函数中，可以根据B函数的返回地址反向找到它的调用者A。根据栈中的返回地址向上回溯栈，一级一级的找到各个调用函数，就可以得到完整的调用关系。<br>backtrace函数就是利用这个原理得到这些调用关系的，它分析栈的内容，找到各级调用的返回地址，将它们保存在字符串数组buffer中，最大数目由参数size决定，它的返回值表示所确定的返回地址的数目。如果返回值小于或等于参数size，表示栈中所有的内容都被分析了；如果栈很大。要想回溯所有内容，就需要增大字符串数组buffer、增大参数size。<br>backtrace_symbols函数将这些返回地址转换为描述性的字符串，返回地址保存在字符串数组buffer中，参数size表示它们的数目。这些描述性的字符串的格式为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">程序名（函数名+偏移）[返回地址]</span><br></pre></td></tr></table></figure>
+<p>其中的“函数名”是根据返回地址找找到的函数名称，偏移是这个返回地址与这个函数的首地址之间的偏移。如果找不到函数名称，则小括号中的“（函数名+偏移）”不打印。<br>backtrace_symbols函数将这些描述性字符保存在一个字符串数组中，作为它的返回值。需要注意，使用完毕后这个字符串数组需要释放掉，但是它的元素（即各个字符串）不需要也不能释放。<br>综上所述，库函数backtrace和backtrace_symbols通常一起使用，实例代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">DebugBacktrace</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="meta">#<span class="keyword">define</span> SIZE 100</span></span><br><span class="line">    <span class="type">void</span> *<span class="built_in">array</span>[SIZE];</span><br><span class="line">    <span class="type">int</span> size,i;</span><br><span class="line">    <span class="type">char</span> **strings;</span><br><span class="line"></span><br><span class="line">    size = backtrace(<span class="built_in">array</span>,SIZE);</span><br><span class="line">    <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>,<span class="string">&quot;\nBacktrace (%d deep):\n&quot;</span>,size);</span><br><span class="line">    strings = backtrace_symbols(<span class="built_in">array</span>,size);</span><br><span class="line">    <span class="keyword">for</span>(i = <span class="number">0</span>;i &lt; size; i++)    </span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>,<span class="string">&quot;%d: %s\n&quot;</span>,i,strings[i]);</span><br><span class="line">    <span class="built_in">free</span>(strings);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这两个函数能显示正确的结果是基于一下假设的。</p>
+<ol>
+<li>编译程序时，gcc的优化选项是0。</li>
+<li>内联（inline）函数没有栈。</li>
+<li>尾调用的优化使得一个“stack frame”替换另一个“stack frame”</li>
+</ol>
+<p><em><strong>连接程序时，使用“-rdynamic”选项，这使得程序包含更多的符号（symbol）。静态（static）函数的符号没有导出来，所以使用这些函数进行回溯时无法找到静态函数的符号</strong></em></p>
+<h2 id="段错误调试实例"><a href="#段错误调试实例" class="headerlink" title="段错误调试实例"></a>段错误调试实例</h2><p>当程序发生段错误时，内核会向程序发送SIGSEGV信号，这个信号的默认处理行为是使程序退出。可以修改信号处理函数，在程序退出之前就使用库函数backtrace和backtrace_symbols打印出函数的调用关系，这有助于找到出错的代码及出错原因。<br>这需要修改代码，只要将SIGSEGV信号的处理函数设为DebugBacktrace函数即可。代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;signal.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;execinfo.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">A</span><span class="params">(<span class="type">int</span> a)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">B</span><span class="params">(<span class="type">int</span> b)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">C</span><span class="params">(<span class="type">int</span> c)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">DebugBacktrace</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">A</span><span class="params">(<span class="type">int</span> a)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%d: A call B\n&quot;</span>,a);</span><br><span class="line">    B(<span class="number">2</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">B</span><span class="params">(<span class="type">int</span> b)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%d: B call C\n&quot;</span>,b);</span><br><span class="line">    C(<span class="number">3</span>);<span class="comment">//这个函数调用将导致段错误</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">C</span><span class="params">(<span class="type">int</span> c)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">char</span> *p = (<span class="type">char</span> *)c;</span><br><span class="line">    *p = <span class="string">&#x27;A&#x27;</span>;<span class="comment">//如果参数c不是一个可用的地址值，则这条语句导致段错误</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%d: function C\n&quot;</span>,c);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//SIGSEGV信号的处理函数，回溯栈，打印函数的调用关系</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">DebugBacktrace</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="meta">#<span class="keyword">define</span> SIZE 100</span></span><br><span class="line">    <span class="type">void</span> *<span class="built_in">array</span>[SIZE];</span><br><span class="line">    <span class="type">int</span> size,i;</span><br><span class="line">    <span class="type">char</span> **strings;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>,<span class="string">&quot;\nSegmentation fault\n&quot;</span>);</span><br><span class="line">    size = backtrace(<span class="built_in">array</span>,SIZE);</span><br><span class="line">    <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>,<span class="string">&quot;Backtrace (%d deep):\n&quot;</span>,size);</span><br><span class="line">    strings = backtrace_symbols(<span class="built_in">array</span>,size);</span><br><span class="line">    <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; size; i++)</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;%d: %s\n&quot;</span>,i,strings[i]);</span><br><span class="line">    <span class="built_in">free</span>(strings);</span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">-1</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">int</span> argc,<span class="type">char</span> **argv)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">char</span> a;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//设置SIGSEGV信号的处理函数</span></span><br><span class="line">    signal(SIGSEGV,DebugBacktrace);</span><br><span class="line"></span><br><span class="line">    A(<span class="number">1</span>);</span><br><span class="line">    C(&amp;a);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>第1-27行的代码定义了A、B、C共3个函数，A调用B，B调用C。在函数C中，第24、25行的代码有漏洞，如果参数c不是一个可用的地址值，则第25行赋值语句导致段错误。在函数B中，故意使第19行调用函数C时传入一个非法地址。<br>第30行是信号处理函数，它通过库函数backtrace和backtrace_symbols获得并打印函数的调用关系后，退出程序（第44行）。这个函数是本实例的重点，读者可以在自己的应用程序代码中加入这个函数，然后使用第52行的函数将它设为SIGSEGV信号的处理函数。<br>segfault.c的Makefile如下，可以看到，编译时选项为“-g -O0”，连接时的选项为“-rdynamic”。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">CC=arm-linux-gcc</span><br><span class="line">CFLAGS=-g -O0</span><br><span class="line">LDFLAGS=-rdynamic</span><br><span class="line"></span><br><span class="line">segfault: segfault.o</span><br><span class="line">    $(CC) $(LDFLAGS) -o $@ $^</span><br><span class="line"></span><br><span class="line">%.o: %.c</span><br><span class="line">    $(CC) $(CFLAGS) -c -o $@ $^</span><br><span class="line"></span><br><span class="line">clean:</span><br><span class="line">    rm -rf segfault *.o</span><br></pre></td></tr></table></figure>
+<p>执行make命令生成可执行程序segfault，运行后可以看到如下信息:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">segfault</span><br><span class="line"><span class="number">1</span>:  A call B</span><br><span class="line"><span class="number">2</span>:  B call C</span><br><span class="line"></span><br><span class="line">Segmentation fault</span><br><span class="line"><span class="title function_">Backtrace</span> <span class="params">(<span class="number">6</span> deep)</span>:</span><br><span class="line">0: <span class="title function_">segfault</span><span class="params">(DebugBacktrace+<span class="number">0x30</span>)</span> [0x89b4]</span><br><span class="line">1: /lib/libc.so.6 [0x4004bd10]</span><br><span class="line">2: <span class="title function_">segfault</span><span class="params">(B+<span class="number">0x28</span>)</span> [0x893c]</span><br><span class="line">3: <span class="title function_">segfault</span><span class="params">(A+<span class="number">0x28</span>)</span> [0x890c]</span><br><span class="line">4: <span class="title function_">segfault</span><span class="params">(main+<span class="number">0x2c</span>)</span> [0x8a84]</span><br><span class="line">5: /lib/libc.so.6<span class="params">(__libc_start_main+<span class="number">0xe4</span>)</span> [0x40034f14]</span><br></pre></td></tr></table></figure>
+<p>标号0-5行表示从下到上的函数调用关系：标号5的__libc_start_main函数调用第4行的main函数，main函数调用标号3的A函数，A函数调用标号2的B函数。B调用C时出错，这导致内核发出SIGSEGV信号，这时正常的流程被打断，信号处理函数DebugBacktrace被强行调用，标号1、0的行表示处理信号时的函数调用关系。<br>从这几个标号可以看出，当main函数调用A、A调用B时，出现段错误。这些调用关系可以帮助开发人员缩小定位错误的范围，在很复杂的程序中尤其如此。<br>从上面的输出信息“2: segfault (B + 0x28)[0x893c]”中可以知道，B函数调用的某个函数的返回地址为0x893c，这个地址前面的语句就是调用下一级函数。<br>单从这些调用关系还是不能直接看出是在函数C中出错，这时要用到segfault程序的反汇编代码。使用下面的指令进行反汇编：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">arm-linux-objdump -D segfault &gt; segfault.dis</span><br></pre></td></tr></table></figure>
+<p>反汇编文件segfault.dis的部分内容如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">00008914&lt;B&gt;:</span><br><span class="line">    ... ...</span><br><span class="line">    8938: eb000001  b1  8944&lt;C&gt;</span><br><span class="line">    893c: e89da808  ldmia   sp, &#123;r3,fp,sp,pc&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到，返回地址0x893c前面的代码调用函数C，所以可以确定是在函数C出错。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8FLinux/" rel="tag"># 嵌入式Linux</a>
+              <a href="/tags/Linux-%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F/" rel="tag"># Linux 应用程序</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/10/19/LCD%E5%92%8CUSB%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E7%A7%BB%E6%A4%8D/" rel="prev" title="LCD和USB驱动程序移植">
+                  <i class="fa fa-chevron-left"></i> LCD和USB驱动程序移植
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Nibil</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">421k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6:23</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.0/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+</body>
+</html>
