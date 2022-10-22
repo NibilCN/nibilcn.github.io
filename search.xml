@@ -505,6 +505,42 @@
       </tags>
   </entry>
   <entry>
+    <title>shell和shell脚本</title>
+    <url>/2022/10/22/shell%E5%92%8Cshell%E8%84%9A%E6%9C%AC/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>在Linux环境下，如果你不懂bash是什么，那么其他东西就不用学了。因为终端机执行命令的方式，就是通过bash的环境来处理的。所以说它很重要。bash的东西非常多，包括变量的设置与使用、bash操作环境的构建、数据流重定向的功能，还有那好用的管道命令。好好清一清脑门，准备用功去，本章几乎是所有命令行（command line）与将来主机维护与管理的重要基础，一定要仔细阅读。</p>
+<span id="more"></span>
+<h1 id="认识bash这个shell"><a href="#认识bash这个shell" class="headerlink" title="认识bash这个shell"></a>认识bash这个shell</h1><p>管理整个计算机硬件的其实就是操作系统的内核（kernel），这个内核是需要被保护的，所以我们一般用户就只能通过shell来跟内核通信，以让内核达到我们所想要达到的工作。那么系统有多少shell可用呢？为什么我们要使用bash？下面分别来谈一谈。</p>
+<h2 id="硬件、内核与shell"><a href="#硬件、内核与shell" class="headerlink" title="硬件、内核与shell"></a>硬件、内核与shell</h2><p>什么是Shell？这应该是一个蛮有趣的话题，相信只要摸过计算机，对于操作系统（无论是Linux、UNIX或者是Windows）有点概念的朋友们大多听过这个名词，因为只要有“操作系统”，那么就离不开Shell。不过讨论Shell之前，我们先来了解一下计算机的运作状况。举个例子来说，当你要计算传输出来“音乐”的时候，你的计算机需要什么东西呢？</p>
+<ol>
+<li>硬件：当然就是需要你的硬件有“声卡芯片”这个配备，否则怎么会有声音；</li>
+<li>内核管理：操作系统的内核可以支持这个芯片组，当然还需要提供芯片的驱动程序；</li>
+<li>应用程序：需要用户输入发生声音的命令。</li>
+</ol>
+<p>这就是基本的一个输出声音所需要的步骤。也就是说，你必须要“输入”一个命令之后，“硬件”才通过你执行的命令来工作。那么硬件如何知道你执行的命令呢？那就是内核的控制工作了。也就是说，我们必须通过“Shell”将我们输入的命令与内核通信，好让内核可以控制硬件来准确无误的工作，基本上，我们可以通过下图来说明一下：<br><img src="/2022/10/22/shell%E5%92%8Cshell%E8%84%9A%E6%9C%AC/1.jpeg" alt="img not found"><br>操作系统其实是一组软件，由于这组软件在控制整个硬件与管理系统的活动监测，如果这组软件能被用户随意操作，若用户使用不当，将会使得整个系统崩溃。因为操作系统管理的就是整个硬件功能，所以当然不能够随便被一些没有管理能力的终端用户随意使用。<br>但是我们总是需要让用户操作系统的，所以就有了在操作系统上面发展的应用程序。用户可以通过应用程序来指挥内核，让内核达成我们需要的硬件任务。如下图的操作系统图，我们可以发现应用程序其实就是在最外层，就如同鸡蛋的外壳一样，因此这个也就称为shell。<br><img src="/2022/10/22/shell%E5%92%8Cshell%E8%84%9A%E6%9C%AC/2.jpeg" alt="img not found"><br>其实shell的功能只是提供用户操作系统的一个接口，因此这个shell需要可以调用其他软件才好。man、chmod、vi、fdisk、mkfs等命令都是独立的应用程序，但是我们可以通过shell来操作这些应用程序，让这些应用程序调用内核来运行所需要的工作。<br><em><strong>也就是说，只要能够操作应用程序的接口都能够称为shell，侠义的shell指的是命令行方面的软件，包括本章要介绍的bash等。广义的shell则包括图形界面的软件，因为图形界面其实也能操作各种应用程序来调用内核工作。</strong></em></p>
+<h2 id="为何要学命令行界面的shell"><a href="#为何要学命令行界面的shell" class="headerlink" title="为何要学命令行界面的shell"></a>为何要学命令行界面的shell</h2><p>略</p>
+<h2 id="系统的合法shell与-x2F-etc-x2F-shells功能"><a href="#系统的合法shell与-x2F-etc-x2F-shells功能" class="headerlink" title="系统的合法shell与&#x2F;etc&#x2F;shells功能"></a>系统的合法shell与&#x2F;etc&#x2F;shells功能</h2><p>略</p>
+<h2 id="bash-shell的功能"><a href="#bash-shell的功能" class="headerlink" title="bash shell的功能"></a>bash shell的功能</h2><p>&#x2F;bin&#x2F;bash是Linux默认的shell，bash是GNU计划中重要的工具软件之一，目前也是Linux distributions的标准shell。bash主要兼容于sh，并且依据一些用户需求而加强的shell版本。不论你使用的是哪个distributions，都需要学习bash，它的主要优点有下面几个：</p>
+<ol>
+<li>命令记忆能力（history）<br>①在bash的功能里头，相当棒的一个功能就是“它能记忆使用过得命令”。只要在命令行中按上下键就可以找到前&#x2F;后输入的命令。在很多distributions里头，默认的命令记忆功能可以达到1000个，也就是说，你曾经执行过的命令几乎都被记录下来。<br>②这么多的命令记录在哪里呢？在你的主文件夹内的.bash_history中。不过需要留意的是，~&#x2F;.bash_history记录的是前一次登陆以前所执行的命令，而至于这一次登录所执行的命令都被暂存在临时内存中，当你成功注销系统后，该命令记忆才会记录到.bash_history当中。<br>③最大的好处就是可以查询曾经做过的操作。如此可以知道你的执行步骤，那么就可以追踪你曾执行过的命令，以作为排错的工具。但是如果被黑客入侵了，那么他只要翻你曾经执行过的命令，那么你的主机就危险了。所以最好还是将记录的命令数目减小一点。</li>
+<li>命令与文件补全功能（[Tab]按键的好处）<br>[Tab]接在一串命令的第一个字后面，则为命令补全<br>[Tab]接在一串命令的第二个字后面，则为文件补全<br>所以说，如果我想要知道我的环境中所有可以执行的命令有几个，就直接在bash的提示符之后连续按两次[Tab]按键就能够显示所有的可执行命令了。</li>
+<li>命令别名假设功能（alias）<br>假如我需要知道这个目录下面的所有文件（包含隐藏文件）及所有的文件属性，那么我就必须要执行“ls -la”这样的命令串。但是还有更快的替代方式，使用命令别名。假设我想以lm这个命令来替换上文中的命令，也就是说，lm会等于ls -la这样的一个功能，那么要如何做呢？直接使用alias即可。你在命令行输入alias就可以知道目前的命令别名有哪些了。也可以直接执行命令来设置别名：<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">alias lm=&#x27;ls -la&#x27;</span><br></pre></td></tr></table></figure></li>
+<li>作业控制、前台、后台控制（job control、foreground、background）<br>使用前后台的控制可以让作业进行得更为顺利。至于作业控制得用途则更广，可以让我们随时将工作丢到后台中执行。而不怕不小心使用[Ctrl + C]来中断该进程。此外还可以在单一登陆环境中达到多任务的目的。</li>
+<li>程序脚本（shell script）<br>在Linux下面得shell script则发挥更为强大的功能，可以将你平时管理系统常需要执行的连续命令写成一个文件，还文件还可以通过交互的方式来进行主机的检测工作。也可以通过shell提供的环境变量及相关命令来进行设计。整个设计下来几乎就是一个小型的程序语言了。该script的功能真的是超乎我们的想象之外。以前在DOS下面需要程序语言才能写的东西，在Linux下面使用简单的shell scripts就可以帮你完成。</li>
+<li>通配符（Wildcard）<br>除了完整的字符串之外，bash还支持许多的通配符来帮助用户查询与命令执行。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>鸟哥的LINUX私房菜</category>
+        <category>第3篇第11章 认识和学习bash</category>
+      </categories>
+      <tags>
+        <tag>Linux Shell编程</tag>
+        <tag>脚本语言</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>设备与模块</title>
     <url>/2022/08/02/%E8%AE%BE%E5%A4%87%E4%B8%8E%E6%A8%A1%E5%9D%97/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《Linux内核设计与实现》第17章总结归纳</p>
