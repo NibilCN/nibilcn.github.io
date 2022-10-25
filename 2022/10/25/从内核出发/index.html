@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":false,"version":"8.12.2","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"mac"},"bookmark":{"enable":true,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="在这一章，我们将介绍Linux内核的一些基本常识：从何处获取源代码，如何编译它，又如何安装新代码。那么，让我们考察一下内核程序与用户应用空间程序的差异，以及内核中所使用的通用编程结构。虽然内核在很多方面有其独特性，但从现在来看，它和其他大型软件项目并无多大差别。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从内核出发">
+<meta property="og:url" content="http://example.com/2022/10/25/%E4%BB%8E%E5%86%85%E6%A0%B8%E5%87%BA%E5%8F%91/index.html">
+<meta property="og:site_name" content="Laugh Tale">
+<meta property="og:description" content="在这一章，我们将介绍Linux内核的一些基本常识：从何处获取源代码，如何编译它，又如何安装新代码。那么，让我们考察一下内核程序与用户应用空间程序的差异，以及内核中所使用的通用编程结构。虽然内核在很多方面有其独特性，但从现在来看，它和其他大型软件项目并无多大差别。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-10-25T06:19:18.000Z">
+<meta property="article:modified_time" content="2022-10-25T06:19:18.000Z">
+<meta property="article:author" content="Nibil">
+<meta property="article:tag" content="Linux Kernel">
+<meta property="article:tag" content="操作系统">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2022/10/25/%E4%BB%8E%E5%86%85%E6%A0%B8%E5%87%BA%E5%8F%91/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":"","permalink":"http://example.com/2022/10/25/%E4%BB%8E%E5%86%85%E6%A0%B8%E5%87%BA%E5%8F%91/","path":"2022/10/25/从内核出发/","title":"从内核出发"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>从内核出发 | Laugh Tale</title>
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+  <!--pjax：防止跳转页面音乐暂停-->
+  <script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.js"></script>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Laugh Tale</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">A Nibil's Sharing Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E5%86%85%E6%A0%B8%E6%BA%90%E7%A0%81"><span class="nav-number">1.</span> <span class="nav-text">获取内核源码</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8Git"><span class="nav-number">1.1.</span> <span class="nav-text">使用Git</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E5%86%85%E6%A0%B8%E6%BA%90%E4%BB%A3%E7%A0%81"><span class="nav-number">1.2.</span> <span class="nav-text">安装内核源代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E8%A1%A5%E4%B8%81"><span class="nav-number">1.3.</span> <span class="nav-text">使用补丁</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E6%BA%90%E7%A0%81%E6%A0%91"><span class="nav-number">2.</span> <span class="nav-text">内核源码树</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E5%86%85%E6%A0%B8"><span class="nav-number">3.</span> <span class="nav-text">编译内核</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E5%86%85%E6%A0%B8"><span class="nav-number">3.1.</span> <span class="nav-text">配置内核</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%8F%E5%B0%91%E7%BC%96%E8%AF%91%E7%9A%84%E5%9E%83%E5%9C%BE%E4%BF%A1%E6%81%AF"><span class="nav-number">3.2.</span> <span class="nav-text">减少编译的垃圾信息</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A1%8D%E7%94%9F%E5%A4%9A%E4%B8%AA%E7%BC%96%E8%AF%91%E4%BD%9C%E4%B8%9A"><span class="nav-number">3.3.</span> <span class="nav-text">衍生多个编译作业</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E6%96%B0%E5%86%85%E6%A0%B8"><span class="nav-number">3.4.</span> <span class="nav-text">安装新内核</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E5%BC%80%E5%8F%91%E7%9A%84%E7%89%B9%E7%82%B9"><span class="nav-number">4.</span> <span class="nav-text">内核开发的特点</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%A0libc%E5%BA%93%E6%8A%91%E6%88%96%E6%97%A0%E6%A0%87%E5%87%86%E5%A4%B4%E6%96%87%E4%BB%B6"><span class="nav-number">4.1.</span> <span class="nav-text">无libc库抑或无标准头文件</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Nibil</p>
+  <div class="site-description" itemprop="description">A Nibil's Sharing Blog</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">32</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">40</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/NibilCN" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;NibilCN" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-inner">
+      <!-- require APlayer -->
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css">
+      <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
+      <!-- require MetingJS -->
+      <script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+      <!--网易云-->   
+      <meting-js
+        server="netease"
+        id="7593069088"
+        type="playlist" 
+        mini="false"
+        fixed="false"
+        list-folded="true"
+        autoplay="true"
+        volume="0.4"
+        theme="#FADFA3"
+        order="random"
+        loop="all"
+        preload="auto"
+        mutex="true">
+      </meting-js>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/NibilCN" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/10/25/%E4%BB%8E%E5%86%85%E6%A0%B8%E5%87%BA%E5%8F%91/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Nibil">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Laugh Tale">
+      <meta itemprop="description" content="A Nibil's Sharing Blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="从内核出发 | Laugh Tale">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          从内核出发
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-10-25 14:19:18" itemprop="dateCreated datePublished" datetime="2022-10-25T14:19:18+08:00">2022-10-25</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">学习</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/" itemprop="url" rel="index"><span itemprop="name">书籍</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/Linux%E5%86%85%E6%A0%B8%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/" itemprop="url" rel="index"><span itemprop="name">Linux内核设计与实现</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/Linux%E5%86%85%E6%A0%B8%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/%E7%AC%AC2%E7%AB%A0-%E4%BB%8E%E5%86%85%E6%A0%B8%E5%87%BA%E5%8F%91/" itemprop="url" rel="index"><span itemprop="name">第2章 从内核出发</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>5k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>5 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>在这一章，我们将介绍Linux内核的一些基本常识：从何处获取源代码，如何编译它，又如何安装新代码。那么，让我们考察一下内核程序与用户应用空间程序的差异，以及内核中所使用的通用编程结构。虽然内核在很多方面有其独特性，但从现在来看，它和其他大型软件项目并无多大差别。</p>
+<span id="more"></span>
+<h1 id="获取内核源码"><a href="#获取内核源码" class="headerlink" title="获取内核源码"></a>获取内核源码</h1><p>登录Linux内核官方网站<a target="_blank" rel="noopener" href="http://www.kernel.org,可以随时获取当前版本的linux源代码,可以是完整的压缩形式(使用tar创建的一个压缩文件),也可以是增量补丁形式./">http://www.kernel.org，可以随时获取当前版本的Linux源代码，可以是完整的压缩形式（使用tar创建的一个压缩文件），也可以是增量补丁形式。</a><br>除特殊情况下需要Linux源码的旧版本之外，一般都希望拥有最新的代码。kernel.org是源代码的库存之处，那些领导潮流的内核开发者所发布的增量补丁也放在这里。</p>
+<h2 id="使用Git"><a href="#使用Git" class="headerlink" title="使用Git"></a>使用Git</h2><p>在过去的几年中，Linus和他领导的内核开发者们开始使用一个新版本的控制系统来管理Linux内核源代码。Linus创造的这个系统称为Git。与CSV这样的传统的版本控制系统不同，Git是分布式的，它的用法和工作流程对许多开发者来说很陌生。我强烈建议使用Git来下载和管理Linux内核源代码。<br>你可以使用Git来获取最新提交到Linus版本树的一个副本：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git</span><br></pre></td></tr></table></figure>
+<p>当下载代码后，你可以更新你的分支到Linus的最新分支</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git pull</span><br></pre></td></tr></table></figure>
+<p>有了这两个命令，就可以获取并随时保持与内核官方的代码树一致。</p>
+<h2 id="安装内核源代码"><a href="#安装内核源代码" class="headerlink" title="安装内核源代码"></a>安装内核源代码</h2><p>内核压缩以GNU zip（gzip）和bzip2两种形式发布。bzip2是默认和首选形式，因为它在压缩上比gzip更具优势。以bzip2形式发布的Linux内核叫做linux-x.y.z.tar.bz2，这里x.y.z是内核源码的具体版本。下载了源代码之后，就可以轻而易举的对其解压。如果压缩形式是bzip2，则运行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar xvjf linux-x.y.z.tar.bz2</span><br></pre></td></tr></table></figure>
+<p>如果压缩形式是GNU的zip，则运行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar xvzf linux-x.y.z.tar.gz</span><br></pre></td></tr></table></figure>
+<p>解压后的源代码位于linux-x.y.z目录下。如果你是使用git获取和管理内核源代码，那么就不需要下载压缩文件，只要像前面描述的那样运行git clone命令，git就会下载并且解压最新的源代码。</p>
+<p><em><strong>何处安装并触及源码</strong></em><br>内核源码一般安装在&#x2F;usr&#x2F;src&#x2F;linux目录下。但是请注意，不要把这个源码树用于开发，因为编译你的C库所用的内核版本就链接到这棵树。此外，不要以root身份对内核进行修改，而应当建立自己的主目录，仅以root身份安装新内核。即使在安装新内核时，&#x2F;usr&#x2F;src&#x2F;linux目录都应当原封不动。</p>
+<h2 id="使用补丁"><a href="#使用补丁" class="headerlink" title="使用补丁"></a>使用补丁</h2><p>在Linux内核社区中，补丁是通用语。你可以以补丁的形式发布对代码的修改，也可以以补丁的形式接收其他人所做的修改。增量补丁可以作为版本转移的桥梁。你不需要再下载庞大的内核源码的全部压缩，则只需要给旧版本打上一个增量补丁，让其旧貌换新颜。这不仅节约带宽，还省了时间。要应用增量补丁，从你的内部源码树开始，只需运行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">patch -p1 &lt; ../patch-x.y.z</span><br></pre></td></tr></table></figure>
+<p>一般来说，一个给定版本的内核补丁总是打在前一个版本上。<br>有关创建和应用补丁更深入的讨论会在后续章节进行。</p>
+<h1 id="内核源码树"><a href="#内核源码树" class="headerlink" title="内核源码树"></a>内核源码树</h1><p>内核源码树由很多目录组成，而大多数目录又包含更多的子目录。源码树的根目录及其子目录如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>目录</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>arch</td>
+<td>特定体系结构的源码</td>
+</tr>
+<tr>
+<td>block</td>
+<td>块设备I&#x2F;O层</td>
+</tr>
+<tr>
+<td>crypto</td>
+<td>加密API</td>
+</tr>
+<tr>
+<td>Documentation</td>
+<td>内核源码文档</td>
+</tr>
+<tr>
+<td>drivers</td>
+<td>设备驱动程序</td>
+</tr>
+<tr>
+<td>firmware</td>
+<td>使用某些驱动程序而需要的设备固件</td>
+</tr>
+<tr>
+<td>fs</td>
+<td>VFS和各种文件系统</td>
+</tr>
+<tr>
+<td>include</td>
+<td>内核头文件</td>
+</tr>
+<tr>
+<td>init</td>
+<td>内核引导和初始化</td>
+</tr>
+<tr>
+<td>ipc</td>
+<td>进程间通信代码</td>
+</tr>
+<tr>
+<td>kernel</td>
+<td>像调度程序这样的核心子系统</td>
+</tr>
+<tr>
+<td>lib</td>
+<td>通用内核函数</td>
+</tr>
+<tr>
+<td>mm</td>
+<td>内存管理子系统和VM</td>
+</tr>
+<tr>
+<td>net</td>
+<td>网络子系统</td>
+</tr>
+<tr>
+<td>samples</td>
+<td>示例，示范代码</td>
+</tr>
+<tr>
+<td>scripts</td>
+<td>编译内核所用的脚本</td>
+</tr>
+<tr>
+<td>sound</td>
+<td>语音子系统</td>
+</tr>
+<tr>
+<td>usr</td>
+<td>早期用户空间代码（所谓的initramfs）</td>
+</tr>
+<tr>
+<td>tools</td>
+<td>在Linux开发中有用的工具</td>
+</tr>
+<tr>
+<td>virt</td>
+<td>虚拟化基础结构</td>
+</tr>
+</tbody></table>
+<p>在源码树根目录的很多文件中值得提及。COPYING文件是内核许可证（GNU GPL v2）。CREDITS是开发了很多内核代码的开发者列表。MAINTAINERS是维护者列表，他们负责维护内核子系统和驱动程序。Makefile是基本内核的Makefile。</p>
+<h1 id="编译内核"><a href="#编译内核" class="headerlink" title="编译内核"></a>编译内核</h1><p>便于内核易如反掌。让人叹为观止的是，这实际上比编译和安装像glibc这样的系统级组件还要简单。2.6内核提供了一套新工具，是编译内核更加容易，比早期发布的内核有了长足的进步。</p>
+<h2 id="配置内核"><a href="#配置内核" class="headerlink" title="配置内核"></a>配置内核</h2><p>因为Linux源码随手可得，那就意味着在编译它之前可以配置和定制。的确，你可以把自己需要的特定功能和驱动程序编译进内核。在编译内核之前，首先你必须配置它。由于内核提供了数不胜数的功能，支持了难以计数的硬件，因而有许多东西需要配置。可以配置的各种选项，以CONFIG_FEATURE形式表示，其前缀为CONFIG。例如，对称多处理器（SMP）的配置选项为CONFIG_SMP。如果设置了该选项，则SMP启用，否则，SMP不起作用。配置选择既可以用来决定哪些文件编译进内核，也可以通过预处理命令处理代码。<br>这些配置项要么是二选一，要么是三选一。二选一就是yes或no。比如CONFIG_PREEMPT就是二选一，表示内核抢占功能是否开启。三选一可以是yes、no或module。module意味着该配置项被选定了，但编译的的时候这部分功能的实现代码是以模块（一种可以动态安装的独立代码段）的形式生成。在三选一的情况下，显然yes选项表示把代码编译进主内核映像中，而不是作为一个模块。驱动程序一般选用三选一的配置。<br>配置选项也可以是字符串或整数。这些选项并不控制编译过程，而只是指定内核源码可以访问的值，一般以预处理宏的形式表示。比如，配置选项可以指定静态分配数组的大小。<br>销售商提供的内核，像Canonical的Ubuntu或者Red Hat的Fedora，他们的发布版中包含了预编译的内核，这样的内核使得所需的内核得以充分利用，并几乎把所有的驱动程序都编译成模块。这就为大多数硬件作为独立的模块提供了坚实的内核支持。但是，话又说回来，如果你是一个内核黑客，你应当编译自己的内核，并且按照自己的意愿决定包括或者不包含哪一模块。<br>内核提供了各种不同的工具来简化内核配置。最简单的一种是一个字符界面下的命令行工具。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make config</span><br></pre></td></tr></table></figure>
+<p>该工具会逐一遍历所有配置项，要求用户选择yes、no或者是module。由于这个过程往往要耗费掉很长时间，所以，除非你的工作是按小时计费的，否则应该多利用基于ncurse库编制的图形界面工具：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make menuconfig</span><br></pre></td></tr></table></figure>
+<p>或者，是用基于gtk+的图形工具：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make gconfig</span><br></pre></td></tr></table></figure>
+<p>这三种工具将所有配置项分门别类放置，比如按“处理器类型和特点”。你可以按类移动、浏览内核选项，当然也可以修改其值。<br>这条命令会基于默认的配置为你的体系结构创建一个配置：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make defconfig</span><br></pre></td></tr></table></figure>
+<p>尽管这些缺省值有点随意性（在i386上，据说那就是Linus的配置），但是，如果你从未配置过内核，那它们会提供一个良好的开端。<br>这些配置项会被存放在内核代码树根目录下的.config文件中。你很容易就能找到它，并且可以直接修改它。在这里面查找和修改内核选项也很容易。在你修改过配置文件之后，或者在用已有的配置文件配置新的代码树的时候，你应该验证和更新配置。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make oldconfig</span><br></pre></td></tr></table></figure>
+<p>事实上，在编译内核之前你都应该这么做。<br>配置选项CONFIG_IKCONFIG_PROC把完整的压缩过的内核配置文件存放在&#x2F;proc&#x2F;config.gz下，这样当你编译一个新内核的时候就可以方便地克隆当前的配置。如果你目前的内核已经启用了此选项，就可以从&#x2F;proc下复制出配置文件并且使用它来编译一个新内核：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">zcat /proc/config.gz &gt; .config</span><br><span class="line">make oldconfig</span><br></pre></td></tr></table></figure>
+<p>一旦内核配置好了，就可以使用一个简单的命令来编译它了：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make</span><br></pre></td></tr></table></figure>
+<p>这跟2.6以前的版本不同，你不用在每次编译内核之前都运行make dep了–代码之间的依赖关系会自动维护。你也无须再指定像老版本中bzImage这样的编译方式或独立的编译模块，默认的Makefile规则会打点这一切。</p>
+<h2 id="减少编译的垃圾信息"><a href="#减少编译的垃圾信息" class="headerlink" title="减少编译的垃圾信息"></a>减少编译的垃圾信息</h2><p>如果你想尽量少地看到垃圾信息，却又不希望错误错误报告和警告信息的话，你可以用以下命令来对输出进行重定向：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make &gt; ../detritus</span><br></pre></td></tr></table></figure>
+<p>一旦你需要查看编译的输出信息，你可以查看这个文件。不过，因为错误和警告都会在屏幕上显示，所以你需要查看这个文件的可能性不大。事实上，我只不过输出如下命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make &gt; /dev/null</span><br></pre></td></tr></table></figure>
+<p>就可把无用的输出信息重定向到永无返回值得黑洞&#x2F;dev&#x2F;null。</p>
+<h2 id="衍生多个编译作业"><a href="#衍生多个编译作业" class="headerlink" title="衍生多个编译作业"></a>衍生多个编译作业</h2><p>make程序能把编译过程拆分成多个并行的作业。其中的每个作业独立并发的运行，这有助于极大的加快多处理器系统上的编译过程，也有利于改善处理器的利用率，因为编译大型源代码树也包括I&#x2F;O等待所花费的时间（也就是处理器空下来等待I&#x2F;O请求完成所花费的时间）。<br>默认情况下，make只衍生一个作业，因为Makefiles常会出现不正确的依赖信息。对于不正确的依赖，多个作业可能会互相踩踏，导致编译过程出错。当然，内核的Makefiles没有这样的编码错误，因此衍生出的多个作业编译不会导致失败。为了以多个作业编译内核，使用以下命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make -jn</span><br></pre></td></tr></table></figure>
+<p>这里，n是要衍生出来的作业数。在实际中，每个处理器上一般衍生出一个或者两个作业。例如，在一个16核的处理器上，你可以输入如下命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make -j32 &gt; /dev/null</span><br></pre></td></tr></table></figure>
+<p>利用出色的distcc或者ccache工具，也可以动态的改善内核的编译时间。</p>
+<h2 id="安装新内核"><a href="#安装新内核" class="headerlink" title="安装新内核"></a>安装新内核</h2><p>在内核编译好之后，你还需要安装它。怎么安装就和体系结构以及启动引号工具（bootloader）息息相关了–查阅启动引导工具的说明，按照它的指导将内核映像拷贝到合适的位置，并且按照启动要求按照它。一定要保证随时有一个或两个可以启动的内核，以防新编译的内核出现问题。<br>例如，在使用grub的x86系统上，可能需要把<code>arch/i386/boot/bzImage</code>拷贝到&#x2F;boot目录下，像vmlinuz-version这样命名它，并且编辑<code>/etc/grub/grub.conf</code>文件，为新内核建立一个新的启动项。使用LILO启动的系统应当编辑<code>/etc/lilo.conf</code>，然后运行lilo。<br>所幸，模块的安装是自动的，也是独立于体系结构的。以root身份，只要运行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make modules_install</span><br></pre></td></tr></table></figure>
+<p>就可以把所有已编译的模块安装到正确的主目录<code>/lib/modules</code>下。<br>编译时也会在内核代码树的根目录下创建一个System.map的文件。这是一份符号对照表，用以将内核符号和它们的起始地址对应起来。调试的时候，如果需要把内存地址翻译成容易理解的函数名以及变量名，这就会很有用。</p>
+<h1 id="内核开发的特点"><a href="#内核开发的特点" class="headerlink" title="内核开发的特点"></a>内核开发的特点</h1><p>相对于用户空间内应用程序的开发，内核开发有一些独特之处。尽管<code>这些差异并不会使开发内核代码的难度超过开发用户代码，但它们依然有很大不同</code>。<br>这些特点使内核成为了一只性格迥异的猛兽。一些常用的准则被颠覆了，而又必须建立许多全新的准则。尽管有许多差异一目了然（人人都知道内核可以做它想做的任何事），但还是有一些差异晦暗不明。最重要的差异包括以下几种：</p>
+<ol>
+<li>内核编程时既不能访问C库也不能访问标准的C头文件。</li>
+<li>内核编程时必须使用GNU C。</li>
+<li>内核编程时缺乏像用户空间那样的内存保护机制。</li>
+<li>内核编程时难以执行浮点运算。</li>
+<li>内核给每个进程只有一个很小的定长堆栈。</li>
+<li>由于内核支持异步中断、抢占和SMP，因此时刻注意同步和并发。</li>
+<li>要考虑可移植的重要性。</li>
+</ol>
+<p>以上要点所有的内核开发者必须牢记。</p>
+<h2 id="无libc库抑或无标准头文件"><a href="#无libc库抑或无标准头文件" class="headerlink" title="无libc库抑或无标准头文件"></a>无libc库抑或无标准头文件</h2>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux-Kernel/" rel="tag"># Linux Kernel</a>
+              <a href="/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" rel="tag"># 操作系统</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/10/24/Linux%E5%86%85%E6%A0%B8%E7%AE%80%E4%BB%8B/" rel="prev" title="Linux内核简介">
+                  <i class="fa fa-chevron-left"></i> Linux内核简介
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Nibil</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">435k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6:35</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.0/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+</body>
+</html>
