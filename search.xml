@@ -505,168 +505,6 @@
       </tags>
   </entry>
   <entry>
-    <title>从内核出发</title>
-    <url>/2022/10/25/%E4%BB%8E%E5%86%85%E6%A0%B8%E5%87%BA%E5%8F%91/</url>
-    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>在这一章，我们将介绍Linux内核的一些基本常识：从何处获取源代码，如何编译它，又如何安装新代码。那么，让我们考察一下内核程序与用户应用空间程序的差异，以及内核中所使用的通用编程结构。虽然内核在很多方面有其独特性，但从现在来看，它和其他大型软件项目并无多大差别。</p>
-<span id="more"></span>
-<h1 id="获取内核源码"><a href="#获取内核源码" class="headerlink" title="获取内核源码"></a>获取内核源码</h1><p>登录Linux内核官方网站<a href="http://www.kernel.org,可以随时获取当前版本的linux源代码,可以是完整的压缩形式(使用tar创建的一个压缩文件),也可以是增量补丁形式./">http://www.kernel.org，可以随时获取当前版本的Linux源代码，可以是完整的压缩形式（使用tar创建的一个压缩文件），也可以是增量补丁形式。</a><br>除特殊情况下需要Linux源码的旧版本之外，一般都希望拥有最新的代码。kernel.org是源代码的库存之处，那些领导潮流的内核开发者所发布的增量补丁也放在这里。</p>
-<h2 id="使用Git"><a href="#使用Git" class="headerlink" title="使用Git"></a>使用Git</h2><p>在过去的几年中，Linus和他领导的内核开发者们开始使用一个新版本的控制系统来管理Linux内核源代码。Linus创造的这个系统称为Git。与CSV这样的传统的版本控制系统不同，Git是分布式的，它的用法和工作流程对许多开发者来说很陌生。我强烈建议使用Git来下载和管理Linux内核源代码。<br>你可以使用Git来获取最新提交到Linus版本树的一个副本：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git</span><br></pre></td></tr></table></figure>
-<p>当下载代码后，你可以更新你的分支到Linus的最新分支</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git pull</span><br></pre></td></tr></table></figure>
-<p>有了这两个命令，就可以获取并随时保持与内核官方的代码树一致。</p>
-<h2 id="安装内核源代码"><a href="#安装内核源代码" class="headerlink" title="安装内核源代码"></a>安装内核源代码</h2><p>内核压缩以GNU zip（gzip）和bzip2两种形式发布。bzip2是默认和首选形式，因为它在压缩上比gzip更具优势。以bzip2形式发布的Linux内核叫做linux-x.y.z.tar.bz2，这里x.y.z是内核源码的具体版本。下载了源代码之后，就可以轻而易举的对其解压。如果压缩形式是bzip2，则运行：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">tar xvjf linux-x.y.z.tar.bz2</span><br></pre></td></tr></table></figure>
-<p>如果压缩形式是GNU的zip，则运行：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">tar xvzf linux-x.y.z.tar.gz</span><br></pre></td></tr></table></figure>
-<p>解压后的源代码位于linux-x.y.z目录下。如果你是使用git获取和管理内核源代码，那么就不需要下载压缩文件，只要像前面描述的那样运行git clone命令，git就会下载并且解压最新的源代码。</p>
-<p><em><strong>何处安装并触及源码</strong></em><br>内核源码一般安装在&#x2F;usr&#x2F;src&#x2F;linux目录下。但是请注意，不要把这个源码树用于开发，因为编译你的C库所用的内核版本就链接到这棵树。此外，不要以root身份对内核进行修改，而应当建立自己的主目录，仅以root身份安装新内核。即使在安装新内核时，&#x2F;usr&#x2F;src&#x2F;linux目录都应当原封不动。</p>
-<h2 id="使用补丁"><a href="#使用补丁" class="headerlink" title="使用补丁"></a>使用补丁</h2><p>在Linux内核社区中，补丁是通用语。你可以以补丁的形式发布对代码的修改，也可以以补丁的形式接收其他人所做的修改。增量补丁可以作为版本转移的桥梁。你不需要再下载庞大的内核源码的全部压缩，则只需要给旧版本打上一个增量补丁，让其旧貌换新颜。这不仅节约带宽，还省了时间。要应用增量补丁，从你的内部源码树开始，只需运行：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">patch -p1 &lt; ../patch-x.y.z</span><br></pre></td></tr></table></figure>
-<p>一般来说，一个给定版本的内核补丁总是打在前一个版本上。<br>有关创建和应用补丁更深入的讨论会在后续章节进行。</p>
-<h1 id="内核源码树"><a href="#内核源码树" class="headerlink" title="内核源码树"></a>内核源码树</h1><p>内核源码树由很多目录组成，而大多数目录又包含更多的子目录。源码树的根目录及其子目录如下表所示：</p>
-<table>
-<thead>
-<tr>
-<th>目录</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>arch</td>
-<td>特定体系结构的源码</td>
-</tr>
-<tr>
-<td>block</td>
-<td>块设备I&#x2F;O层</td>
-</tr>
-<tr>
-<td>crypto</td>
-<td>加密API</td>
-</tr>
-<tr>
-<td>Documentation</td>
-<td>内核源码文档</td>
-</tr>
-<tr>
-<td>drivers</td>
-<td>设备驱动程序</td>
-</tr>
-<tr>
-<td>firmware</td>
-<td>使用某些驱动程序而需要的设备固件</td>
-</tr>
-<tr>
-<td>fs</td>
-<td>VFS和各种文件系统</td>
-</tr>
-<tr>
-<td>include</td>
-<td>内核头文件</td>
-</tr>
-<tr>
-<td>init</td>
-<td>内核引导和初始化</td>
-</tr>
-<tr>
-<td>ipc</td>
-<td>进程间通信代码</td>
-</tr>
-<tr>
-<td>kernel</td>
-<td>像调度程序这样的核心子系统</td>
-</tr>
-<tr>
-<td>lib</td>
-<td>通用内核函数</td>
-</tr>
-<tr>
-<td>mm</td>
-<td>内存管理子系统和VM</td>
-</tr>
-<tr>
-<td>net</td>
-<td>网络子系统</td>
-</tr>
-<tr>
-<td>samples</td>
-<td>示例，示范代码</td>
-</tr>
-<tr>
-<td>scripts</td>
-<td>编译内核所用的脚本</td>
-</tr>
-<tr>
-<td>sound</td>
-<td>语音子系统</td>
-</tr>
-<tr>
-<td>usr</td>
-<td>早期用户空间代码（所谓的initramfs）</td>
-</tr>
-<tr>
-<td>tools</td>
-<td>在Linux开发中有用的工具</td>
-</tr>
-<tr>
-<td>virt</td>
-<td>虚拟化基础结构</td>
-</tr>
-</tbody></table>
-<p>在源码树根目录的很多文件中值得提及。COPYING文件是内核许可证（GNU GPL v2）。CREDITS是开发了很多内核代码的开发者列表。MAINTAINERS是维护者列表，他们负责维护内核子系统和驱动程序。Makefile是基本内核的Makefile。</p>
-<h1 id="编译内核"><a href="#编译内核" class="headerlink" title="编译内核"></a>编译内核</h1><p>便于内核易如反掌。让人叹为观止的是，这实际上比编译和安装像glibc这样的系统级组件还要简单。2.6内核提供了一套新工具，是编译内核更加容易，比早期发布的内核有了长足的进步。</p>
-<h2 id="配置内核"><a href="#配置内核" class="headerlink" title="配置内核"></a>配置内核</h2><p>因为Linux源码随手可得，那就意味着在编译它之前可以配置和定制。的确，你可以把自己需要的特定功能和驱动程序编译进内核。在编译内核之前，首先你必须配置它。由于内核提供了数不胜数的功能，支持了难以计数的硬件，因而有许多东西需要配置。可以配置的各种选项，以CONFIG_FEATURE形式表示，其前缀为CONFIG。例如，对称多处理器（SMP）的配置选项为CONFIG_SMP。如果设置了该选项，则SMP启用，否则，SMP不起作用。配置选择既可以用来决定哪些文件编译进内核，也可以通过预处理命令处理代码。<br>这些配置项要么是二选一，要么是三选一。二选一就是yes或no。比如CONFIG_PREEMPT就是二选一，表示内核抢占功能是否开启。三选一可以是yes、no或module。module意味着该配置项被选定了，但编译的的时候这部分功能的实现代码是以模块（一种可以动态安装的独立代码段）的形式生成。在三选一的情况下，显然yes选项表示把代码编译进主内核映像中，而不是作为一个模块。驱动程序一般选用三选一的配置。<br>配置选项也可以是字符串或整数。这些选项并不控制编译过程，而只是指定内核源码可以访问的值，一般以预处理宏的形式表示。比如，配置选项可以指定静态分配数组的大小。<br>销售商提供的内核，像Canonical的Ubuntu或者Red Hat的Fedora，他们的发布版中包含了预编译的内核，这样的内核使得所需的内核得以充分利用，并几乎把所有的驱动程序都编译成模块。这就为大多数硬件作为独立的模块提供了坚实的内核支持。但是，话又说回来，如果你是一个内核黑客，你应当编译自己的内核，并且按照自己的意愿决定包括或者不包含哪一模块。<br>内核提供了各种不同的工具来简化内核配置。最简单的一种是一个字符界面下的命令行工具。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make config</span><br></pre></td></tr></table></figure>
-<p>该工具会逐一遍历所有配置项，要求用户选择yes、no或者是module。由于这个过程往往要耗费掉很长时间，所以，除非你的工作是按小时计费的，否则应该多利用基于ncurse库编制的图形界面工具：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make menuconfig</span><br></pre></td></tr></table></figure>
-<p>或者，是用基于gtk+的图形工具：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make gconfig</span><br></pre></td></tr></table></figure>
-<p>这三种工具将所有配置项分门别类放置，比如按“处理器类型和特点”。你可以按类移动、浏览内核选项，当然也可以修改其值。<br>这条命令会基于默认的配置为你的体系结构创建一个配置：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make defconfig</span><br></pre></td></tr></table></figure>
-<p>尽管这些缺省值有点随意性（在i386上，据说那就是Linus的配置），但是，如果你从未配置过内核，那它们会提供一个良好的开端。<br>这些配置项会被存放在内核代码树根目录下的.config文件中。你很容易就能找到它，并且可以直接修改它。在这里面查找和修改内核选项也很容易。在你修改过配置文件之后，或者在用已有的配置文件配置新的代码树的时候，你应该验证和更新配置。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make oldconfig</span><br></pre></td></tr></table></figure>
-<p>事实上，在编译内核之前你都应该这么做。<br>配置选项CONFIG_IKCONFIG_PROC把完整的压缩过的内核配置文件存放在&#x2F;proc&#x2F;config.gz下，这样当你编译一个新内核的时候就可以方便地克隆当前的配置。如果你目前的内核已经启用了此选项，就可以从&#x2F;proc下复制出配置文件并且使用它来编译一个新内核：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">zcat /proc/config.gz &gt; .config</span><br><span class="line">make oldconfig</span><br></pre></td></tr></table></figure>
-<p>一旦内核配置好了，就可以使用一个简单的命令来编译它了：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make</span><br></pre></td></tr></table></figure>
-<p>这跟2.6以前的版本不同，你不用在每次编译内核之前都运行make dep了–代码之间的依赖关系会自动维护。你也无须再指定像老版本中bzImage这样的编译方式或独立的编译模块，默认的Makefile规则会打点这一切。</p>
-<h2 id="减少编译的垃圾信息"><a href="#减少编译的垃圾信息" class="headerlink" title="减少编译的垃圾信息"></a>减少编译的垃圾信息</h2><p>如果你想尽量少地看到垃圾信息，却又不希望错误错误报告和警告信息的话，你可以用以下命令来对输出进行重定向：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make &gt; ../detritus</span><br></pre></td></tr></table></figure>
-<p>一旦你需要查看编译的输出信息，你可以查看这个文件。不过，因为错误和警告都会在屏幕上显示，所以你需要查看这个文件的可能性不大。事实上，我只不过输出如下命令：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make &gt; /dev/null</span><br></pre></td></tr></table></figure>
-<p>就可把无用的输出信息重定向到永无返回值得黑洞&#x2F;dev&#x2F;null。</p>
-<h2 id="衍生多个编译作业"><a href="#衍生多个编译作业" class="headerlink" title="衍生多个编译作业"></a>衍生多个编译作业</h2><p>make程序能把编译过程拆分成多个并行的作业。其中的每个作业独立并发的运行，这有助于极大的加快多处理器系统上的编译过程，也有利于改善处理器的利用率，因为编译大型源代码树也包括I&#x2F;O等待所花费的时间（也就是处理器空下来等待I&#x2F;O请求完成所花费的时间）。<br>默认情况下，make只衍生一个作业，因为Makefiles常会出现不正确的依赖信息。对于不正确的依赖，多个作业可能会互相踩踏，导致编译过程出错。当然，内核的Makefiles没有这样的编码错误，因此衍生出的多个作业编译不会导致失败。为了以多个作业编译内核，使用以下命令：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make -jn</span><br></pre></td></tr></table></figure>
-<p>这里，n是要衍生出来的作业数。在实际中，每个处理器上一般衍生出一个或者两个作业。例如，在一个16核的处理器上，你可以输入如下命令：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make -j32 &gt; /dev/null</span><br></pre></td></tr></table></figure>
-<p>利用出色的distcc或者ccache工具，也可以动态的改善内核的编译时间。</p>
-<h2 id="安装新内核"><a href="#安装新内核" class="headerlink" title="安装新内核"></a>安装新内核</h2><p>在内核编译好之后，你还需要安装它。怎么安装就和体系结构以及启动引号工具（bootloader）息息相关了–查阅启动引导工具的说明，按照它的指导将内核映像拷贝到合适的位置，并且按照启动要求按照它。一定要保证随时有一个或两个可以启动的内核，以防新编译的内核出现问题。<br>例如，在使用grub的x86系统上，可能需要把<code>arch/i386/boot/bzImage</code>拷贝到&#x2F;boot目录下，像vmlinuz-version这样命名它，并且编辑<code>/etc/grub/grub.conf</code>文件，为新内核建立一个新的启动项。使用LILO启动的系统应当编辑<code>/etc/lilo.conf</code>，然后运行lilo。<br>所幸，模块的安装是自动的，也是独立于体系结构的。以root身份，只要运行：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make modules_install</span><br></pre></td></tr></table></figure>
-<p>就可以把所有已编译的模块安装到正确的主目录<code>/lib/modules</code>下。<br>编译时也会在内核代码树的根目录下创建一个System.map的文件。这是一份符号对照表，用以将内核符号和它们的起始地址对应起来。调试的时候，如果需要把内存地址翻译成容易理解的函数名以及变量名，这就会很有用。</p>
-<h1 id="内核开发的特点"><a href="#内核开发的特点" class="headerlink" title="内核开发的特点"></a>内核开发的特点</h1><p>相对于用户空间内应用程序的开发，内核开发有一些独特之处。尽管<code>这些差异并不会使开发内核代码的难度超过开发用户代码，但它们依然有很大不同</code>。<br>这些特点使内核成为了一只性格迥异的猛兽。一些常用的准则被颠覆了，而又必须建立许多全新的准则。尽管有许多差异一目了然（人人都知道内核可以做它想做的任何事），但还是有一些差异晦暗不明。最重要的差异包括以下几种：</p>
-<ol>
-<li>内核编程时既不能访问C库也不能访问标准的C头文件。</li>
-<li>内核编程时必须使用GNU C。</li>
-<li>内核编程时缺乏像用户空间那样的内存保护机制。</li>
-<li>内核编程时难以执行浮点运算。</li>
-<li>内核给每个进程只有一个很小的定长堆栈。</li>
-<li>由于内核支持异步中断、抢占和SMP，因此时刻注意同步和并发。</li>
-<li>要考虑可移植的重要性。</li>
-</ol>
-<p>以上要点所有的内核开发者必须牢记。</p>
-<h2 id="无libc库抑或无标准头文件"><a href="#无libc库抑或无标准头文件" class="headerlink" title="无libc库抑或无标准头文件"></a>无libc库抑或无标准头文件</h2>]]></content>
-      <categories>
-        <category>学习</category>
-        <category>书籍</category>
-        <category>Linux内核设计与实现</category>
-        <category>第2章 从内核出发</category>
-      </categories>
-      <tags>
-        <tag>Linux Kernel</tag>
-        <tag>操作系统</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>设备与模块</title>
     <url>/2022/08/02/%E8%AE%BE%E5%A4%87%E4%B8%8E%E6%A8%A1%E5%9D%97/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《Linux内核设计与实现》第17章总结归纳</p>
@@ -3172,6 +3010,202 @@ hid_irq_in是USB中断传输方式的中断处理函数，当键盘被按下时�
         <category>书籍</category>
         <category>Linux内核设计与实现</category>
         <category>第1章 Linux内核简介</category>
+      </categories>
+      <tags>
+        <tag>Linux Kernel</tag>
+        <tag>操作系统</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>从内核出发</title>
+    <url>/2022/10/25/%E4%BB%8E%E5%86%85%E6%A0%B8%E5%87%BA%E5%8F%91/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>在这一章，我们将介绍Linux内核的一些基本常识：从何处获取源代码，如何编译它，又如何安装新代码。那么，让我们考察一下内核程序与用户应用空间程序的差异，以及内核中所使用的通用编程结构。虽然内核在很多方面有其独特性，但从现在来看，它和其他大型软件项目并无多大差别。</p>
+<span id="more"></span>
+<h1 id="获取内核源码"><a href="#获取内核源码" class="headerlink" title="获取内核源码"></a>获取内核源码</h1><p>登录Linux内核官方网站<a href="http://www.kernel.org,可以随时获取当前版本的linux源代码,可以是完整的压缩形式(使用tar创建的一个压缩文件),也可以是增量补丁形式./">http://www.kernel.org，可以随时获取当前版本的Linux源代码，可以是完整的压缩形式（使用tar创建的一个压缩文件），也可以是增量补丁形式。</a><br>除特殊情况下需要Linux源码的旧版本之外，一般都希望拥有最新的代码。kernel.org是源代码的库存之处，那些领导潮流的内核开发者所发布的增量补丁也放在这里。</p>
+<h2 id="使用Git"><a href="#使用Git" class="headerlink" title="使用Git"></a>使用Git</h2><p>在过去的几年中，Linus和他领导的内核开发者们开始使用一个新版本的控制系统来管理Linux内核源代码。Linus创造的这个系统称为Git。与CSV这样的传统的版本控制系统不同，Git是分布式的，它的用法和工作流程对许多开发者来说很陌生。我强烈建议使用Git来下载和管理Linux内核源代码。<br>你可以使用Git来获取最新提交到Linus版本树的一个副本：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git</span><br></pre></td></tr></table></figure>
+<p>当下载代码后，你可以更新你的分支到Linus的最新分支</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git pull</span><br></pre></td></tr></table></figure>
+<p>有了这两个命令，就可以获取并随时保持与内核官方的代码树一致。</p>
+<h2 id="安装内核源代码"><a href="#安装内核源代码" class="headerlink" title="安装内核源代码"></a>安装内核源代码</h2><p>内核压缩以GNU zip（gzip）和bzip2两种形式发布。bzip2是默认和首选形式，因为它在压缩上比gzip更具优势。以bzip2形式发布的Linux内核叫做linux-x.y.z.tar.bz2，这里x.y.z是内核源码的具体版本。下载了源代码之后，就可以轻而易举的对其解压。如果压缩形式是bzip2，则运行：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">tar xvjf linux-x.y.z.tar.bz2</span><br></pre></td></tr></table></figure>
+<p>如果压缩形式是GNU的zip，则运行：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">tar xvzf linux-x.y.z.tar.gz</span><br></pre></td></tr></table></figure>
+<p>解压后的源代码位于linux-x.y.z目录下。如果你是使用git获取和管理内核源代码，那么就不需要下载压缩文件，只要像前面描述的那样运行git clone命令，git就会下载并且解压最新的源代码。</p>
+<p><em><strong>何处安装并触及源码</strong></em><br>内核源码一般安装在&#x2F;usr&#x2F;src&#x2F;linux目录下。但是请注意，不要把这个源码树用于开发，因为编译你的C库所用的内核版本就链接到这棵树。此外，不要以root身份对内核进行修改，而应当建立自己的主目录，仅以root身份安装新内核。即使在安装新内核时，&#x2F;usr&#x2F;src&#x2F;linux目录都应当原封不动。</p>
+<h2 id="使用补丁"><a href="#使用补丁" class="headerlink" title="使用补丁"></a>使用补丁</h2><p>在Linux内核社区中，补丁是通用语。你可以以补丁的形式发布对代码的修改，也可以以补丁的形式接收其他人所做的修改。增量补丁可以作为版本转移的桥梁。你不需要再下载庞大的内核源码的全部压缩，则只需要给旧版本打上一个增量补丁，让其旧貌换新颜。这不仅节约带宽，还省了时间。要应用增量补丁，从你的内部源码树开始，只需运行：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">patch -p1 &lt; ../patch-x.y.z</span><br></pre></td></tr></table></figure>
+<p>一般来说，一个给定版本的内核补丁总是打在前一个版本上。<br>有关创建和应用补丁更深入的讨论会在后续章节进行。</p>
+<h1 id="内核源码树"><a href="#内核源码树" class="headerlink" title="内核源码树"></a>内核源码树</h1><p>内核源码树由很多目录组成，而大多数目录又包含更多的子目录。源码树的根目录及其子目录如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>目录</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>arch</td>
+<td>特定体系结构的源码</td>
+</tr>
+<tr>
+<td>block</td>
+<td>块设备I&#x2F;O层</td>
+</tr>
+<tr>
+<td>crypto</td>
+<td>加密API</td>
+</tr>
+<tr>
+<td>Documentation</td>
+<td>内核源码文档</td>
+</tr>
+<tr>
+<td>drivers</td>
+<td>设备驱动程序</td>
+</tr>
+<tr>
+<td>firmware</td>
+<td>使用某些驱动程序而需要的设备固件</td>
+</tr>
+<tr>
+<td>fs</td>
+<td>VFS和各种文件系统</td>
+</tr>
+<tr>
+<td>include</td>
+<td>内核头文件</td>
+</tr>
+<tr>
+<td>init</td>
+<td>内核引导和初始化</td>
+</tr>
+<tr>
+<td>ipc</td>
+<td>进程间通信代码</td>
+</tr>
+<tr>
+<td>kernel</td>
+<td>像调度程序这样的核心子系统</td>
+</tr>
+<tr>
+<td>lib</td>
+<td>通用内核函数</td>
+</tr>
+<tr>
+<td>mm</td>
+<td>内存管理子系统和VM</td>
+</tr>
+<tr>
+<td>net</td>
+<td>网络子系统</td>
+</tr>
+<tr>
+<td>samples</td>
+<td>示例，示范代码</td>
+</tr>
+<tr>
+<td>scripts</td>
+<td>编译内核所用的脚本</td>
+</tr>
+<tr>
+<td>sound</td>
+<td>语音子系统</td>
+</tr>
+<tr>
+<td>usr</td>
+<td>早期用户空间代码（所谓的initramfs）</td>
+</tr>
+<tr>
+<td>tools</td>
+<td>在Linux开发中有用的工具</td>
+</tr>
+<tr>
+<td>virt</td>
+<td>虚拟化基础结构</td>
+</tr>
+</tbody></table>
+<p>在源码树根目录的很多文件中值得提及。COPYING文件是内核许可证（GNU GPL v2）。CREDITS是开发了很多内核代码的开发者列表。MAINTAINERS是维护者列表，他们负责维护内核子系统和驱动程序。Makefile是基本内核的Makefile。</p>
+<h1 id="编译内核"><a href="#编译内核" class="headerlink" title="编译内核"></a>编译内核</h1><p>便于内核易如反掌。让人叹为观止的是，这实际上比编译和安装像glibc这样的系统级组件还要简单。2.6内核提供了一套新工具，是编译内核更加容易，比早期发布的内核有了长足的进步。</p>
+<h2 id="配置内核"><a href="#配置内核" class="headerlink" title="配置内核"></a>配置内核</h2><p>因为Linux源码随手可得，那就意味着在编译它之前可以配置和定制。的确，你可以把自己需要的特定功能和驱动程序编译进内核。在编译内核之前，首先你必须配置它。由于内核提供了数不胜数的功能，支持了难以计数的硬件，因而有许多东西需要配置。可以配置的各种选项，以CONFIG_FEATURE形式表示，其前缀为CONFIG。例如，对称多处理器（SMP）的配置选项为CONFIG_SMP。如果设置了该选项，则SMP启用，否则，SMP不起作用。配置选择既可以用来决定哪些文件编译进内核，也可以通过预处理命令处理代码。<br>这些配置项要么是二选一，要么是三选一。二选一就是yes或no。比如CONFIG_PREEMPT就是二选一，表示内核抢占功能是否开启。三选一可以是yes、no或module。module意味着该配置项被选定了，但编译的的时候这部分功能的实现代码是以模块（一种可以动态安装的独立代码段）的形式生成。在三选一的情况下，显然yes选项表示把代码编译进主内核映像中，而不是作为一个模块。驱动程序一般选用三选一的配置。<br>配置选项也可以是字符串或整数。这些选项并不控制编译过程，而只是指定内核源码可以访问的值，一般以预处理宏的形式表示。比如，配置选项可以指定静态分配数组的大小。<br>销售商提供的内核，像Canonical的Ubuntu或者Red Hat的Fedora，他们的发布版中包含了预编译的内核，这样的内核使得所需的内核得以充分利用，并几乎把所有的驱动程序都编译成模块。这就为大多数硬件作为独立的模块提供了坚实的内核支持。但是，话又说回来，如果你是一个内核黑客，你应当编译自己的内核，并且按照自己的意愿决定包括或者不包含哪一模块。<br>内核提供了各种不同的工具来简化内核配置。最简单的一种是一个字符界面下的命令行工具。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make config</span><br></pre></td></tr></table></figure>
+<p>该工具会逐一遍历所有配置项，要求用户选择yes、no或者是module。由于这个过程往往要耗费掉很长时间，所以，除非你的工作是按小时计费的，否则应该多利用基于ncurse库编制的图形界面工具：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make menuconfig</span><br></pre></td></tr></table></figure>
+<p>或者，是用基于gtk+的图形工具：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make gconfig</span><br></pre></td></tr></table></figure>
+<p>这三种工具将所有配置项分门别类放置，比如按“处理器类型和特点”。你可以按类移动、浏览内核选项，当然也可以修改其值。<br>这条命令会基于默认的配置为你的体系结构创建一个配置：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make defconfig</span><br></pre></td></tr></table></figure>
+<p>尽管这些缺省值有点随意性（在i386上，据说那就是Linus的配置），但是，如果你从未配置过内核，那它们会提供一个良好的开端。<br>这些配置项会被存放在内核代码树根目录下的.config文件中。你很容易就能找到它，并且可以直接修改它。在这里面查找和修改内核选项也很容易。在你修改过配置文件之后，或者在用已有的配置文件配置新的代码树的时候，你应该验证和更新配置。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make oldconfig</span><br></pre></td></tr></table></figure>
+<p>事实上，在编译内核之前你都应该这么做。<br>配置选项CONFIG_IKCONFIG_PROC把完整的压缩过的内核配置文件存放在&#x2F;proc&#x2F;config.gz下，这样当你编译一个新内核的时候就可以方便地克隆当前的配置。如果你目前的内核已经启用了此选项，就可以从&#x2F;proc下复制出配置文件并且使用它来编译一个新内核：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">zcat /proc/config.gz &gt; .config</span><br><span class="line">make oldconfig</span><br></pre></td></tr></table></figure>
+<p>一旦内核配置好了，就可以使用一个简单的命令来编译它了：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make</span><br></pre></td></tr></table></figure>
+<p>这跟2.6以前的版本不同，你不用在每次编译内核之前都运行make dep了–代码之间的依赖关系会自动维护。你也无须再指定像老版本中bzImage这样的编译方式或独立的编译模块，默认的Makefile规则会打点这一切。</p>
+<h2 id="减少编译的垃圾信息"><a href="#减少编译的垃圾信息" class="headerlink" title="减少编译的垃圾信息"></a>减少编译的垃圾信息</h2><p>如果你想尽量少地看到垃圾信息，却又不希望错误错误报告和警告信息的话，你可以用以下命令来对输出进行重定向：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make &gt; ../detritus</span><br></pre></td></tr></table></figure>
+<p>一旦你需要查看编译的输出信息，你可以查看这个文件。不过，因为错误和警告都会在屏幕上显示，所以你需要查看这个文件的可能性不大。事实上，我只不过输出如下命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make &gt; /dev/null</span><br></pre></td></tr></table></figure>
+<p>就可把无用的输出信息重定向到永无返回值得黑洞&#x2F;dev&#x2F;null。</p>
+<h2 id="衍生多个编译作业"><a href="#衍生多个编译作业" class="headerlink" title="衍生多个编译作业"></a>衍生多个编译作业</h2><p>make程序能把编译过程拆分成多个并行的作业。其中的每个作业独立并发的运行，这有助于极大的加快多处理器系统上的编译过程，也有利于改善处理器的利用率，因为编译大型源代码树也包括I&#x2F;O等待所花费的时间（也就是处理器空下来等待I&#x2F;O请求完成所花费的时间）。<br>默认情况下，make只衍生一个作业，因为Makefiles常会出现不正确的依赖信息。对于不正确的依赖，多个作业可能会互相踩踏，导致编译过程出错。当然，内核的Makefiles没有这样的编码错误，因此衍生出的多个作业编译不会导致失败。为了以多个作业编译内核，使用以下命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make -jn</span><br></pre></td></tr></table></figure>
+<p>这里，n是要衍生出来的作业数。在实际中，每个处理器上一般衍生出一个或者两个作业。例如，在一个16核的处理器上，你可以输入如下命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make -j32 &gt; /dev/null</span><br></pre></td></tr></table></figure>
+<p>利用出色的distcc或者ccache工具，也可以动态的改善内核的编译时间。</p>
+<h2 id="安装新内核"><a href="#安装新内核" class="headerlink" title="安装新内核"></a>安装新内核</h2><p>在内核编译好之后，你还需要安装它。怎么安装就和体系结构以及启动引号工具（bootloader）息息相关了–查阅启动引导工具的说明，按照它的指导将内核映像拷贝到合适的位置，并且按照启动要求按照它。一定要保证随时有一个或两个可以启动的内核，以防新编译的内核出现问题。<br>例如，在使用grub的x86系统上，可能需要把<code>arch/i386/boot/bzImage</code>拷贝到&#x2F;boot目录下，像vmlinuz-version这样命名它，并且编辑<code>/etc/grub/grub.conf</code>文件，为新内核建立一个新的启动项。使用LILO启动的系统应当编辑<code>/etc/lilo.conf</code>，然后运行lilo。<br>所幸，模块的安装是自动的，也是独立于体系结构的。以root身份，只要运行：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">make modules_install</span><br></pre></td></tr></table></figure>
+<p>就可以把所有已编译的模块安装到正确的主目录<code>/lib/modules</code>下。<br>编译时也会在内核代码树的根目录下创建一个System.map的文件。这是一份符号对照表，用以将内核符号和它们的起始地址对应起来。调试的时候，如果需要把内存地址翻译成容易理解的函数名以及变量名，这就会很有用。</p>
+<h1 id="内核开发的特点"><a href="#内核开发的特点" class="headerlink" title="内核开发的特点"></a>内核开发的特点</h1><p>相对于用户空间内应用程序的开发，内核开发有一些独特之处。尽管<code>这些差异并不会使开发内核代码的难度超过开发用户代码，但它们依然有很大不同</code>。<br>这些特点使内核成为了一只性格迥异的猛兽。一些常用的准则被颠覆了，而又必须建立许多全新的准则。尽管有许多差异一目了然（人人都知道内核可以做它想做的任何事），但还是有一些差异晦暗不明。最重要的差异包括以下几种：</p>
+<ol>
+<li>内核编程时既不能访问C库也不能访问标准的C头文件。</li>
+<li>内核编程时必须使用GNU C。</li>
+<li>内核编程时缺乏像用户空间那样的内存保护机制。</li>
+<li>内核编程时难以执行浮点运算。</li>
+<li>内核给每个进程只有一个很小的定长堆栈。</li>
+<li>由于内核支持异步中断、抢占和SMP，因此时刻注意同步和并发。</li>
+<li>要考虑可移植的重要性。</li>
+</ol>
+<p>以上要点所有的内核开发者必须牢记。</p>
+<h2 id="无libc库抑或无标准头文件"><a href="#无libc库抑或无标准头文件" class="headerlink" title="无libc库抑或无标准头文件"></a>无libc库抑或无标准头文件</h2><p>与用户空间的应用程序不同，内核不能链接使用标准C函数库–或者其他的那些库也不行。造成这种情况的原因有很多，其中就包括先有鸡还是先有蛋这个悖论。不过最主要的原因还是速度和大小。对内核来说，完整的C库–哪怕是它的一个子集，都太大且太低效了。<br>别着急，大部分常用的C库函数在内核中都已经得到了实现。比如操作字符串的函数组就位于<code>lib/string.c</code>中。只要包含&lt;linux&#x2F;string.h&gt;头文件，就可以使用它们。</p>
+<p><strong>头文件</strong><br><em>当我在谈及头文件时，都指的是组成内核源代码树的内核头文件。内核源代码文件不能包含外部头文件，就像它们不能用外部库一样。<br>基本的头文件位于内核源代码树顶级目录下的include目录中。例如，头文件&lt;linux&#x2F;inotify.h&gt;对应内核源代码树的<code>include/linux/inotify.h</code>。<br>体系结构相关的头文件集位于内核源代码树的<code>arch/&lt;architecture&gt;/include/asm</code>目录下。例如，如果编译的是x86体系结构，则体系结构相关的头文件就是<code>arch/x86/include/asm</code>。内核代码通过以<code>asm/</code>为前缀的方式包含这些头文件，例如&lt;asm&#x2F;ioctl.h&gt;。</em></p>
+<p>在所有没有实现的函数中，最著名的就数printf()函数了。内核代码虽然无法调用printf()，但它提供的printk()函数几乎与printf()相同。printk()函数负责把格式化好的字符串拷贝到内核缓冲区中，这样syslog程序就可以通过读取该缓冲区来获取内核信息。printk()的用法很像printf()：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">printk(<span class="string">&quot;Hello world! A string:&#x27;%s&#x27; and an integer:&#x27;%d&#x27;\n&quot;</span>,str,i);</span><br></pre></td></tr></table></figure>
+<p>printk()和printf()之间的一个显著区别在于，printk()允许你通过指定一个标志来设置优先级。syslogd会根据这个优先级标志来决定在什么地方显示这条系统消息。下面是一个使用这种优先级标志的例子：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">printk(KERN_ERR<span class="string">&quot;this is an error!\n&quot;</span>);</span><br></pre></td></tr></table></figure>
+<p><strong>注意</strong><br><em>在KERN_ERR和要打印的消息之间没有逗号，这样写是别有用意的。优先级标志是预处理定义的一个描述性字符串，在编译时优先级标志就与要打印的消息绑在一起。贯穿整本书，我们会使用printk()。</em></p>
+<h2 id="GNU-C"><a href="#GNU-C" class="headerlink" title="GNU C"></a>GNU C</h2><p>像所有自视清高的Unix内核一样，Linux内核是用C语言编写的。让人略感惊讶的是，内核并不完全符合ANSI C标准。实际上，只要有可能，内核开发者总是要用到gc<br>c提供的许多语言的扩展部分。gcc是多种GNU编译器的集合，它包含的C编译器既可以编译内核，也可以编译Linux系统上用C语言写的其他代码。<br>内核开发者使用的C语言涵盖了ISO C99标准和GNU C扩展特性。这其中的这种变化把Linux内核推向了gcc的怀抱，尽管目前出现了一些新的编译器如Intel C，已经支持了足够多的gcc扩展特性，完全可以用来编译Linux内核了。最早支持gcc的版本是3.2，但是推荐使用gcc4.4或者之后的版本。Linux内核用到的ISO C99标准的扩展没有什么特别之处，而且C99作为C语言官方标准的修订本，不可能有大的或者是激进的变化。让人感兴趣的是，与标准C语言有区别的，通常也是那些人们不熟悉的变化，多数集中在GNU C上。就让我们研究一下内核代码中所使用到的C语言扩展中让人感兴趣的那部分吧，这些变化使内核代码有别于你所熟悉的其他项目。</p>
+<h3 id="内联函数"><a href="#内联函数" class="headerlink" title="内联函数"></a>内联函数</h3><p>C99和GNU C均支持内联函数。inline这个名称就可以反映出它的工作方式，函数会在它所调用的位置上展开。这么做可以消除函数调用和返回所带来的开销（寄存器存储和恢复）。而且，由于编译器会把调用函数的代码和函数本身放在一起进行优化，所以也有进一步优化代码的可能。不过这么做是有代价的，代码会变长，这也就意味着占用更多的内存空间或者占用更多的指令缓存。内核开发者通常把那些对时间要求比较高，而本身长度又比较短的函数定义成内联函数。如果一个函数较大，会被反复调用，且没有特别的时间上的限制，我们不赞成将它做成内联函数。<br>定义一个内联函数的时候，需要使用static作为关键字，并且用inline限定它。比如：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">void</span> <span class="title function_">wolf</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> tail_size)</span>;</span><br></pre></td></tr></table></figure>
+<p>内联函数必须在使用之前就定义好，否则编译器就没法把这个函数展开。实践中一般在头文件中定义内联函数。由于使用了static作为关键字进行限制，所以编译时不会为内联函数单独建立一个函数体。如果一个内联函数仅仅在某个源文件中使用，那么也可以把它定义在该文件开始的地方。<br><code>在内核中，为了类型安全和易读性，优先使用内联函数而不是复杂的宏。</code></p>
+<h3 id="内联汇编"><a href="#内联汇编" class="headerlink" title="内联汇编"></a>内联汇编</h3><p>gcc编译器支持在C函数中嵌入汇编指令。当然，在内核编程的时候，只有知道对应的体系结构，才能使用这个功能。<br>我们通常使用asm()指令嵌入汇编代码。例如，下面这条内联汇编用于执行x86处理器的rdtsc指令，返回时间戳(tsc)寄存器的值：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">int</span> low,high;</span><br><span class="line"><span class="keyword">asm</span> <span class="title function_">volatile</span><span class="params">(<span class="string">&quot;rdtsc&quot;</span> : <span class="string">&quot;=a&quot;</span>(low), <span class="string">&quot;=d&quot;</span>(high))</span>;</span><br><span class="line"><span class="comment">/* low和high分别包含64位时间戳的低32位和高32位 */</span></span><br></pre></td></tr></table></figure>
+<p>Linux的内核混合使用了C语言和汇编语言。在偏近体系结构的底层或对执行时间要求严格的地方，一般使用汇编语言。而内核其他部分的大部分代码是用C语言编写的。</p>
+<h3 id="分支声明"><a href="#分支声明" class="headerlink" title="分支声明"></a>分支声明</h3><p>对于条件选择语句，gcc内建了一条指令用于优化，在一个条件经常出现，或者该条件很少出现的时候，编译器可以根据这条指令对条件分支选择进行优化。内核把这条指令封装成了宏，比如likely()和unlikely()，这样使用起来比较方便。<br>例如，下面是一个条件选择语句：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span>(error) &#123;</span><br><span class="line">    <span class="comment">/*....*/</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果想要把这个选择标记成绝少发生的分支：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* 我们认为error绝大多数时间都会是0 */</span></span><br><span class="line"><span class="keyword">if</span>(unlikely(error)) &#123;</span><br><span class="line">    <span class="comment">/* ... */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>相反，如果我们想把一个分支标记为通常为真的选择：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* 如果我们认为success通常不会为0 */</span></span><br><span class="line"><span class="keyword">if</span>(likely(success)) &#123;</span><br><span class="line">    <span class="comment">/*...*/</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在你想要对某个条件选择语句进行优化之前，一定要搞清楚其中是不是存在那么个条件，在绝大多数情况下都会成立。这点十分重要：如果你的判断正确，确实是这个条件占压倒性的地位，那么性能会得到提升；如果你搞错了，性能反而会下降。正如上面这些例子所示，通常在对一些错误条件进行判断的时候会用到unlikely()和likely()。你可以猜到，unlikely()在内核中会得到更广泛的使用，因为if语句往往判断一种特殊情况。</p>
+<h3 id="没有内存保护机制"><a href="#没有内存保护机制" class="headerlink" title="没有内存保护机制"></a>没有内存保护机制</h3><p>如果一个用户进程试图进行一次非法的内存访问，内核就会发现这个错误，发送SIGSEGV信号，并结束整个进程。然而，如果是内核自己发生非法内存访问，那后果就很难控制了。毕竟又有谁能照顾内核呢？内核中发生错误就会直接导致Oops，这时内核中出现的最常见的一类错误。在内核中，不应该去做访问非法的内存地址，引用空指针之类的事情，否则它可能会因此死掉，却根本不告诉你一声–在内核里面，风险常常会比外面大一些。<br>此外，内核中的内存都不分页。也就是说，你每用掉一个字节，物理内存就会减少一个字节。所以，在你想往内核中加入什么新功能的时候，要记住这一点。</p>
+<h3 id="不要轻易在内核中使用浮点数"><a href="#不要轻易在内核中使用浮点数" class="headerlink" title="不要轻易在内核中使用浮点数"></a>不要轻易在内核中使用浮点数</h3><p>在用户空间的进程内进行浮点操作的时候，内核会完成从整数操作到浮点数操作的模式转化。在执行浮点指令时到底会做些什么，因体系结构不同，内核的选择也不同，但是，内核通常捕获陷阱并着手于整数到浮点方式的转变。<br>与用户空间进程不同，内核并不能完美的支持浮点操作，因为它本身不能陷入。在内核中使用浮点数时，除了要人工保存和恢复浮点寄存器，还有其他一些琐碎的事情要做。如果要直截了当地回答，那就是：别这么做了，除了一些极少的情况，不要在内核中使用浮点操作。</p>
+<h3 id="容积小而固定的栈"><a href="#容积小而固定的栈" class="headerlink" title="容积小而固定的栈"></a>容积小而固定的栈</h3><p>用户空间的程序可以从栈上分配大量的空间来存放变量，甚至巨大的结构体或者是包含数以千计的数据项的数组都没有问题。之所以可以这么做，是因为用户空间的栈本身就比较大，而且还动态增长（在DOS的那个年代，即使在用户空间也只有固定大小的栈）。<br>内核栈的准确大小岁体系结构而变。在x86上，栈的大小在编译时配置，可以是4KB也可以是8KB。从历史上说，内核栈的大小是两页，这就意味着，32位机的内核栈是8KB，而64位机是16KB，这是固定不变的。每个处理器都有自己的栈。</p>
+<h3 id="同步和并发"><a href="#同步和并发" class="headerlink" title="同步和并发"></a>同步和并发</h3><p>内核很容易产生竞争条件。和单线程的用户空间程序不同，内核的许多特性都要求能够并发地访问共享数据，这就要求有同步机制以保证不出现竞争条件，特别是：</p>
+<ol>
+<li>Linux是抢占多任务操作系统。内核的进程调度程序即兴地对进程进行调度和重新调度。内核必须和这些任务同步。</li>
+<li>Linux内核支持对称多处理系统（SMP）。所以，如果没有适当的保护，同时在两个或两个以上的处理器上执行的内核代码很可能会同时访问共享的同一个资源。</li>
+<li>中断是异步到来的，完全不顾及当前正在执行的代码。也就是说，如果不加以适当的保护，中断完全有可能在代码访问资源的时候到来，这样，中断处理程序就有可能访问同一资源。</li>
+<li>Linux内核可以抢占。所以，如果不加以适当的保护，内核中一段正在执行的代码可能会被另外一段代码抢占，从而有可能导致几段代码同时访问相同的资源。</li>
+</ol>
+<p>常用的解决竞争的办法就是自旋锁和信号量。</p>
+<h3 id="可移植性的重要性"><a href="#可移植性的重要性" class="headerlink" title="可移植性的重要性"></a>可移植性的重要性</h3><p>尽管用户空间的应用程序不太注意移植问题，然而Linux却是一个可移植的操作系统，并且要一直保持这种特点。也就是说，大部分C代码应该与体系结构无关，在许多不同体系结构的计算机上都能保持编译和执行，因此，必须把与体系结构相关的代码从内核代码树的特定目录中适当的分离出来。<br>诸如保持字节序、64位对齐、不假定字长和页面长度等一系列准则都有助于移植性。</p>
+<h1 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h1><p>毫无疑义，内核有独一无二的特质。它实施自己的规则和奖罚措施，拥有整个系统的最高管理权。当然，Linux内核的复杂性和高门槛与其他大型软件项目并无差异。在内核开发之路上最重要的步骤是要意识到内核并没有那么可怕。陌生是肯定的，但真的就不可逾越？事实并非如此。<br>本章和以前的章节为贯穿本书剩余章节所讨论的主题奠定了基础。在后续的每一章中，我们都会涵盖内核的一个具体概念或子系统。在探索的征途中，最重要的是要阅读和修改内核源代码，只有通过实际的阅读和实践才会理解内核。内核的源代码是可以免费获取的，直接用就可以。</p>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>Linux内核设计与实现</category>
+        <category>第2章 从内核出发</category>
       </categories>
       <tags>
         <tag>Linux Kernel</tag>
