@@ -3213,6 +3213,176 @@ hid_irq_in是USB中断传输方式的中断处理函数，当键盘被按下时�
       </tags>
   </entry>
   <entry>
+    <title>进程管理</title>
+    <url>/2022/10/26/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>本章引入进程的概念，进程是Unix操作系统抽象概念中最基本的一种。其中涉及进程的定义以及相关的概念，比如线程；然后讨论Linux内核如何管理每个进程：它们在内核中如何被列举，如何创建，最终又如何消亡。我们拥有操作系统就是为了运行用户程序，因此，进程管理就是所有操作系统的心脏所在，Linux也不例外。</p>
+<span id="more"></span>
+
+<h1 id="进程"><a href="#进程" class="headerlink" title="进程"></a>进程</h1><p>进程就是处于执行期的程序（目标码存放在某种存储介质上）。但进程并不仅仅局限于一段可执行程序代码（Unix称其为代码段，text section）。通常进程还要包含其他资源，像打开的文件，挂起的信号，内核内部数据，处理器状态，一个或多个具有内存映射的内存地址空间及一个或多个执行线程（thread of execution），当然还包括用来存放全局变量的数据段等。实际上，进程就是正在执行的程序代码的实时结果。内核需要有效而又透明地管理所有细节。<br>执行线程，简称线程（thread），是在进程中活动的对象。每个线程都拥有一个独立的程序技术器、进程栈和一组进程寄存器。内核调度的对象是线程，而不是进程。在传统的Unix系统中，一个进程只包含一个线程，但现在的系统中，包含多个线程的多线程程序司空见惯。稍后你就会看到，Linux系统的线程实现非常特别：它对线程和进程并无特别区分。对Linux而言，线程不过是一种特殊的进程罢了。<br>在现代操作系统中，进程提供两种虚拟机制：虚拟处理器和虚拟内存。虽然实际上可能是许多进程正在分享一个处理器，但是虚拟处理器会给进程一种假象，让这些进程觉得自己在独享处理器。而虚拟内存让进程在分配和管理内存时觉得自己拥有整个系统的所有内存资源。有趣的是，注意在线程之间可以共享虚拟内存，但每个都拥有各自的虚拟处理器。<br>程序本身并不是进程，进程是处于执行期的程序以及相关的资源的总称。实际上，完全可能存在两个或多个不同的进程执行的是同一个程序。并且两个或两个以上并存的进程还可以共享许多诸如打开的文件、地址空间之类的资源。<br>无疑，进程在创建它的时刻开始存活。在Linux系统中，这通常是调用fork()系统的结果，该系统调用通过复制一个现有进程来创建一个全新的进程。调用fork()的进程称为父进程，新产生的进程称为子进程。在该调用结束时，在返回点这个相同位置上，父进程恢复执行，子进程开始执行。fork()系统调用从内核返回两次：一次回到父进程，另一次回到新产生的子进程。<br>通常，创建新的进程都是为了立即执行新的、不同的程序，而接着调用exec()这组函数就可以创建新的地址空间，并把新的程序载入其中。在现代Linux内核中，fork()实际上是由clone()系统调用实现的。<br>最终，程序通过exit()系统调用调用并退出执行。这个函数会终结进程并将其占用的资源释放掉。父进程可以通过wait4()系统调用查询子进程是否终结，这其实使得进程拥有了等待特定进程执行完毕的能力。进程退出执行之后被设置为僵死状态，直到它的父进程调用wait()或waitpid()为止。<br><strong>注意</strong><br>    进程的另一个名字是任务（task），Linux通常把进程也叫做任务。</p>
+<h1 id="进程描述符及任务结构"><a href="#进程描述符及任务结构" class="headerlink" title="进程描述符及任务结构"></a>进程描述符及任务结构</h1><p>内核把进程的列表存放在叫做任务队列（task list）的双向循环链表中。链表中中的每一项都是类型为task_struct、称为进程描述符（process descriptor）的结构，该结构定义在&lt;linux&#x2F;sched.h&gt;文件中。进程描述符中包含一个具体进程的所有信息。<br>task_struct相对较大，在32位机器上，它大约有1.7KB。但如果考虑到该结构内包含了内核管理一个进程所需的所有信息，那么它的大小也算相当小的了。进程描述符中包含的数据能完整的描述一个正在执行的程序：它打开的文件，进程的地址空间，挂起的信号，进程的状态，还有其他更多信息。<br><img src="/2022/10/26/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/1.jpeg" alt="img not found"></p>
+<h2 id="分配进程描述符"><a href="#分配进程描述符" class="headerlink" title="分配进程描述符"></a>分配进程描述符</h2><p>Linux通过slab分配器分配task_struct结构，这样能达到对象复用和缓存着色（cache coloring）的目的。在2.6以前的内核中，各个进程的task_struct存放在它们内核栈的尾端。这样做是为了让那些像x86那样寄存器较少的硬件体系结构只要通过栈指针就能计算出它的位置，而避免使用额外的寄存器专门记录。由于现在使用的slab分配器动态生成task_struct，所以只需要在栈底或栈顶创建一个新的结构struct thread_info。<br>在x86上，struct thread_info在文件&lt;asm&#x2F;thread_info.h&gt;中定义如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">thread_info</span> &#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span>	        *<span class="title">task</span>;</span>		<span class="comment">/* main task structure */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">exec_domain</span>	        *<span class="title">exec_domain</span>;</span>	<span class="comment">/* execution domain */</span></span><br><span class="line">	__u32			            flags;		<span class="comment">/* low level flags */</span></span><br><span class="line">	__u32			            status;		<span class="comment">/* thread synchronous flags */</span></span><br><span class="line">	__u32			            cpu;		<span class="comment">/* current CPU */</span></span><br><span class="line">	<span class="type">int</span> 			            preempt_count;	<span class="comment">/* 0 =&gt; preemptable, &lt;0 =&gt; BUG */</span></span><br><span class="line"></span><br><span class="line">	<span class="type">mm_segment_t</span>		        addr_limit;	</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">restart_block</span>        <span class="title">restart_block</span>;</span></span><br><span class="line">    <span class="type">void</span>                        *sysenter_return;</span><br><span class="line">    <span class="type">int</span>                         uaccess_err;  </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p><img src="/2022/10/26/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/2.jpeg" alt="img not found"><br>每个任务的thread_info结构在它的内核栈的尾端分配。结构中task域中存放的是指向该任务实际task_struct的指针。</p>
+<h2 id="进程描述符的存放"><a href="#进程描述符的存放" class="headerlink" title="进程描述符的存放"></a>进程描述符的存放</h2><p>内核通过一个唯一的进程标识值（PID）来标识每个进程。PID是一个数，表示为pid_t隐含类型，实际上就是一个int类型。为了与老版本的Unix和Linux兼容，PID的最大值默认设置为32768（short int 短整型的最大值），尽管这个值也可以增加到高达400万（这受&lt;linux&#x2F;threads.h&gt;中所定义PID最大值的限制）。内核把每个进程的PID存放在它们各自的进程描述符中。<br>这个最大值很重要，因为它实际上就是系统中允许同时存在的进程的最大数目。尽管32768对于一般的桌面系统足够用了，但是大型服务器可能需要更多进程。这和值越小，转一圈就越快，本来数值大的进程比数值小的进程迟允许，但这样一来就破坏了这一原则。如果确实需要的话，可以不考虑与老式系统的兼容，由系统管理员通过修改<code>/proc/sys/kernel/pid_max</code>来提高上限。<br>在内核中，访问任务通常需要获得指向其task_struct的指针。实际上，内核中大部分处理进程的代码都是直接通过task_struct进行的。因此，通过current宏查找当前正在运行进程的进程描述符的速度就显得尤为重要。硬件体系结构不同，该宏的实现也不同，它必须针对专门的硬件体系结构做处理。有的硬件体系结构可以拿出一个专门寄存器来存放指向当前进程task_struct的指针，用于加快访问速度。而有些像x86这样的体系结构（其寄存器并不富余），就只能在内核栈的尾端创建thread_info结构，通过计算间接偏移查找task_struct结构。<br>在x86系统上，current把栈指针的后13个有效位屏蔽掉，用来计算出thread_info的偏移。该操作是通过current_thread_info()函数来完成的。汇编代码如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">movl $-8192, %eax</span><br><span class="line">andl %esp, %eax</span><br></pre></td></tr></table></figure>
+<p>这里假定栈的大小位8KB。当4KB的栈启用时，就要用4096，而不是8192。<br>最后，current再从thread_info的task域中提取并返回task_struct的地址：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">current_thread_info()-&gt;task;</span><br></pre></td></tr></table></figure>
+<p>对比一下这部分在PowerPC上的实现（IBM基于RISC的现代微处理器），我们可以发现PPC当前的task_struct是保存在一个寄存器中的。也就是说，在PPC上，current宏只需把r2寄存器中值返回就行了。与x86不一样，PPC有足够多的寄存器，所以它的实现有这样选择的余地。而访问进程描述符是一个重要的频繁操作，所以PPC的内核开发者觉得完全有必要为此使用一个专用的寄存器。</p>
+<h3 id="进程状态"><a href="#进程状态" class="headerlink" title="进程状态"></a>进程状态</h3><p>进程描述符中的state描述了进程的当前状态。系统中的每个进程都必然处于五种进程状态中的一种。该域的值也必为下列五种状态之一：</p>
+<ol>
+<li>TASK_RUNNING（运行）–进程是可执行的；它或者正在执行，或者在运行队列中等待执行。这是进程在用户空间中执行的唯一可能的状态；这种状态也可以应用到内核空间中正在执行的进程。</li>
+<li>TASK_INTERRUPTIBLE（可中断）–进程正在睡眠（也就是说它被阻塞），等待某些条件的达成。一旦条件达成，内核就会把进程状态设置成运行。处于此状态的进程也会因为接收到信号而被提前唤醒并随时准备投入运行。</li>
+<li>TASK_UNINTERRUPTIBLE（不可中断）–除了就算是接收到信号也不会被唤醒或准备投入运行外，这个状态域可打断状态相同。由于处于此状态的任务对信号不做响应，所以较之可中断状态，使用的较少。</li>
+<li>__TASK_TRACES–被其他进程跟踪的进程，例如通过ptrace对调试程序进行跟踪。</li>
+<li>__TASK_STOPPED（停止）–进程停止执行；进程没有投入运行也不能投入运行。通常这种状态发生在接收到SIGSTOP、SIGTSTP、SIGTTIN、SIGTTOU等信号的时候。此外，在调试期间接收到任何信号，都会使进程进入这种状态。<br><img src="/2022/10/26/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/3.jpeg" alt="img not found"></li>
+</ol>
+<h3 id="设置当前进程状态"><a href="#设置当前进程状态" class="headerlink" title="设置当前进程状态"></a>设置当前进程状态</h3><p>内核需要经常调整某个进程的状态。这时最好使用set_task_state(task,state)函数：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">set_task_state(task,state); <span class="comment">//将任务task的状态设置为state</span></span><br></pre></td></tr></table></figure>
+<p>该函数将指定的进程设置为指定的状态。必要的时候，它会设置内存屏障来强制其他处理器作重新排序。（一般只有在SMP系统中有此必要）否则，它等价于：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">task-&gt;state = state;</span><br></pre></td></tr></table></figure>
+<p>set_current_state(state)和set_task_state(current,state)含义是等同的。参看&lt;linux&#x2F;sched.h&gt;中对相关函数实现的说明。</p>
+<h3 id="进程上下文"><a href="#进程上下文" class="headerlink" title="进程上下文"></a>进程上下文</h3><p>可执行程序代码是进程的重要组成部分。这些代码从一个可执行文件载入到进程的地址空间执行。一般程序在用户空间执行。当一个程序调用执行了系统调用或者出发了某个异常，它就陷入内核空间。此时，我们称内核“代表进程执行”并处于进程上下文中。由此上下文中current宏是有效的。除非在此间隙有更高优先级的进程需要执行并由调度器做出相应调整，否则在内核退出的时候，程序恢复在用户空间继续执行。<br>系统调用和异常处理程序是对内核明确定义的接口。进程只有通过这些接口才能陷入内核执行–对内核的所有访问都必须通过这些接口。</p>
+<h3 id="进程家族树"><a href="#进程家族树" class="headerlink" title="进程家族树"></a>进程家族树</h3><p>Unix系统的进程之间存在一个明显的继承关系，在Linux系统中也是如此。所有进程都是PID为1的init进程的后代。内核在系统启动的最后阶段启动init进程。该进程读取系统的初始化脚本（initscript）并执行其他的相关程序，最终完成系统启动的整个过程。<br>系统中的每个进程必有一个父进程，相应的，每个进程也可以拥有零个或多个子进程。拥有同一个父进程的所有进程被称为兄弟。进程间的关系存放在进程描述符中。每个task_struct都包含一个指向其父进程task_struct、叫做parent的指针，还包含一个称为children的子进程链表。所以，对于当前进程，可以通过下面的代码获得其父进程的进程描述符：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">my_parent</span> =</span> current-&gt;parent;</span><br></pre></td></tr></table></figure>
+<p>同样，也可以按以下方式依次访问子进程：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">task</span>;</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> *<span class="title">list</span>;</span></span><br><span class="line"></span><br><span class="line">list_for_each(<span class="built_in">list</span>,&amp;current-&gt;children) &#123;</span><br><span class="line">    task = list_entry(<span class="built_in">list</span>,<span class="keyword">struct</span> task_struct,sibling);</span><br><span class="line">    <span class="comment">/* task现在指向当前的某个子进程 */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>init进程的进程描述符是作为init_task静态分配的。下面的代码可以很好地演示所有进程之间的关系：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">task</span>;</span></span><br><span class="line"><span class="keyword">for</span>(task = current;task != &amp;init_task;task = task-&gt;parent)</span><br><span class="line"><span class="comment">/* task现在指向init */</span></span><br></pre></td></tr></table></figure>
+<p>实际上，你可以通过这种继承体系从系统的任何一个进程出发查找到任意指定的其他进程。但大多数时候，只需要通过简单的重复方式就可以遍历系统中的所有进程。这非常容易做到，因为任务队列就是一个双向循环链表。对于给定的进程，获取链表的下一个进程。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">list_entry(task-&gt;tasks.next,<span class="keyword">struct</span> task_struct,tasks)</span><br></pre></td></tr></table></figure>
+<p>获取前一个进程的方法与之相同：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">list_entry(task-&gt;tasks.prev,<span class="keyword">struct</span> task_struct,tasks)</span><br></pre></td></tr></table></figure>
+<p>这两个例程分别通过next_task(task)宏和prev_task(task)宏实现。而实际上，for_each_process(task)宏提供了一次访问整个任务队列的能力。每次访问，任务指针都指向链表中的下一个元素：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">task</span>;</span></span><br><span class="line"></span><br><span class="line">for_each_process(task) &#123;</span><br><span class="line">    <span class="comment">/* 它打印出的每一个任务的名称和PID */</span></span><br><span class="line">    printk(<span class="string">&quot;%s[%d]\n&quot;</span>,task-&gt;comm,task-&gt;pid);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>特别提醒</strong><br>    <em>在一个拥有大量进程的系统中通过重复来遍历所有的进程代价是很大的，因此，如果没有充足的理由，别这样做</em></p>
+<h1 id="进程创建"><a href="#进程创建" class="headerlink" title="进程创建"></a>进程创建</h1><p>Unix的进程创建很特别。许多其他的操作相同都提供了产生（spawn）进程的机制，首先在新的地址空间里创建进程，读入可执行程序，最后开始执行。Unix采用了与众不同的实现方式，它把上述步骤分解到两个单独的函数中去执行：fork()和exec()。首先，fork()通过拷贝当前进程创建一个子进程。父进程与子进程的区别仅仅在于PID（每个进程唯一）、PPID（父进程的进程号，子进程将其设置为被拷贝进程的PID）和某些资源和统计量（例如，挂起的信号，它没有必要被继承）。exec()函数负责读取可执行文件并将其载入地址空间开始运行。把这两个函数组合起来使用的效果跟其他系统使用的单一函数的效果相似。</p>
+<h2 id="写时拷贝"><a href="#写时拷贝" class="headerlink" title="写时拷贝"></a>写时拷贝</h2><p>传统的fork()系统调用直接把所有的资源复制给新创建的进程。这种实现过于简单并且效率低下，因为它拷贝的数据也许并不共享，更糟的情况是，如果新进程打算立即执行一个新的映像，那么所有的拷贝都将前功尽弃。Linux的fork()使用写时拷贝（copy-on-write）页实现。写时拷贝是一种可以推迟甚至是免除拷贝数据的技术。内核此时并不复制整个地址空间，而是让父进程和子进程共享同一个拷贝。<br>只有在需要写入的时候，数据才会被复制，从而使各个进程拥有各自的拷贝。也就是说，资源的复制只有在需要写入的时候才进行，在此之前，只是以只读方式共享。这种技术使地址空间上的页的拷贝被推迟到实际发生写入的时候才进行。在页根本不会被写入的情况下（fork()后立即调用exec()）它们就无须复制了。<br>fork()的实际开销就是复制父进程的页表以及给子进程创建唯一的进程描述符。在一般情况下，进程创建后都会马上运行一个可执行的文件，这种优化可以避免拷贝大量根本不会使用的数据（地址空间中常常包含数十兆的数据）。由于Unix强调进程快速执行的能力，所以这个优化是很重要的。</p>
+<h2 id="fork"><a href="#fork" class="headerlink" title="fork()"></a>fork()</h2><p>Linux通过clone()系统调用实现fork()。这个调用通过一系列的参数标志来指明父、子进程需要共享的资源。fork()、vfork()和__clone()库函数都根据各自需要的参数标志去调用clone()，然后由clone()去调用do_fork()。<br>do_fork()完成了创建中的大部分工作，它的定义在<code>kernel/fork.c</code>文件中。该函数调用copy_process()函数，然后让进程开始运行。copy_process()函数完成的工作很有意思：</p>
+<ol>
+<li>调用dup_task_struct()为新进程创建一个内核栈，thread_info结构和task_struct，这些值与当前进程的值相同。此时，子进程和父进程的描述符是完全相同的。</li>
+<li>检查并确保新创建这个子进程后，当前用户所拥有的进程数目没有超出给它分配的资源的限制。</li>
+<li>子进程着手使自己与父进程区别开来。进程描述符内的许多成员都要被清0或设为初始值。那些不是继承而来的进程描述符成员，主要是统计信息。task_struct中的大多数数据都依然未被修改。</li>
+<li>子进程的状态被设置为TASK_UNINTERRUPTBLE，以保证它不会投入运行。</li>
+<li>copy_process()调用copy_flag()以更新task_struct的flags成员。表明进程是否拥有超级用户权限的PF_SUPERPRIV标志被清0。表明进程还没有调用exec()函数的PF_FORKNOEXEC标志被设置。</li>
+<li>调用alloc_pid()为新进程分配一个有效的PID。</li>
+<li>根据传递给clone()的参数标志，copy_process()拷贝或共享打开的文件、文件系统信息、信号处理函数、进程地址空间和命名空间等。在一般情况下，这些资源会被给定进程的所有线程共享；否则，这些资源对每个进程是不同的，因此被拷贝到这里。</li>
+<li>最后，copy_process()做扫尾工作并返回一个指向子进程的指针。</li>
+</ol>
+<p>再回到do_fork()函数，如果copy_process()函数成功返回，新创建的子进程被唤醒并让其投入运行。内核有意选择子进程首先执行。因为一般子进程都会马上调用exec()函数，这样可以避免写时拷贝的额外开销，如果父进程首先执行的话，有可能会开始向地址空间写入。</p>
+<h2 id="vfork"><a href="#vfork" class="headerlink" title="vfork()"></a>vfork()</h2><p>除了不拷贝父进程的页表项外，vfork()系统调用和fork()的功能相同。子进程作为父进程的一个单独的线程在它的地址空间里运行，父进程被阻塞，直到子进程退出或执行exec()。子进程不能向地址空间写入。在过去的3BSD时期，这个优化是很有意义的，那时并未使用写时拷贝页来实现fork()。现在由于在执行fork()时引入了写时拷贝页并且明确了子进程先执行，vfork()的好处就只仅限于不拷贝父进程的页表项了。如果Linux将来fork()有了写时拷贝页表项，那么vfork()就彻底没用了。另外由于vfork()语意非常微妙（试想，如果exec()调用失败会发生什么），所以理想情况下，系统最好不要调用vfork()，内核也不用实现它。完全可以把vfork()实现成一个普普通通的fork()–实际上，Linux2.2以前都是这么做的。<br>vfork()系统调用的实现是通过向clone()系统调用传递一个特殊标志来进行的。</p>
+<ol>
+<li>在调用copy_process()时，task_struct的成员vfork_done被设置为NULL。</li>
+<li>在执行do_fork()时，如果给定特别标志，则vfork_done会指向一个特定地址。</li>
+<li>子进程先开始执行后，父进程不是马上执行，而是一直等待，直到子进程通过vfork_done指针向它发送信号。</li>
+<li>在调用mm_release()时，该函数用于进程退出内存地址空间，并且检查vfork_done是否为空，如果不为空，则会向父进程发送信号。</li>
+<li>回到do_fork()，父进程醒来并返回。</li>
+</ol>
+<p>如果一切执行顺利，子进程在新的地址空间里运行而父进程也恢复了在原地址空间的运行。这样，开销确实低了，不过它的实现并不是优良的。</p>
+<h1 id="线程在Linux中的实现"><a href="#线程在Linux中的实现" class="headerlink" title="线程在Linux中的实现"></a>线程在Linux中的实现</h1><p>线程机制是现代编程技术中常用的一种抽象概念。该机制提供了在同一程序内共享内存地址空间运行的一组线程。这些线程还可以共享打开的文件和其他资源。线程机制支持并发程序设计技术（concurrent programing），在多处理系统上，它也能保证真正的并行处理（parallelism）。<br>Linux实现线程的机制非常独特。从内核的角度来说，它并没有线程这个概念。Linux把所有的线程都当作进程来实现。内核并没有准备特别的调度算法或是定义特别的数据结构来表征线程。相反，线程仅仅被视为一个与其他进程共享资源的进程。每个线程都有唯一隶属于自己的task_struct，所以在内核中，它看起来就像一个普通的进程（只是线程和其他的一些进程共享某些资源，如地址空间）。<br>上述线程机制的实现与Mircosoft Windows或是Sun Solaris等操作系统的实现差异非常大。这些系统都在内核中提供了专门支持线程的机制（这些系统常常把线程称为轻量级进程（lightweight processes））。“轻量级进程”这种叫法本身就概括了Linux在此处与其他系统的差异。在其他的系统中，相较于重量级的进程，线程被抽象成一种耗费较小资源，运行迅速的执行单元。而对于Linux来说，它只是一种进程间共享资源的手段（Linux中的进程本身就是轻量级了）。举个例子来说，假如我们有一个包含四个线程的进程，在专门提供线程支持的系统中，通常会有一个包含指向四个不同线程的指针的进程描述符。该描述符负责描述像地址空间、打开的文件等这样的共享资源。线程本身再去描述它独占的资源。相反，Linux仅仅创建四个进程并分配四个普通的task_struct结构。建立这四个进程时指定它们共享某些资源，这是相当高雅的做法。</p>
+<h2 id="创建线程"><a href="#创建线程" class="headerlink" title="创建线程"></a>创建线程</h2><p>线程的创建和普通进程的创建类似，只不过在调用clone()的时候需要传递一些参数标志来指明需要共享的资源：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">clone(CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND,<span class="number">0</span>);</span><br></pre></td></tr></table></figure>
+<p>上面的代码产生的结果和调用fork()差不多，只是父子俩共享地址空间、文件系统资源、文件描述符和信号处理程序。换个说法就是，新建的进程和它的父进程就是流行的所谓线程。<br>对比一下，一个普通的fork()的实现就是：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">clone(SIGCHLD,<span class="number">0</span>);</span><br></pre></td></tr></table></figure>
+<p>而vfork()的实现是：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">clone(CLONE_VFORK | CLONE_VM | SIGCHLD,<span class="number">0</span>);</span><br></pre></td></tr></table></figure>
+<p>传递给clone()的参数标志决定了新创建进程的行为方式和父子进程之间共享的资源种类。下表列举了这些clone()用到的参数以及它们的作用，这些都是在&lt;linux&#x2F;sched.h&gt;中定义的。</p>
+<table>
+<thead>
+<tr>
+<th>参数标志</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CLONE_FILES</td>
+<td>父子进程共享打开的文件</td>
+</tr>
+<tr>
+<td>CLONE_FS</td>
+<td>父子进程共享文件系统信息</td>
+</tr>
+<tr>
+<td>CLONE_IDLETASK</td>
+<td>将PID设置为0（只供idle进程使用）</td>
+</tr>
+<tr>
+<td>CLONE_NEWNS</td>
+<td>为子进程创建新的命名空间</td>
+</tr>
+<tr>
+<td>CLONE_PARENT</td>
+<td>指定子进程与父进程拥有同一个进程</td>
+</tr>
+<tr>
+<td>CLONE_PTRACE</td>
+<td>继续调试子进程</td>
+</tr>
+<tr>
+<td>CLONE_SETTID</td>
+<td>将TID回写至用户空间</td>
+</tr>
+<tr>
+<td>CLONE_SETTLS</td>
+<td>为子进程创建新的TLS</td>
+</tr>
+<tr>
+<td>CLONE_SIGHAND</td>
+<td>父子进程共享信号处理函数及被阻断的信号</td>
+</tr>
+<tr>
+<td>CLONE_SYSVSEM</td>
+<td>父子进程共享System V SEM_UNDO语义</td>
+</tr>
+<tr>
+<td>CLONE_THREAD</td>
+<td>父子进程放入相同的线程组</td>
+</tr>
+<tr>
+<td>CLONE_VFORK</td>
+<td>调用vfork()，所以父进程准备睡眠等待子进程将其唤醒</td>
+</tr>
+<tr>
+<td>CLONE_UNTRACED</td>
+<td>防止跟踪进程在子进程上强制执行CLONE_PTRACE</td>
+</tr>
+<tr>
+<td>CLONE_STOP</td>
+<td>以TASK_STOPPED状态开始进程</td>
+</tr>
+<tr>
+<td>CLONE_SETTLS</td>
+<td>为子进程创建新的TLS（thread-local storage）</td>
+</tr>
+<tr>
+<td>CLONE_CHILD_CLEARTID</td>
+<td>清除子进程的TID</td>
+</tr>
+<tr>
+<td>CLONE_CHILD_SETTID</td>
+<td>设置子进程的TID</td>
+</tr>
+<tr>
+<td>CLONE_PARENT_SETTID</td>
+<td>设置父进程的TID</td>
+</tr>
+<tr>
+<td>CLONE_VM</td>
+<td>父子进程共享地址空间</td>
+</tr>
+</tbody></table>
+<h2 id="内核线程"><a href="#内核线程" class="headerlink" title="内核线程"></a>内核线程</h2>]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>Linux内核设计与实现</category>
+        <category>第3章 进程管理</category>
+      </categories>
+      <tags>
+        <tag>Linux Kernel</tag>
+        <tag>操作系统</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>嵌入式编程基础知识</title>
     <url>/2022/08/05/%E5%B5%8C%E5%85%A5%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《嵌入式Linux应用完全开发手册》第1篇第3章总结归纳</p>
