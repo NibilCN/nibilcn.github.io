@@ -20,28 +20,29 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":false,"version":"8.12.2","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"mac"},"bookmark":{"enable":true,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
 
-    <meta name="description" content="这里是Nibil建立博客后的第一篇文章。">
+    <meta name="description" content="在第7章中，我们讨论了内核为处理中断而提供的中断处理程序机制。中断处理程序是内核中很有用的部分。但是，由于本身存在一些局限，所以它只能完成整个中断处理流程的上半部分。这些局限包括：  中断处理程序以异步方式执行，并且它有可能打断其他重要代码（甚至包括其他中断处理程序）的执行。因此，为了避免被打断的代码停止时间过长，中断执行程序应该执行得越快越好。 如果当前有一个中断处理程序正在执行，在最好的情况下">
 <meta property="og:type" content="article">
-<meta property="og:title" content="第一篇博客">
-<meta property="og:url" content="http://example.com/2022/07/30/%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/index.html">
+<meta property="og:title" content="中断下半部和推后执行的工作">
+<meta property="og:url" content="http://example.com/2022/11/11/%E4%B8%AD%E6%96%AD%E4%B8%8B%E5%8D%8A%E9%83%A8%E5%92%8C%E6%8E%A8%E5%90%8E%E6%89%A7%E8%A1%8C%E7%9A%84%E5%B7%A5%E4%BD%9C/index.html">
 <meta property="og:site_name" content="Laugh Tale">
-<meta property="og:description" content="这里是Nibil建立博客后的第一篇文章。">
+<meta property="og:description" content="在第7章中，我们讨论了内核为处理中断而提供的中断处理程序机制。中断处理程序是内核中很有用的部分。但是，由于本身存在一些局限，所以它只能完成整个中断处理流程的上半部分。这些局限包括：  中断处理程序以异步方式执行，并且它有可能打断其他重要代码（甚至包括其他中断处理程序）的执行。因此，为了避免被打断的代码停止时间过长，中断执行程序应该执行得越快越好。 如果当前有一个中断处理程序正在执行，在最好的情况下">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2022-07-30T05:56:09.000Z">
-<meta property="article:modified_time" content="2022-07-30T05:56:09.000Z">
+<meta property="article:published_time" content="2022-11-11T06:52:57.000Z">
+<meta property="article:modified_time" content="2022-11-11T06:52:57.000Z">
 <meta property="article:author" content="Nibil">
-<meta property="article:tag" content="感想">
+<meta property="article:tag" content="Linux Kernel">
+<meta property="article:tag" content="操作系统">
 <meta name="twitter:card" content="summary">
 
 
-<link rel="canonical" href="http://example.com/2022/07/30/%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/">
+<link rel="canonical" href="http://example.com/2022/11/11/%E4%B8%AD%E6%96%AD%E4%B8%8B%E5%8D%8A%E9%83%A8%E5%92%8C%E6%8E%A8%E5%90%8E%E6%89%A7%E8%A1%8C%E7%9A%84%E5%B7%A5%E4%BD%9C/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":"","permalink":"http://example.com/2022/07/30/%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/","path":"2022/07/30/第一篇博客/","title":"第一篇博客"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":"","permalink":"http://example.com/2022/11/11/%E4%B8%AD%E6%96%AD%E4%B8%8B%E5%8D%8A%E9%83%A8%E5%92%8C%E6%8E%A8%E5%90%8E%E6%89%A7%E8%A1%8C%E7%9A%84%E5%B7%A5%E4%BD%9C/","path":"2022/11/11/中断下半部和推后执行的工作/","title":"中断下半部和推后执行的工作"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>第一篇博客 | Laugh Tale</title>
+<title>中断下半部和推后执行的工作 | Laugh Tale</title>
   
 
 
@@ -133,7 +134,7 @@
 
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-overview-active">
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           文章目录
@@ -146,6 +147,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%8B%E5%8D%8A%E9%83%A8"><span class="nav-number">1.</span> <span class="nav-text">下半部</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E7%94%A8%E4%B8%8B%E5%8D%8A%E9%83%A8"><span class="nav-number">1.1.</span> <span class="nav-text">为什么要用下半部</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8B%E5%8D%8A%E9%83%A8%E7%9A%84%E7%8E%AF%E5%A2%83"><span class="nav-number">1.2.</span> <span class="nav-text">下半部的环境</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8B%E5%8D%8A%E9%83%A8%E7%9A%84%E8%B5%B7%E6%BA%90"><span class="nav-number">1.2.1.</span> <span class="nav-text">下半部的起源</span></a></li></ol></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -240,7 +242,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/07/30/%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/11/%E4%B8%AD%E6%96%AD%E4%B8%8B%E5%8D%8A%E9%83%A8%E5%92%8C%E6%8E%A8%E5%90%8E%E6%89%A7%E8%A1%8C%E7%9A%84%E5%B7%A5%E4%BD%9C/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -253,12 +255,12 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="第一篇博客 | Laugh Tale">
+      <meta itemprop="name" content="中断下半部和推后执行的工作 | Laugh Tale">
       <meta itemprop="description" content="">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          第一篇博客
+          中断下半部和推后执行的工作
         </h1>
 
         <div class="post-meta-container">
@@ -269,7 +271,7 @@
       </span>
       <span class="post-meta-item-text">发表于</span>
 
-      <time title="创建时间：2022-07-30 13:56:09" itemprop="dateCreated datePublished" datetime="2022-07-30T13:56:09+08:00">2022-07-30</time>
+      <time title="创建时间：2022-11-11 14:52:57" itemprop="dateCreated datePublished" datetime="2022-11-11T14:52:57+08:00">2022-11-11</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -277,11 +279,19 @@
       </span>
       <span class="post-meta-item-text">分类于</span>
         <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E6%9D%82/" itemprop="url" rel="index"><span itemprop="name">杂</span></a>
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">学习</span></a>
         </span>
           ，
         <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E6%9D%82/%E6%84%9F%E6%83%B3/" itemprop="url" rel="index"><span itemprop="name">感想</span></a>
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/" itemprop="url" rel="index"><span itemprop="name">书籍</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/Linux%E5%86%85%E6%A0%B8%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/" itemprop="url" rel="index"><span itemprop="name">Linux内核设计与实现</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/Linux%E5%86%85%E6%A0%B8%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/%E7%AC%AC8%E7%AB%A0-%E4%B8%AD%E6%96%AD%E4%B8%8B%E5%8D%8A%E9%83%A8%E5%92%8C%E6%8E%A8%E5%90%8E%E6%89%A7%E8%A1%8C%E7%9A%84%E5%B7%A5%E4%BD%9C/" itemprop="url" rel="index"><span itemprop="name">第8章 中断下半部和推后执行的工作</span></a>
         </span>
     </span>
 
@@ -299,14 +309,14 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>436</span>
+      <span>2.5k</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
         <i class="far fa-clock"></i>
       </span>
       <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>1 分钟</span>
+      <span>2 分钟</span>
     </span>
 </div>
 
@@ -317,9 +327,27 @@
     
     
     <div class="post-body" itemprop="articleBody">
-        <p>这里是Nibil建立博客后的第一篇文章。</p>
+        <p>在第7章中，我们讨论了内核为处理中断而提供的中断处理程序机制。中断处理程序是内核中很有用的部分。但是，由于本身存在一些局限，所以它只能完成整个中断处理流程的上半部分。这些局限包括：</p>
+<ol>
+<li>中断处理程序以异步方式执行，并且它有可能打断其他重要代码（甚至包括其他中断处理程序）的执行。因此，为了避免被打断的代码停止时间过长，中断执行程序应该执行得越快越好。</li>
+<li>如果当前有一个中断处理程序正在执行，在最好的情况下（如果IRQF_DISABLED没有被设置），与该中断同级的其他中断会被屏蔽，在最坏的情况下（如果IRQF_DISABLED有被设置），当前处理器上所有其他中断都会被屏蔽。因为禁止中断后硬件与操作系统无法通信，因此，中断处理程序执行得越快越好。</li>
+<li>由于中断处理函数往往需要对硬件进行操作，所以它们通常有很高的时限要求。</li>
+<li>中断处理程序不在进程上下文中运行，所以它们不能阻塞。这限制了它们所做得事情。</li>
+</ol>
+<p>现在，为什么中断处理程序只能作为整个硬件中断处理流程一部分的原因就很明显了。操作系统必须有一个快速、异步、简单的机制负责对硬件做出迅速响应并完成那些时间要求很严格的操作。中断处理程序很适合于实现这些功能，可是，对于那些其他的、对时间要求相对宽松的任务，就应该推后到中断被激活以后再去运行。<br>这样，整个中断处理流程就被分为了两个部分，或叫两半。第一个部分是中断处理程序（上半部），就像我们在第7章讨论的那样，内核通过对它的异步执行完成对硬件中断的即时响应。在本章中，我们要研究的是中断处理流程中的另外那一部分，下半部（bottom halves）。</p>
 <span id="more"></span>
-<p>历时两个工作日，我采用了<a target="_blank" rel="noopener" href="https://hexo.io/">Hexo博客框架</a>和Github Pages网页部署工具。在广大网友的帮助下，踩过一些坑，终于成功搭建并部署Nibil的博客。博客采用了<a target="_blank" rel="noopener" href="https://github.com/next-theme/hexo-theme-next">Next</a>主题模板,在仿照<a target="_blank" rel="noopener" href="https://carlyleliu.github.io/">CarlyleLiu</a>的博客模板的基础上，附带了我本人的一些个性化设置。于是，Nibil的私人博客诞生了，希望不要马上去世~~~<br>我建立博客的初衷是为了督促自己能抽出时间来学习，复习自己从事的嵌入式行业的专业知识，并分享在博客上，以此来达到温故而知新的目的，从而提高自己的行业竞争力。我暂时将博客大纲定性为四块，工作，学习，生活，杂项。工作包含自己在公司做项目过程中遇到的问题以及解决的问题，避免自己重复踩坑。学习包含自己主动去提升尚未掌握但是以后工作中会用到的领域的知识，避免一问三不知。生活属于是自己日常生活中的一些分享，毕竟这是一个博客。杂项就是我个人的一些感想，领悟啥的，属于是发牢骚。<br>暂时就写这么多，希望我的这第一篇文章不会成为我的最后一篇文章！</p>
+
+<h1 id="下半部"><a href="#下半部" class="headerlink" title="下半部"></a>下半部</h1><p>下半部的工作就是执行与中断处理密切相关但中断处理程序本身不执行的工作。在理想情况下，最好是中断处理程序将所有工作都交给下半部分执行，因为我们希望在中断处理程序中完成的工作越少越好（也就是越快越好）。我们期望中断处理程序能够尽可能快的返回。<br>但是，中断处理程序注定要完成一部分工作。例如，中断处理程序几乎都需要通过操作硬件对中断的到达进行确认，有时它还会从硬件拷贝数据。因为这些工作对时间非常敏感，所以只能靠中断处理程序自己去完成。<br>剩下的几乎所有其他工作都是下半部执行的目标。例如，如果你在上半部中把数据从硬件拷贝到内存，那么当然应该在下半部中处理它们。遗憾的是，并不存在严格明确的规定来说明到底什么任务应该在哪个部分中完成–如何做决定完全取决于驱动程序开发者自己的判断。尽管在理论上不存在什么错误，但是轻率的实现效果往往不很理想。记住，中断处理程序会异步执行，并且在最好的情况下它也会锁定当前的中断线。因此将中断处理程序持续执行的时间缩短到最小程度显得非常重要。对于在上半部和下半部之间划分工作，尽管不存在某种严格的规则，但还是有一些提示可供借鉴：</p>
+<ol>
+<li>如果一个任务对时间非常敏感，将其放在中断处理程序中执行。</li>
+<li>如果一个任务和硬件相关，将其放在中断处理程序中执行。</li>
+<li>如果一个任务要保证不被其他中断（特别是相同的中断）打断，将其放在中断处理程序中执行。</li>
+<li>其他所有任务，考虑放置在下半部执行。</li>
+</ol>
+<p>当你开始尝试写自己的驱动程序的时候，读一下别人的中断处理程序和相应的下半部可能会让你受益匪浅。在决定怎样把你的中断处理流程中的工作划分到上半部和下半部中去的时候，问问自己什么必须放进上半部而什么可以放进下半部。通常，中断处理程序要执行得越快越好。</p>
+<h2 id="为什么要用下半部"><a href="#为什么要用下半部" class="headerlink" title="为什么要用下半部"></a>为什么要用下半部</h2><p>理解为什么要让工作推后执行以及在什么时候推后执行非常关键。你希望尽量减少中断处理程序中需要完成的工作量，因为它在运行的时候，当前的中断线在所有处理器上都会被屏蔽。更糟糕的是，如果一个处理程序是IRQF_DISABLED类型，它执行的时候会禁止所有本地中断（而且把本地中断线全局的屏蔽掉）。而缩短中断被屏蔽的时间对系统的响应能力和性能都至关重要。再加上中断处理程序要与其他程序（甚至是其他的中断处理程序）异步执行，所以很明显，我们必须尽力缩短中断处理程序的执行。解决的办法就是把一些工作放到以后去做。<br>但具体放到以后什么时候去做呢？在这里，以后仅仅用来强调不是马上而已，理解这一点相当重要，下半部并不需要指明一个确切时间，只要把这些任务推迟一点，让它们在系统不太繁忙的并且中断恢复后执行就可以了。通常下半部在中断处理程序一返回就会马上运行。下半部执行的关键在于当它们运行的时候，允许响应所有的中断。<br>不仅仅是Linux，许多操作系统也把处理硬件中断的过程分为两部分。上半部分简单快速，执行的时候禁止一些或全部中断。下半部分稍后执行，而且执行期间可以响应所有的中断。这种设计可使系统处于中断屏蔽状态的时间尽可能的短，以此来提高系统的响应能力。</p>
+<h2 id="下半部的环境"><a href="#下半部的环境" class="headerlink" title="下半部的环境"></a>下半部的环境</h2><p>和上半部只能通过中断处理程序实现不同，下半部可以通过多种机制实现。这些用来实现下半部的机制分别由不同的接口和子系统组成。在第7章中，我们了解到实现中断处理程序的方法只有一种，但在本章中你会发现，实现一个下半部会有许多不同的方法。实际上，在Linux发展的过程中曾经出现过多种下半部机制。让人备受困扰的是，其中不少机制名字起得很相像，甚至还有一些机制名字词不达意。这就需要专门的程序员来给下半部命名。<br>在本章中，我们将要讨论2.6版本的内核中的下半部机制是如何设计和实现的。同时我们也会讨论怎么在自己编写的内核代码中使用它们。而那些过去使用的、已经废除了有一段时间的机制，由于曾经闻名遐迩，所以在相关的时候我们还会有所提及。</p>
+<h3 id="下半部的起源"><a href="#下半部的起源" class="headerlink" title="下半部的起源"></a>下半部的起源</h3><p>最早的Linux只提供“bottom half”这种机制用于实现下半部。这个名字在那时毫无异义，因为当时它是将工作推后的唯一方法。这种机制也被称为“BH”，我们现在也这么叫它，以避免和“下半部”这个通用词汇混淆。像过往的那段美好岁月中的许多东西一样，BH接口也非常简单。它提供了一个静态创建、由32个bottom havles组成的链表。上半部通过一个32位整数中的一位来标识出哪个bottom half可以执行。每个BH都在全局范围内进行同步。即使分属于不同的处理器，也不允许任何两个bottom half同时执行。这种机制使用方便却不够灵活，简单却有性能瓶颈。</p>
 
     </div>
 
@@ -329,18 +357,19 @@
 
     <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/%E6%84%9F%E6%83%B3/" rel="tag"># 感想</a>
+              <a href="/tags/Linux-Kernel/" rel="tag"># Linux Kernel</a>
+              <a href="/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" rel="tag"># 操作系统</a>
           </div>
 
         
 
           <div class="post-nav">
             <div class="post-nav-item">
+                <a href="/2022/11/09/%E4%B8%AD%E6%96%AD%E5%92%8C%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86/" rel="prev" title="中断和中断处理">
+                  <i class="fa fa-chevron-left"></i> 中断和中断处理
+                </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2022/08/02/%E8%AE%BE%E5%A4%87%E4%B8%8E%E6%A8%A1%E5%9D%97/" rel="next" title="设备与模块">
-                  设备与模块 <i class="fa fa-chevron-right"></i>
-                </a>
             </div>
           </div>
     </footer>
