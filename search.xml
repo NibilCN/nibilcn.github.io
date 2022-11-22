@@ -6412,134 +6412,6 @@ s3cmci.c中的函数会将GPG8引脚设置为外部中断EINT16，设置双边�
       </tags>
   </entry>
   <entry>
-    <title>内核同步方法</title>
-    <url>/2022/11/18/%E5%86%85%E6%A0%B8%E5%90%8C%E6%AD%A5%E6%96%B9%E6%B3%95/</url>
-    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>上一章讨论了竞争条件为何会产生以及怎么去解决。幸运的是，Linux内核提供了一组相当完备的同步方法，这些方法使得内核开发者们能编写出高效而又自由竞争的代码。本章讨论的就是这些方法，包括它们的接口、行为和用途。</p>
-<span id="more"></span>
-
-<h1 id="原子操作"><a href="#原子操作" class="headerlink" title="原子操作"></a>原子操作</h1><p>我们首先介绍同步方法中的原子操作，因为它是其他同步方法的基石。原子操作可以保证指令以原子的方式执行–执行过程不被打断。众所周知，原子原本指的是不可分割的微粒，所以原子操作也就是不能够被分割的指令。例如，上一章曾提到过原子操作的加操作，它通过把读取和增加变量的行为包含在一个单步中执行，从而防止了竞争的发生保证了操作结果总是一致的。一起来回忆一下这个整数增加递加过程中遇到的竞争吧：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">线程1               线程2</span><br><span class="line">获得i(T)            获得i(7)</span><br><span class="line">增加i(7-&gt;8)         ----</span><br><span class="line">----                增加i(8-&gt;9)</span><br><span class="line">写回i(8)            ----</span><br><span class="line">----                写回i(8)</span><br></pre></td></tr></table></figure>
-<p>使用原子操作，上述的竞争不会发生—事实上不可能发生。从而，计算过程无疑会是下述之一：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">线程1                                   线程2</span><br><span class="line">获得、增加和存储i(7-&gt;8)                  ----</span><br><span class="line">----                                    获得、增加和存储i(8-&gt;9)</span><br><span class="line"></span><br><span class="line">或者是</span><br><span class="line">线程2                                   线程1</span><br><span class="line">获得、增加和存储i(7-&gt;8)                  ----</span><br><span class="line">----                                    获得、增加和存储i(8-&gt;9)</span><br></pre></td></tr></table></figure>
-<p>最后得到的是9，毫无疑问是正确结果。两个原子操作绝对不可能并发地访问同一个变量，这样加操作也就绝不可能引起竞争。<br>内核提供了两组原子操作接口—-一组针对整数进行操作，另一组针对单独的位进行操作。在Linux支持的所有体系结构上都实现了这两组接口。大多数体系结构会提供支持原子操作的简单算数指令。而有些体系结构确实缺少简单的原子操作指令，但是也为单步执行提供了锁内存总线的指令，这就确保了其他改变内存的操作不能同时发生。</p>
-<h2 id="原子整数操作"><a href="#原子整数操作" class="headerlink" title="原子整数操作"></a>原子整数操作</h2><p>针对整数的原子操作只能对atomic_t类型的数据进行处理。在这里之所以引入了一个特殊数据类型，而没有直接使用C语言的int类型，主要是出于两个原因：首先，让原子函数只接收atomic_t类型的操作数，可以确保原子操作只与这种特殊类型数据一起使用。同时，这也保证了该类型的数据不会被传递给任何非原子函数。实际上，对一个数据一会儿要采用原子操作，一会儿又不用原子操作，这又能有什么好处？其次，使用atomic_t类型确保编译器不对（不能说完美地完成了任务但不乏自知之明）相应的值进行访问优化—-这点使得原子操作最终接收到正确的内存地址，而不只是个别名。最后，在不同体系结构上实现原子操作的时候，使用atomic_t可以屏蔽其间的差异。atomic_t类型定义在文件&lt;linux&#x2F;types.h&gt;中。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    <span class="keyword">volatile</span> <span class="type">int</span> counter;</span><br><span class="line">&#125;<span class="type">atomic_t</span>;</span><br></pre></td></tr></table></figure>
-<p>尽管Linux支持的所有机器上的整形数据都是32位的，但是使用atomic_t的代码只能将该类型的数据当作24位来使用。这个限制完全是因为在SPARC体系结构上，原子操作的实现不同于其他其他体系结构：32位int类型的低8位被嵌入了一个锁，如下图所示：<br><img src="/2022/11/18/%E5%86%85%E6%A0%B8%E5%90%8C%E6%AD%A5%E6%96%B9%E6%B3%95/1.jpeg" alt="img not found"><br>因为SPARC体系结构对原子操作缺乏指令级的支持，所以只能利用该锁来避免对原子类型数据的并发访问。所以在SPARC机器上就是只能使用24位了。虽然其他机器上的代码完全可以使用全部的32位，但在SPARC机器上却可能造成了一些奇怪和微妙的错误—-这简直太不和谐了。最近，机灵的黑客已经允许SPARC提供全32位的atomic_t，这一限制不存在了。<br>使用原子整形操作需要的声明都在&lt;asm&#x2F;atomic.h&gt;文件中。有些体系结构会提供一些只能在该体系结构上使用的额外原子操作方法，但所有的体系结构都能保证内核使用到的所有操作的最小集。在写内核代码时，可以肯定，这个最小操作集在所有体系结构上都已经实现了。<br>定义一个atomic_t类型的数据方法很平常，你还可以定义时给它设定初值：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">atomic_t</span> v;                     <span class="comment">//定义v</span></span><br><span class="line"><span class="type">atomic_t</span> u = ATOMIC_INIT(<span class="number">0</span>);    <span class="comment">//定义u并把它初始化为0</span></span><br></pre></td></tr></table></figure>
-<p>操作也都非常简单：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">atomic_set</span>(&amp;v,<span class="number">4</span>);       <span class="comment">//v = 4（原子地）</span></span><br><span class="line"><span class="type">atomic_add</span>(<span class="number">2</span>,&amp;v);       <span class="comment">//v = v + 2 = 6（原子地）</span></span><br><span class="line"><span class="type">atomic_inc</span>(&amp;v);         <span class="comment">//v = v + 1 = 7（原子地）</span></span><br></pre></td></tr></table></figure>
-<p>如果需要将atomic_t转换成int型，可以使用atomic_read()来完成：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">printk(<span class="string">&quot;%d\n&quot;</span>,<span class="type">atomic_read</span>(&amp;v)); <span class="comment">//会打印“7”</span></span><br></pre></td></tr></table></figure>
-<p>原子操作最常见的用途就是实现计数器。使用复杂的锁机制来保护一个单纯的计数器显然杀鸡用了宰牛刀，所以，开发者最好使用atomic_inc()和atomic_dec()这两个相对来说轻便一点的操作。<br>还可以用原子整数操作原子地执行一个操作并检查结果。一个常见的例子就是原子地减操作和检查。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">atomic_dec_and_test</span><span class="params">(<span class="type">atomic_t</span> *v)</span>;</span><br></pre></td></tr></table></figure>
-<p>这个函数将给定的原子变量减1，如果结果为0，就返回真；否则返回假。下表列出了所有的标准原子整数操作（所有体系结构都包含这些操作）。某种特定的体系结构上实现的所有操作可以在文件&lt;asm&#x2F;atomic.h&gt;中找到。<br><strong>原子整数操作列表</strong><br><img src="/2022/11/18/%E5%86%85%E6%A0%B8%E5%90%8C%E6%AD%A5%E6%96%B9%E6%B3%95/2.jpeg" alt="img not found"><br>原子操作通常是内联函数，往往是通过内嵌汇编指令来实现的。如果某个函数本来就是原子的，那么它往往就会被定义成一个宏。例如，在大部分体系结构上，读取一个字本身就是一种原子操作，也就是说，在对一个字进行写入操作期间不可能完成对该字的读取。这样，把atomic_read()定义成一个宏，只须返回atomic_t类型的整数值就可以了。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">    atomic_read - read atomic variable</span></span><br><span class="line"><span class="comment">    @v: pointer of type atomic_t</span></span><br><span class="line"><span class="comment">    Atomically reads the value of @v</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">int</span> <span class="title function_">atomic_read</span><span class="params">(<span class="type">const</span> <span class="type">atomic_t</span> *v)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> v-&gt;counter;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><strong>原子性和顺序性的比较</strong><br>关于原子读取的上述讨论引发了原子性和顺序性之间差异的讨论。正如所讨论的，一个字长的读取总是原子的发生，绝不可能对同一个字交错的进行写；读总是返回一个完整的字，这或者发生在写操作之前，或者之后，绝不可能发生在写的过程中。例如，如果一个整数初始化为42，然后又置为365，那么读取这个整数肯定会返回42或者365，而绝不会是二者的混合。这就是我们所谓的原子性。<br>也许代码比这又更多的要求。或许要求读必须在待定的写之前发生—-这种需求其实不属于原子性要求，也是顺序要求。原子性确保指令执行期间不被打断，要么全部执行完，要么根本不执行。另一方面，顺序性确保即使两条或多条指令出现在独立的执行线程中，甚至独立的处理器上，它们本该的执行顺序却依然要保持。<br>在本小节讨论的原子操作只保证</p>
-<p>在编写代码的时候，能使用原子操作时，就尽量不要使用复杂的加锁机制。对多数体系结构来讲，原子操作与更复杂的同步方法相比较，给系统带来的开销小，对高速缓存行的影响也小。但是，对于那些有高性能要求的代码，对多种同步方法进行测试比较，不失为一种明智的做法。</p>
-<h2 id="64位原子操作"><a href="#64位原子操作" class="headerlink" title="64位原子操作"></a>64位原子操作</h2><p>随着64位体系结构越来越普及，内核开发者确实在考虑原子变量除32位atomic_t类型外，也应引入64位的atomic64_t。因为移植性原因，atomic_t变量大小无法在体系结构之间改变。所以，atomic_t类型即便在64位体系结构下也是32位的，若要使用64位的原子变量，则要使用atomic64_t类型—-其功能和其32位的兄弟无异，使用方法完全相同，不同的只有整形变量大小从32位变成了64位。几乎所有的经典32位原子操作都有64位的实现，它们被冠以atomic64前缀，而32位实现冠以atomic前缀。下表是所有标准原子操作列表；有些体系结构实现的方式更多，但是没有移植性。与atomic_t一样，atomic64_t类型其实是对长整型的一个简单封装类。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    <span class="keyword">volatile</span> <span class="type">long</span> counter;</span><br><span class="line">&#125;<span class="type">atomic64_t</span>;</span><br></pre></td></tr></table></figure>
-<p><strong>原子操作整形</strong><br><img src="/2022/11/18/%E5%86%85%E6%A0%B8%E5%90%8C%E6%AD%A5%E6%96%B9%E6%B3%95/3.jpeg" alt="img not found"></p>
-<p>所有64位体系结构都提供了atomic64_t类型，以及一组对应的算法操作方法。但是多数32位体系结构不支持atomic64_t类型—-不过，x86-32是一个众所周知的例外。为了便于在Linux支持的各种体系结构之间移植代码，开发者应该使用32位的atomic_t类型。把64位的atomic64_t类型留给那些特殊体系结构和需要64位的代码吧。</p>
-<h2 id="原子位操作"><a href="#原子位操作" class="headerlink" title="原子位操作"></a>原子位操作</h2><p>除了原子整数操作之外，内核也提供了一组针对位这一级数据进行操作的函数。没什么好奇怪的，它们是与体系结构相关的操作，定义在文件&lt;asm&#x2F;bitops.h&gt;中。<br>令人感到奇怪的是位操作函数是对普通的内存地址进行操作的。它的参数是一个指针和一个位号，第0位是给定地址的最低有效位。在32位机上，第31位是给定地址的最高有效位而第32位是下一个字的最低有效位。虽然使用原子位操作在多数情况下是对一个字长的内存进行访问，因而位号应该位于0-31（在64位机器上是0-63），但是，对位号的范围并没有限制。<br>由于原子位操作是对普通的指针进行的操作，所以不像原子整形对应atomic_t，这里没有特殊的数据类型。相反，只要指针指向了任何你希望的数据，你就可以对它进行操作。来看下一个例子：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> word = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">set_bit(<span class="number">0</span>,&amp;word);           <span class="comment">//第0位被设置（原子地）</span></span><br><span class="line">set_bit(<span class="number">1</span>,&amp;word);           <span class="comment">//第1位被设置（原子地）</span></span><br><span class="line">printk(<span class="string">&quot;%u1\n&quot;</span>,word);       <span class="comment">//打印3</span></span><br><span class="line">clear_bot(<span class="number">1</span>,&amp;word);         <span class="comment">//清空第1位</span></span><br><span class="line">change_bot(<span class="number">0</span>,&amp;word);        <span class="comment">//翻转第0位的值，这里它被清空</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//原子地设置第0位并且返回设置前的值(0)</span></span><br><span class="line"><span class="keyword">if</span>(test_and_set_bit(<span class="number">0</span>,&amp;word)) &#123;</span><br><span class="line">    <span class="comment">//永远不为真</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//下面的语句是合法的；你可以把原子位指令与一般的C语句混在一起</span></span><br><span class="line">word = <span class="number">7</span>;</span><br></pre></td></tr></table></figure>
-<p>下表给出了标准原子位操作列表。<br><img src="/2022/11/18/%E5%86%85%E6%A0%B8%E5%90%8C%E6%AD%A5%E6%96%B9%E6%B3%95/4.jpeg" alt="img not found"></p>
-<p>为方便起见，内核还提供了一组与上述操作对应的非原子位函数。非原子位函数与原子位函数的操作完全相同，但是，前者不保证原子性，但其名字前缀多两个下划线。例如，与test_bit()对应的非原子形式是__test_bit()。如果你不需要原子性操作（比如说，你已经用锁保护了自己的数据），那么这些非原子的位函数相比原子的位函数可能会执行的更快些。</p>
-<p><strong>非原子位操作到底是什么？</strong><br>乍一看，非原子位操作没有任何意义。因为仅仅涉及一个位，所以不存在发生矛盾的可能。只要其中的一个操作成功，还会有什么事情？的确，顺序性可能是重要的，但我们在此正谈论原子性。到了最后，如果这一位有了任一条指令所设置的值，我们应当友好的离开，对吗？<br>让我们跳回到原子性看看到底意味着什么。原子性意味着，或者指令完整地成功执行完，不被打断，或者根本不执行。所以，如果你连续执行两个原子位操作，你会希望两个操作都成功。在操作都完成后，位的值应该是第二个操作所赋予的。但是，在最后一个操作发生前的某个时间点，位的值应该维持第一个操作所赋予的。但是，在最后一个操作发生前的某个时间点，位的值应该维持第一个操作所赋予的。换句话说，真正的原子操作需要的是—-所有中间结果都正确无误。<br>例如，假定给出的两个原子位操作：先对某位置位，然后清零。如果没有原子操作，那么，这一位可能的确清零了，但是也可能根本没有置位。置位操作可能与清除操作同时发生，但没有成功。清除操作可能成功了，这一位如愿呈现位清零。但是，有了原子操作，置位会真正发生，可能有那么一刻，读操作显示所置的位，然后清除操作才执行，该位变为0了。<br>这种行为可能是重要的，尤其当顺序性开始起作用的时候，或者当操作硬件寄存器的时候。</p>
-<p>内核还提供了两个例程用来从指定的地址开始搜索第一个被设置（或未被设置）的位。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">find_first_bit</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> *addr,<span class="type">unsigned</span> <span class="type">int</span> size)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">find_first_zero_bit</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> *addr,<span class="type">unsigned</span> <span class="type">int</span> size)</span>;</span><br></pre></td></tr></table></figure>
-<p>这两个函数中第一个参数是一个指针，第二个参数是要搜索的总位数，返回值分别是第一个被设置好的（或没被设置的）位的位号。如果你的搜索范围仅限于一个字，使用_ffs()和ffz()这两个函数更好，它们只需要给定一个要搜索的地址做参数。<br>与原子整数操作不同，代码一般无法选择是否使用位操作，它们是唯一的、具有可移植性的设置特定位方法，需要选择的是使用原子位操作还是非原子位操作。如果你的代码本身已经避免了竞争条件，你可以使用非原子位操作，通常这样执行更快，当然，这还要取决于具体的体系结构。</p>
-<h1 id="自旋锁"><a href="#自旋锁" class="headerlink" title="自旋锁"></a>自旋锁</h1><p>如果每个临界区都能像增加变量那样简单就好了，可以现实总是残酷的。现实世界里，临界区甚至可以跨越多个函数。举个例子，我们经常会碰到这种情况：先得从一个数据结构中移出数据，对其进行格式转换和解析，最后再把它加入到另一个数据结构中。整个执行过程必须是原子的，在数据被更新完之前，不能有其他代码来读取这些数据。显然，简单的原子操作对此无能为力，这就需要使用更为复杂的同步方法—-锁来提高保护。<br>Linux内核中最常见的锁是自旋锁（spin lock）。自旋锁最多只能被一个可执行线程持有。如果一个执行线程试图获得一个被已经持有的（即所谓的争用）自旋锁，那么该线程就会一直进行忙循环–旋转–等待锁重新可用。要是锁未被争用，请求锁的执行线程便能立刻得到它，继续执行。在任意时间，自旋锁都可以防止多于一个的执行线程同时进入临界区。同一个锁可以用在多个位置，例如，对于给定数据的所有访问都可以得到保护和同步。<br>再回到上一章门和锁的例子，自旋锁相当于坐在门外等待同伴从里面出来，并把钥匙交给你。如果你到了门口，发现里面没人，就可以抓到钥匙进入房间。如果你到了门口发现里面正好有人，就必须在门外等待钥匙，不断地检查房间是否为空。当房间为空时，你就可以抓到钥匙进入。正是因为有了钥匙（相当于自旋锁），才允许一次只有一个人（相当于执行线程）进入房间（相当于临界区）。<br>一个被争用的自旋锁使得请求它的线程在等待锁重新可用时自旋（特别浪费处理器时间），这种行为是自旋锁的要点。所以自旋锁不应该被长时间持有。事实上，这点正是使用自旋锁的初衷：在短期间内进行轻量级加锁。还可以采取另外的方式来处理对锁的争用：让请求线程睡眠，直到锁重新可用时再唤醒它。这样处理器就不必循环等待了，可以去执行其他代码。这也会带来一定的开销–这里有两次明显的上下文切换，被阻塞的线程要换出和换入，与实现自旋锁的少数几行代码相比，上下文切换当然有较多的代码。因此，持有自旋锁的时间最好小于完成两次上下文切换的耗时。当然我们大多数人都不会无聊到去测量上下文切换的耗时，所以我们让持有自选锁的时间应尽可能的短就可以了。在下面的内容中我们将讨论信号量，信号量提供了上述第二种锁机制，它使得发生争用时，等待的线程能投入睡眠，而不是旋转。</p>
-<h2 id="自旋锁方法"><a href="#自旋锁方法" class="headerlink" title="自旋锁方法"></a>自旋锁方法</h2><p>自旋锁的实现和体系结构密切相关，代码往往通过汇编实现。这些与体系结构相关的代码定义在文件&lt;asm&#x2F;spinlock.h&gt;中，实际需要用到的接口定义在文件&lt;linux&#x2F;spinlock.h&gt;中。自旋锁的基本使用形式如下：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">DEFINE_SPINLOCK(mr_lock);</span><br><span class="line">spin_lock(&amp;mr_lock);</span><br><span class="line"><span class="comment">//临界区</span></span><br><span class="line">spin_unlock(&amp;mr_lock);</span><br></pre></td></tr></table></figure>
-<p>因为自旋锁在同一时刻至多被一个执行线程持有，所以一个时刻只能有一个线程位于临界区内，这就为多处理器机器提供了防止并发访问所需的保护机制。注意在单处理器机器上，编译的时候并不会加入自旋锁。它仅仅被当作一个设置内核抢占机制是否被启用的开关。如果禁止内核抢占，那么在编译时自旋锁会被完全剔除出内核。</p>
-<p><strong>警告：自旋锁是不可递归的！</strong><br>Linux内核实现的自旋锁是不可递归的，这点不同于自旋锁在其他操作系统中的实现。所以如果你试图得到一个你正持有的锁，你必须自旋，等待你自己释放这个锁。但你处于自旋忙等待中，所以你永远没有机会释放锁，于是你被自己锁死了。千万小心自旋锁。</p>
-<p>自旋锁可以使用中断处理程序中（此处不能用信号量，因为它会导致睡眠）。在中断处理程序中使用自旋锁时，一定要在获取锁之前，首先禁止本地中断（在当前处理器上的中断请求），否则，中断处理程序就会打断正持有锁的代码，有可能会试图去争用这个已经被持有的自旋锁。这样一来，中断处理程序就会自旋，等待该锁重新可用，但是锁的持有者在这个中断处理程序执行完毕之前不可能运行。这正是我们在前面的内容中提到的双重请求死锁。注意，需要关闭的只是当前处理器上的中断。如果中断发生在不同的处理器上，即使中断处理程序在同一锁上自旋，也不会妨碍锁的持有者（在不同处理器上）最终释放锁。<br>内核提供的禁止中断同时请求锁的接口，使用起来很方便，方法如下：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">DEFINE_SPINLOCK(mr_lock);</span><br><span class="line"><span class="type">unsigned</span> <span class="type">long</span> flags;</span><br><span class="line"></span><br><span class="line">spin_lock_irqsave(&amp;mr_lock,flags);</span><br><span class="line"><span class="comment">//临界区</span></span><br><span class="line">spin_unlock_irqrestore(&amp;mr_lock,flags);</span><br></pre></td></tr></table></figure>
-<p>函数spin_lock_irqsave()保存中断的当前状态，并禁止本地中断，然后再去获取指定的锁。反过来spin_unlock_irqrestore()对指定的锁解锁，然后让中断恢复到加锁前的状态。所以即使中断最初是被禁止的，代码也不会错误地激活它们，相反，会继续让它们禁止。注意，flags变量看起来像是由数值传递的，这是因为这些锁函数有些部分是通过宏的方式实现的。<br>在单处理器系统上，虽然在编译时抛弃掉了锁机制，但在上面例子中仍需要关闭中断，以禁止中断处理程序访问共享数据。加锁和解锁分别可以禁止和允许内核抢占。</p>
-<p><strong>锁什么？</strong><br>使用锁的时候一定要对症下药，要有针对性。要知道需要保护的是数据而不是代码。尽管本章的例子讲的都是保护临界区的重要性，但是真正需要保护的其实是临界区中的数据，而不是代码。<br>大原则：<code>针对代码加锁会使得程序难以理解，并且容易引发竞争条件，正确的做法应该是对数据而不是代码加锁</code>。<br>既然不是对代码加锁，那就一定要用特定的锁来保护自己的共享资源。例如，“struct foo 由loo_lock加锁”。无论你何时需要访问共享数据，一定要先保证数据是安全的。而保证数据安全往往就意味着在对数据进行操作前，首先占用恰当的锁，完成操作后再释放它。</p>
-<p>如果你能确定中断在加锁前是激活的，那就不需要在解锁后恢复中断以前的状态了。你可以无条件地在解锁时激活中断。这时，使用spin_lock_irq()和spin_unlock_irq()会更好一些。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">DEFINE_SPINLOCK(mr_lock);</span><br><span class="line"></span><br><span class="line">spin_lock_irq(&amp;mr_lock);</span><br><span class="line"><span class="comment">//关键节</span></span><br><span class="line">spin_unlock_irq(&amp;mr_lock);</span><br></pre></td></tr></table></figure>
-<p>由于内核变得庞大而复杂，因此，在内核的执行路线上，你很难搞清楚中断在当前调用点上到底是不是处于激活状态。也正因为如此，我们并不提倡使用spin_lock_irq()方法。如果你一定要使用它，那你应该确定中断原来就处于激活状态，否则当其他人期望中断处于未激活状态时却发现处于激活状态，可能会很不开心。</p>
-<p><strong>调试自旋锁</strong><br>配置选项CONFIG_DEBUG_SPINLOCK为使用自旋锁的代码加入许多调试检查手段。例如，激活了该选项，内核就会检查是否使用了未初始化的锁，是否在还没加锁的时候就要对锁执行开锁操作。在测试代码时，总是应该激活这个选项。如果需要进一步全程调试锁，还应该打开CONFIG_DEBUG_LOCK_ALLOC选项。</p>
-<h2 id="其他针对自旋锁的操作"><a href="#其他针对自旋锁的操作" class="headerlink" title="其他针对自旋锁的操作"></a>其他针对自旋锁的操作</h2><p>你可以使用是spin_lock_init()方法来初始化动态创建的自旋锁（此时你只有一个指向spinlock_t类型的指针，没有它的实体）。<br>spin_try_lock()试图获得某个特定的自旋锁，如果该锁已经被争用，那么该方法会立刻返回一个非0值，而不会自旋等待锁被释放；如果成功获得了这个自旋锁，该函数返回0。同理，spin_is_locked()方法用于检查特定的锁当前是否已经被占用，如果已经被占用，返回非0值；否则返回0。该方法只做判断，并不实际占用。<br>下表给出了标准的自旋锁操作的完整列表。</p>
-<p><strong>自旋锁方法列表</strong></p>
-<table>
-<thead>
-<tr>
-<th>方法</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>spin_lock()</td>
-<td>获取指定的自旋锁</td>
-</tr>
-<tr>
-<td>spin_lock_irq()</td>
-<td>禁止本地中断并获取指定的锁</td>
-</tr>
-<tr>
-<td>spin_lock_irqsave()</td>
-<td>保存本地中断的当前状态，禁止本地中断，并获取指定的锁</td>
-</tr>
-<tr>
-<td>spin_unlock()</td>
-<td>释放指定的锁</td>
-</tr>
-<tr>
-<td>spin_unlock_irq()</td>
-<td>释放指定的锁，并激活本地中断</td>
-</tr>
-<tr>
-<td>spin_unlock_irqrestore()</td>
-<td>释放指定的锁，并让本地中断恢复到以前状态</td>
-</tr>
-<tr>
-<td>spin_lock_init()</td>
-<td>动态初始化指定的spinlock_t</td>
-</tr>
-<tr>
-<td>sping_trylock()</td>
-<td>试图获取指定的锁，如果未获取，则返回非0</td>
-</tr>
-<tr>
-<td>spin_is_locked()</td>
-<td>如果指定的锁当前正在被获取，则返回非0，否则返回0</td>
-</tr>
-</tbody></table>
-<h2 id="自旋锁与下半部"><a href="#自旋锁与下半部" class="headerlink" title="自旋锁与下半部"></a>自旋锁与下半部</h2><p>在第8章中曾经提到过，在于下半部配合使用时，必须小心地使用锁机制。函数spin_lock_bh()用于获取指定锁，同时它会禁止所有下半部的执行。相应的spin_unlock_bh()函数执行相反的操作。<br>由于下半部可以抢占进程上下文中的代码，所以当下半部和进程上下文共享数据时，必须对进程上下文中的共享数据进行保护，所以需要加锁的同时还要禁止下半部执行，同样，由于中断处理程序可以抢占下半部，所以如果中断处理程序和下半部共享数据，那么就必须在获取恰当的锁的同时还要禁止中断。<br>回忆一下，同类的tasklet不可能同时运行，所以对于同类tasklet中的共享数据不需要保护。但是当数据被两个不同种类的tasklet共享时，就需要在访问下半部中的数据前先获得一个普通的自旋锁。这里不需要禁止下半部，因为在同一个处理器上绝不会有tasklet相互强占的情况。<br>对于软中断，无论是否同种类型，如果数据被软中断共享，那么它必须得到锁的保护。这是因为，即使是同种类型的两个软中断也可以同时运行在一个系统的多个处理上。但是，同一处理器上的一个软中断绝不会抢占另一个软中断，因此，根本没有必要禁止下半部。</p>
-<h1 id="读-写自旋锁"><a href="#读-写自旋锁" class="headerlink" title="读-写自旋锁"></a>读-写自旋锁</h1><p>有时，锁的用途可以明确地分为读取和写入两个场景。例如，对一个链表可能既要更新又要检索。当更新（写入）链表时，不能有其他代码并发地写链表或从链表中读取数据，写操作要求完全互斥。另一方面，当对其检索（读取）链表时，只要其他程序不对链表进行写操作就行了。只要没有写操作，多个并发的读操作都是安全的。任务链表的存取模式就非常类似于这种情况，它就是通过读-写自旋锁获得保护的。<br>当对某个数据结构的操作可以像这样被划分为读&#x2F;写或者消费者&#x2F;生产者两种类别时，类似读&#x2F;写锁这样的机制就很有帮助了。为此，Linux内核提供了专门的读-写自旋锁。这种自旋锁为读和写分别提供了不同的锁。一个或多个读任务可以并发地持有读者锁；相反，用于写的锁最多只能被一个写任务持有，而且此时不能有并发的读操作。有时把读&#x2F;写锁叫做共享&#x2F;排斥锁，或者并发&#x2F;排斥锁，因为这种锁以共享和排斥的形式获得使用。<br>读&#x2F;写自旋锁的使用方法类似于普通自旋锁，它们通过下面的方法初始化：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">DEFINE_RWLOCK(mr_rwlock);</span><br></pre></td></tr></table></figure>
-<p>然后，在读者的代码分支中使用如下函数：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">read_lock(&amp;mr_rwlock);</span><br><span class="line"><span class="comment">//临界区（只读）</span></span><br><span class="line">read_unlock(&amp;mr_rwlock);</span><br></pre></td></tr></table></figure>
-<p>最后，在写者的代码分支中使用如下函数：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">write_lock(&amp;mr_rwlock);</span><br><span class="line"><span class="comment">//临界区（读写）</span></span><br><span class="line">write_unlock(&amp;mr_rwlock);</span><br></pre></td></tr></table></figure>
-<p>通常情况下，读锁和写锁会位于完全分割开的代码分支中，如上例所示。<br>注意，不能把一个读锁“升级”为写锁。比如考虑下面这段代码：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">read_lock(&amp;mr_rwlock);</span><br><span class="line">write_lock(&amp;mr_rwlock);</span><br></pre></td></tr></table></figure>
-<p>执行上述两个函数将会带来死锁，因为写锁会不断自旋，等待所有的读者释放锁，其中也包括它自己。所以当确实需要写操作时，要在一开始就请求写锁。<code>如果写和读不能清晰地分开的话，那么就使用一般的自旋锁就行了，不要使用读写-自旋锁。</code><br>多个读者可以安全地获得同一个锁，事实上，即使一个线程递归地同一读锁也是安全的。这个特性使得读-写自旋锁真正地成为一种有用并且常用的优化手段。如果在中断处理程序中只有读操作而没有写操作，那么，就可以混合使用“中断禁止”锁，使用read_lock()而不是read_lock_irqsave()对读进行保护。不过，你还是需要用write_lock_irqsave()禁止有写操作的中断，否则，中断里的读操作就有可能锁死在写锁上。下表列出了针对读-写自旋锁的所有操作。<br><img src="/2022/11/18/%E5%86%85%E6%A0%B8%E5%90%8C%E6%AD%A5%E6%96%B9%E6%B3%95/5.jpeg" alt="img not found"><br>在使用Linux读-写自旋锁时，最后要考虑的一点是这种锁机制照顾读比照顾写要多一点。当读锁被持有时，写操作为了互斥访问只能等待，但是，读者却可以继续成功地占用锁。而自旋等待的写者在所有读者释放锁之前是无法获得锁的。所以，大量读者必定会使挂起的写者处于饥饿状态，在你自己设计锁时一定要记住这一点–有些时候这种行为是有益的，有时则会带来灾难。<br>自旋锁提供了一种快速简单的锁实现方法。如果加锁的时间不长并且代码不会睡眠（比如中断处理程序），利用自旋锁是最佳选择。如果加锁时间可能很长或者代码在持有锁时有可能睡眠，那么最好使用信号量来完成加锁功能。</p>
-<h1 id="信号量"><a href="#信号量" class="headerlink" title="信号量"></a>信号量</h1><p>Linux中的信号量是一种睡眠锁。如果有一个任务试图获得一个不可用（已经被占用）的信号量时，信号量会将其推进一个等待队列，然后让其睡眠。这时处理器能重获自由，从而去执行其他代码。当持有的信号量可用（被释放）后，处于等待队列中的那个任务将被唤醒，并获得该信号量。<br>让我们再一次回到门和钥匙的例子。当某个人到了门前，他抓取钥匙，然后进入房间。最大的差异在于当另一个人到了门前，但无法得到钥匙时会发生什么情况。在这种情况下，这家伙不是在徘徊等待，而是把自己的名字写在一个列表中，然后打盹去了。当里面的人离开房间时，就在门口查看一下列表。如果列表上有名字，他就对第一个名字仔细检查，并在胸部给他一拳，叫醒他，让他进入房间。在这种方式中，钥匙（信号量）继续确保一次只有一个人（执行线程）进入房间（临界区）。这就比自旋锁提供了更好的处理器利用率，因为没有把时间花费在忙等待上，但是，信号量比自旋锁有更大的开销。<br>我们可以从信号量的睡眠特性得出一些有意思的结论：</p>
-<ol>
-<li>由于争用信号量的进程在等待锁重新变为可用时会睡眠，所以信号量适用于锁会被长时间持有的情况。</li>
-<li>相反，锁被短时间持有时，使用信号量就不太适宜了。因为睡眠、维护等待队列以及唤醒所花费的开销可能比锁占用的全部时间还要长。</li>
-<li>由于执行线程在锁被争用会睡眠，所以只能在进程上下文中才能获得信号量锁，因为在中断上下文中是不能进行调度的。</li>
-<li>你可以在持有信号量时去睡眠（当然你也可能并不需要睡眠），因为当其他进程试图获得同一信号量时不会因此而死锁（因为该进程也只是去睡眠而已，而你最终会继续执行的）。</li>
-<li>在你占用信号量的同时不能占用自旋锁。因为你在等待信号量时可能会睡眠，而在持有自旋锁时是不允许睡眠的。</li>
-</ol>
-<p>以上这些结论阐明了信号量和自旋锁在使用上的差异，在使用信号量的大多数时候，你的选择余地不大。往往在需要和用户空间同步时，你的代码会需要睡眠，此时使用信号量是唯一的选择。由于不受睡眠的限制，使用信号量通常来说更加容易一些。如果需要在自旋锁和信号量中做选择，应该根据锁被持有的时间长短做判断。理想情况当然是所有的锁定操作都应该越短越好。但如果你用的是信号量，那么锁定的时间长一点也能接受。另外，信号量不同于自旋锁，它不会禁止内核抢占，所以持有信号量的代码可以被抢占。这意味着信号量不会对调度的等待时间带来负面影响。</p>
-<h2 id="计数信号量和二值信号量"><a href="#计数信号量和二值信号量" class="headerlink" title="计数信号量和二值信号量"></a>计数信号量和二值信号量</h2><p>最后要讨论的是信号量的一个有用特性，它可以同时允许任意数量的锁持有者，而自旋锁在一个时刻最多允许一个任务持有它。信号量同时允许的持有者数量可以在声明信号量时指定。这个值称为使用者数量（usage count）或简单地叫数量（count）。通常情况下，信号量和自旋锁一样，在一个时刻仅允许一个持有者。这时计数等于1，这样的信号量被称为二值信号量（因为它或者由一个任务持有，或者根本没有任务持有它）或者称为互斥信号量（因为它强制进行互斥）。另一方面，初始化的时候也可以把数量设置为大于1的非0值。这种情况，信号量被称为计数信号量，它允许在一个时刻至多有count个锁持有者。计数信号量不能用来进行强制互斥，因为它允许多个执行线程同时访问临界区。相反，这种信号量用来对特定代码加以限制，内核中使用它的机会不多。在使用信号量时，基本上用到的都是互斥信号量（计数等于1的信号量）。<br>信号量在1968年由Edsger Wybe Dijkstra提出，此后它逐渐成为一种常用的锁机制。<code>信号量支持两个原子操作P()和V()，这两个名字来自荷兰语Proberen和Vershogen</code>。前者叫做测试操作，后者叫做增加操作。后来的系统把两种操作分别叫做down()和up()，Linux也遵从这种叫法。down()操作通过对信号量计数减1来请求获得一个信号量。如果结果是0或者大于0，获得信号量锁，任务就可以进入临界区。如果结果是负数，任务会被放入等待队列，处理器执行其他任务。该函数如同一个动词，降低（down）一个信号量就等于获取该信号量。相反，当临界区中的操作完成后，up()操作用来释放信号量，该操作也被称作是提升信号量，因为它会增加信号量的计数值。如果在该信号量上的等待队列不为空，那么处于队列中等待的任务在被唤醒的同时会获得该信号量。</p>
-<h2 id="创建和初始化信号量"><a href="#创建和初始化信号量" class="headerlink" title="创建和初始化信号量"></a>创建和初始化信号量</h2>]]></content>
-      <categories>
-        <category>学习</category>
-        <category>书籍</category>
-        <category>Linux内核设计与实现</category>
-        <category>第10章 内核同步方法</category>
-      </categories>
-      <tags>
-        <tag>Linux Kernel</tag>
-        <tag>操作系统</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>进程调度</title>
     <url>/2022/10/28/%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>第3章讨论了进程，它在操作系统看来是程序的运行态表现形式。本章将讨论进程调度程序，它是确保进程能有效工作的一个内核子系统。<br>调度程序负责决定将哪个进程投入运行，何时运行以及运行多长时间。进程调度程序（常常简称调度程序）可看作在可运行态程序之间分配有限的处理器时间资源的内核子系统。调度程序是像Linux这样的多任务操作系统的基础。只有通过调度程序的合理调度，系统资源才能最大限度的发挥作用，多进程才会并发执行的效果。<br>调度程序没有太复杂的原理。最大限度地利用处理器时间的原则是，只要有可以执行的进程，那么总会有进程正在执行。但是只要系统中可运行的进程的数目比处理器的个数多，就注定某一给定时刻会有一些进程不能执行。这些进程在等待运行。这一组处于可运行状态的进程中选择一个来执行，是调度程序所需完成的基本工作。</p>
@@ -7028,6 +6900,371 @@ s3cmci.c中的函数会将GPG8引脚设置为外部中断EINT16，设置双边�
         <category>书籍</category>
         <category>Linux内核设计与实现</category>
         <category>第8章 中断下半部和推后执行的工作</category>
+      </categories>
+      <tags>
+        <tag>Linux Kernel</tag>
+        <tag>操作系统</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>内核同步方法</title>
+    <url>/2022/11/18/%E5%86%85%E6%A0%B8%E5%90%8C%E6%AD%A5%E6%96%B9%E6%B3%95/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>上一章讨论了竞争条件为何会产生以及怎么去解决。幸运的是，Linux内核提供了一组相当完备的同步方法，这些方法使得内核开发者们能编写出高效而又自由竞争的代码。本章讨论的就是这些方法，包括它们的接口、行为和用途。</p>
+<span id="more"></span>
+
+<h1 id="原子操作"><a href="#原子操作" class="headerlink" title="原子操作"></a>原子操作</h1><p>我们首先介绍同步方法中的原子操作，因为它是其他同步方法的基石。原子操作可以保证指令以原子的方式执行–执行过程不被打断。众所周知，原子原本指的是不可分割的微粒，所以原子操作也就是不能够被分割的指令。例如，上一章曾提到过原子操作的加操作，它通过把读取和增加变量的行为包含在一个单步中执行，从而防止了竞争的发生保证了操作结果总是一致的。一起来回忆一下这个整数增加递加过程中遇到的竞争吧：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">线程1               线程2</span><br><span class="line">获得i(T)            获得i(7)</span><br><span class="line">增加i(7-&gt;8)         ----</span><br><span class="line">----                增加i(8-&gt;9)</span><br><span class="line">写回i(8)            ----</span><br><span class="line">----                写回i(8)</span><br></pre></td></tr></table></figure>
+<p>使用原子操作，上述的竞争不会发生—事实上不可能发生。从而，计算过程无疑会是下述之一：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">线程1                                   线程2</span><br><span class="line">获得、增加和存储i(7-&gt;8)                  ----</span><br><span class="line">----                                    获得、增加和存储i(8-&gt;9)</span><br><span class="line"></span><br><span class="line">或者是</span><br><span class="line">线程2                                   线程1</span><br><span class="line">获得、增加和存储i(7-&gt;8)                  ----</span><br><span class="line">----                                    获得、增加和存储i(8-&gt;9)</span><br></pre></td></tr></table></figure>
+<p>最后得到的是9，毫无疑问是正确结果。两个原子操作绝对不可能并发地访问同一个变量，这样加操作也就绝不可能引起竞争。<br>内核提供了两组原子操作接口—-一组针对整数进行操作，另一组针对单独的位进行操作。在Linux支持的所有体系结构上都实现了这两组接口。大多数体系结构会提供支持原子操作的简单算数指令。而有些体系结构确实缺少简单的原子操作指令，但是也为单步执行提供了锁内存总线的指令，这就确保了其他改变内存的操作不能同时发生。</p>
+<h2 id="原子整数操作"><a href="#原子整数操作" class="headerlink" title="原子整数操作"></a>原子整数操作</h2><p>针对整数的原子操作只能对atomic_t类型的数据进行处理。在这里之所以引入了一个特殊数据类型，而没有直接使用C语言的int类型，主要是出于两个原因：首先，让原子函数只接收atomic_t类型的操作数，可以确保原子操作只与这种特殊类型数据一起使用。同时，这也保证了该类型的数据不会被传递给任何非原子函数。实际上，对一个数据一会儿要采用原子操作，一会儿又不用原子操作，这又能有什么好处？其次，使用atomic_t类型确保编译器不对（不能说完美地完成了任务但不乏自知之明）相应的值进行访问优化—-这点使得原子操作最终接收到正确的内存地址，而不只是个别名。最后，在不同体系结构上实现原子操作的时候，使用atomic_t可以屏蔽其间的差异。atomic_t类型定义在文件&lt;linux&#x2F;types.h&gt;中。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    <span class="keyword">volatile</span> <span class="type">int</span> counter;</span><br><span class="line">&#125;<span class="type">atomic_t</span>;</span><br></pre></td></tr></table></figure>
+<p>尽管Linux支持的所有机器上的整形数据都是32位的，但是使用atomic_t的代码只能将该类型的数据当作24位来使用。这个限制完全是因为在SPARC体系结构上，原子操作的实现不同于其他其他体系结构：32位int类型的低8位被嵌入了一个锁，如下图所示：<br><img src="/2022/11/18/%E5%86%85%E6%A0%B8%E5%90%8C%E6%AD%A5%E6%96%B9%E6%B3%95/1.jpeg" alt="img not found"><br>因为SPARC体系结构对原子操作缺乏指令级的支持，所以只能利用该锁来避免对原子类型数据的并发访问。所以在SPARC机器上就是只能使用24位了。虽然其他机器上的代码完全可以使用全部的32位，但在SPARC机器上却可能造成了一些奇怪和微妙的错误—-这简直太不和谐了。最近，机灵的黑客已经允许SPARC提供全32位的atomic_t，这一限制不存在了。<br>使用原子整形操作需要的声明都在&lt;asm&#x2F;atomic.h&gt;文件中。有些体系结构会提供一些只能在该体系结构上使用的额外原子操作方法，但所有的体系结构都能保证内核使用到的所有操作的最小集。在写内核代码时，可以肯定，这个最小操作集在所有体系结构上都已经实现了。<br>定义一个atomic_t类型的数据方法很平常，你还可以定义时给它设定初值：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">atomic_t</span> v;                     <span class="comment">//定义v</span></span><br><span class="line"><span class="type">atomic_t</span> u = ATOMIC_INIT(<span class="number">0</span>);    <span class="comment">//定义u并把它初始化为0</span></span><br></pre></td></tr></table></figure>
+<p>操作也都非常简单：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">atomic_set</span>(&amp;v,<span class="number">4</span>);       <span class="comment">//v = 4（原子地）</span></span><br><span class="line"><span class="type">atomic_add</span>(<span class="number">2</span>,&amp;v);       <span class="comment">//v = v + 2 = 6（原子地）</span></span><br><span class="line"><span class="type">atomic_inc</span>(&amp;v);         <span class="comment">//v = v + 1 = 7（原子地）</span></span><br></pre></td></tr></table></figure>
+<p>如果需要将atomic_t转换成int型，可以使用atomic_read()来完成：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">printk(<span class="string">&quot;%d\n&quot;</span>,<span class="type">atomic_read</span>(&amp;v)); <span class="comment">//会打印“7”</span></span><br></pre></td></tr></table></figure>
+<p>原子操作最常见的用途就是实现计数器。使用复杂的锁机制来保护一个单纯的计数器显然杀鸡用了宰牛刀，所以，开发者最好使用atomic_inc()和atomic_dec()这两个相对来说轻便一点的操作。<br>还可以用原子整数操作原子地执行一个操作并检查结果。一个常见的例子就是原子地减操作和检查。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">atomic_dec_and_test</span><span class="params">(<span class="type">atomic_t</span> *v)</span>;</span><br></pre></td></tr></table></figure>
+<p>这个函数将给定的原子变量减1，如果结果为0，就返回真；否则返回假。下表列出了所有的标准原子整数操作（所有体系结构都包含这些操作）。某种特定的体系结构上实现的所有操作可以在文件&lt;asm&#x2F;atomic.h&gt;中找到。<br><strong>原子整数操作列表</strong><br><img src="/2022/11/18/%E5%86%85%E6%A0%B8%E5%90%8C%E6%AD%A5%E6%96%B9%E6%B3%95/2.jpeg" alt="img not found"><br>原子操作通常是内联函数，往往是通过内嵌汇编指令来实现的。如果某个函数本来就是原子的，那么它往往就会被定义成一个宏。例如，在大部分体系结构上，读取一个字本身就是一种原子操作，也就是说，在对一个字进行写入操作期间不可能完成对该字的读取。这样，把atomic_read()定义成一个宏，只须返回atomic_t类型的整数值就可以了。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">    atomic_read - read atomic variable</span></span><br><span class="line"><span class="comment">    @v: pointer of type atomic_t</span></span><br><span class="line"><span class="comment">    Atomically reads the value of @v</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">int</span> <span class="title function_">atomic_read</span><span class="params">(<span class="type">const</span> <span class="type">atomic_t</span> *v)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> v-&gt;counter;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>原子性和顺序性的比较</strong><br>关于原子读取的上述讨论引发了原子性和顺序性之间差异的讨论。正如所讨论的，一个字长的读取总是原子的发生，绝不可能对同一个字交错的进行写；读总是返回一个完整的字，这或者发生在写操作之前，或者之后，绝不可能发生在写的过程中。例如，如果一个整数初始化为42，然后又置为365，那么读取这个整数肯定会返回42或者365，而绝不会是二者的混合。这就是我们所谓的原子性。<br>也许代码比这又更多的要求。或许要求读必须在待定的写之前发生—-这种需求其实不属于原子性要求，也是顺序要求。原子性确保指令执行期间不被打断，要么全部执行完，要么根本不执行。另一方面，顺序性确保即使两条或多条指令出现在独立的执行线程中，甚至独立的处理器上，它们本该的执行顺序却依然要保持。<br>在本小节讨论的原子操作只保证</p>
+<p>在编写代码的时候，能使用原子操作时，就尽量不要使用复杂的加锁机制。对多数体系结构来讲，原子操作与更复杂的同步方法相比较，给系统带来的开销小，对高速缓存行的影响也小。但是，对于那些有高性能要求的代码，对多种同步方法进行测试比较，不失为一种明智的做法。</p>
+<h2 id="64位原子操作"><a href="#64位原子操作" class="headerlink" title="64位原子操作"></a>64位原子操作</h2><p>随着64位体系结构越来越普及，内核开发者确实在考虑原子变量除32位atomic_t类型外，也应引入64位的atomic64_t。因为移植性原因，atomic_t变量大小无法在体系结构之间改变。所以，atomic_t类型即便在64位体系结构下也是32位的，若要使用64位的原子变量，则要使用atomic64_t类型—-其功能和其32位的兄弟无异，使用方法完全相同，不同的只有整形变量大小从32位变成了64位。几乎所有的经典32位原子操作都有64位的实现，它们被冠以atomic64前缀，而32位实现冠以atomic前缀。下表是所有标准原子操作列表；有些体系结构实现的方式更多，但是没有移植性。与atomic_t一样，atomic64_t类型其实是对长整型的一个简单封装类。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    <span class="keyword">volatile</span> <span class="type">long</span> counter;</span><br><span class="line">&#125;<span class="type">atomic64_t</span>;</span><br></pre></td></tr></table></figure>
+<p><strong>原子操作整形</strong><br><img src="/2022/11/18/%E5%86%85%E6%A0%B8%E5%90%8C%E6%AD%A5%E6%96%B9%E6%B3%95/3.jpeg" alt="img not found"></p>
+<p>所有64位体系结构都提供了atomic64_t类型，以及一组对应的算法操作方法。但是多数32位体系结构不支持atomic64_t类型—-不过，x86-32是一个众所周知的例外。为了便于在Linux支持的各种体系结构之间移植代码，开发者应该使用32位的atomic_t类型。把64位的atomic64_t类型留给那些特殊体系结构和需要64位的代码吧。</p>
+<h2 id="原子位操作"><a href="#原子位操作" class="headerlink" title="原子位操作"></a>原子位操作</h2><p>除了原子整数操作之外，内核也提供了一组针对位这一级数据进行操作的函数。没什么好奇怪的，它们是与体系结构相关的操作，定义在文件&lt;asm&#x2F;bitops.h&gt;中。<br>令人感到奇怪的是位操作函数是对普通的内存地址进行操作的。它的参数是一个指针和一个位号，第0位是给定地址的最低有效位。在32位机上，第31位是给定地址的最高有效位而第32位是下一个字的最低有效位。虽然使用原子位操作在多数情况下是对一个字长的内存进行访问，因而位号应该位于0-31（在64位机器上是0-63），但是，对位号的范围并没有限制。<br>由于原子位操作是对普通的指针进行的操作，所以不像原子整形对应atomic_t，这里没有特殊的数据类型。相反，只要指针指向了任何你希望的数据，你就可以对它进行操作。来看下一个例子：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> word = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">set_bit(<span class="number">0</span>,&amp;word);           <span class="comment">//第0位被设置（原子地）</span></span><br><span class="line">set_bit(<span class="number">1</span>,&amp;word);           <span class="comment">//第1位被设置（原子地）</span></span><br><span class="line">printk(<span class="string">&quot;%u1\n&quot;</span>,word);       <span class="comment">//打印3</span></span><br><span class="line">clear_bot(<span class="number">1</span>,&amp;word);         <span class="comment">//清空第1位</span></span><br><span class="line">change_bot(<span class="number">0</span>,&amp;word);        <span class="comment">//翻转第0位的值，这里它被清空</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//原子地设置第0位并且返回设置前的值(0)</span></span><br><span class="line"><span class="keyword">if</span>(test_and_set_bit(<span class="number">0</span>,&amp;word)) &#123;</span><br><span class="line">    <span class="comment">//永远不为真</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//下面的语句是合法的；你可以把原子位指令与一般的C语句混在一起</span></span><br><span class="line">word = <span class="number">7</span>;</span><br></pre></td></tr></table></figure>
+<p>下表给出了标准原子位操作列表。<br><img src="/2022/11/18/%E5%86%85%E6%A0%B8%E5%90%8C%E6%AD%A5%E6%96%B9%E6%B3%95/4.jpeg" alt="img not found"></p>
+<p>为方便起见，内核还提供了一组与上述操作对应的非原子位函数。非原子位函数与原子位函数的操作完全相同，但是，前者不保证原子性，但其名字前缀多两个下划线。例如，与test_bit()对应的非原子形式是__test_bit()。如果你不需要原子性操作（比如说，你已经用锁保护了自己的数据），那么这些非原子的位函数相比原子的位函数可能会执行的更快些。</p>
+<p><strong>非原子位操作到底是什么？</strong><br>乍一看，非原子位操作没有任何意义。因为仅仅涉及一个位，所以不存在发生矛盾的可能。只要其中的一个操作成功，还会有什么事情？的确，顺序性可能是重要的，但我们在此正谈论原子性。到了最后，如果这一位有了任一条指令所设置的值，我们应当友好的离开，对吗？<br>让我们跳回到原子性看看到底意味着什么。原子性意味着，或者指令完整地成功执行完，不被打断，或者根本不执行。所以，如果你连续执行两个原子位操作，你会希望两个操作都成功。在操作都完成后，位的值应该是第二个操作所赋予的。但是，在最后一个操作发生前的某个时间点，位的值应该维持第一个操作所赋予的。但是，在最后一个操作发生前的某个时间点，位的值应该维持第一个操作所赋予的。换句话说，真正的原子操作需要的是—-所有中间结果都正确无误。<br>例如，假定给出的两个原子位操作：先对某位置位，然后清零。如果没有原子操作，那么，这一位可能的确清零了，但是也可能根本没有置位。置位操作可能与清除操作同时发生，但没有成功。清除操作可能成功了，这一位如愿呈现位清零。但是，有了原子操作，置位会真正发生，可能有那么一刻，读操作显示所置的位，然后清除操作才执行，该位变为0了。<br>这种行为可能是重要的，尤其当顺序性开始起作用的时候，或者当操作硬件寄存器的时候。</p>
+<p>内核还提供了两个例程用来从指定的地址开始搜索第一个被设置（或未被设置）的位。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">find_first_bit</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> *addr,<span class="type">unsigned</span> <span class="type">int</span> size)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">find_first_zero_bit</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> *addr,<span class="type">unsigned</span> <span class="type">int</span> size)</span>;</span><br></pre></td></tr></table></figure>
+<p>这两个函数中第一个参数是一个指针，第二个参数是要搜索的总位数，返回值分别是第一个被设置好的（或没被设置的）位的位号。如果你的搜索范围仅限于一个字，使用_ffs()和ffz()这两个函数更好，它们只需要给定一个要搜索的地址做参数。<br>与原子整数操作不同，代码一般无法选择是否使用位操作，它们是唯一的、具有可移植性的设置特定位方法，需要选择的是使用原子位操作还是非原子位操作。如果你的代码本身已经避免了竞争条件，你可以使用非原子位操作，通常这样执行更快，当然，这还要取决于具体的体系结构。</p>
+<h1 id="自旋锁"><a href="#自旋锁" class="headerlink" title="自旋锁"></a>自旋锁</h1><p>如果每个临界区都能像增加变量那样简单就好了，可以现实总是残酷的。现实世界里，临界区甚至可以跨越多个函数。举个例子，我们经常会碰到这种情况：先得从一个数据结构中移出数据，对其进行格式转换和解析，最后再把它加入到另一个数据结构中。整个执行过程必须是原子的，在数据被更新完之前，不能有其他代码来读取这些数据。显然，简单的原子操作对此无能为力，这就需要使用更为复杂的同步方法—-锁来提高保护。<br>Linux内核中最常见的锁是自旋锁（spin lock）。自旋锁最多只能被一个可执行线程持有。如果一个执行线程试图获得一个被已经持有的（即所谓的争用）自旋锁，那么该线程就会一直进行忙循环–旋转–等待锁重新可用。要是锁未被争用，请求锁的执行线程便能立刻得到它，继续执行。在任意时间，自旋锁都可以防止多于一个的执行线程同时进入临界区。同一个锁可以用在多个位置，例如，对于给定数据的所有访问都可以得到保护和同步。<br>再回到上一章门和锁的例子，自旋锁相当于坐在门外等待同伴从里面出来，并把钥匙交给你。如果你到了门口，发现里面没人，就可以抓到钥匙进入房间。如果你到了门口发现里面正好有人，就必须在门外等待钥匙，不断地检查房间是否为空。当房间为空时，你就可以抓到钥匙进入。正是因为有了钥匙（相当于自旋锁），才允许一次只有一个人（相当于执行线程）进入房间（相当于临界区）。<br>一个被争用的自旋锁使得请求它的线程在等待锁重新可用时自旋（特别浪费处理器时间），这种行为是自旋锁的要点。所以自旋锁不应该被长时间持有。事实上，这点正是使用自旋锁的初衷：在短期间内进行轻量级加锁。还可以采取另外的方式来处理对锁的争用：让请求线程睡眠，直到锁重新可用时再唤醒它。这样处理器就不必循环等待了，可以去执行其他代码。这也会带来一定的开销–这里有两次明显的上下文切换，被阻塞的线程要换出和换入，与实现自旋锁的少数几行代码相比，上下文切换当然有较多的代码。因此，持有自旋锁的时间最好小于完成两次上下文切换的耗时。当然我们大多数人都不会无聊到去测量上下文切换的耗时，所以我们让持有自选锁的时间应尽可能的短就可以了。在下面的内容中我们将讨论信号量，信号量提供了上述第二种锁机制，它使得发生争用时，等待的线程能投入睡眠，而不是旋转。</p>
+<h2 id="自旋锁方法"><a href="#自旋锁方法" class="headerlink" title="自旋锁方法"></a>自旋锁方法</h2><p>自旋锁的实现和体系结构密切相关，代码往往通过汇编实现。这些与体系结构相关的代码定义在文件&lt;asm&#x2F;spinlock.h&gt;中，实际需要用到的接口定义在文件&lt;linux&#x2F;spinlock.h&gt;中。自旋锁的基本使用形式如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">DEFINE_SPINLOCK(mr_lock);</span><br><span class="line">spin_lock(&amp;mr_lock);</span><br><span class="line"><span class="comment">//临界区</span></span><br><span class="line">spin_unlock(&amp;mr_lock);</span><br></pre></td></tr></table></figure>
+<p>因为自旋锁在同一时刻至多被一个执行线程持有，所以一个时刻只能有一个线程位于临界区内，这就为多处理器机器提供了防止并发访问所需的保护机制。注意在单处理器机器上，编译的时候并不会加入自旋锁。它仅仅被当作一个设置内核抢占机制是否被启用的开关。如果禁止内核抢占，那么在编译时自旋锁会被完全剔除出内核。</p>
+<p><strong>警告：自旋锁是不可递归的！</strong><br>Linux内核实现的自旋锁是不可递归的，这点不同于自旋锁在其他操作系统中的实现。所以如果你试图得到一个你正持有的锁，你必须自旋，等待你自己释放这个锁。但你处于自旋忙等待中，所以你永远没有机会释放锁，于是你被自己锁死了。千万小心自旋锁。</p>
+<p>自旋锁可以使用中断处理程序中（此处不能用信号量，因为它会导致睡眠）。在中断处理程序中使用自旋锁时，一定要在获取锁之前，首先禁止本地中断（在当前处理器上的中断请求），否则，中断处理程序就会打断正持有锁的代码，有可能会试图去争用这个已经被持有的自旋锁。这样一来，中断处理程序就会自旋，等待该锁重新可用，但是锁的持有者在这个中断处理程序执行完毕之前不可能运行。这正是我们在前面的内容中提到的双重请求死锁。注意，需要关闭的只是当前处理器上的中断。如果中断发生在不同的处理器上，即使中断处理程序在同一锁上自旋，也不会妨碍锁的持有者（在不同处理器上）最终释放锁。<br>内核提供的禁止中断同时请求锁的接口，使用起来很方便，方法如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">DEFINE_SPINLOCK(mr_lock);</span><br><span class="line"><span class="type">unsigned</span> <span class="type">long</span> flags;</span><br><span class="line"></span><br><span class="line">spin_lock_irqsave(&amp;mr_lock,flags);</span><br><span class="line"><span class="comment">//临界区</span></span><br><span class="line">spin_unlock_irqrestore(&amp;mr_lock,flags);</span><br></pre></td></tr></table></figure>
+<p>函数spin_lock_irqsave()保存中断的当前状态，并禁止本地中断，然后再去获取指定的锁。反过来spin_unlock_irqrestore()对指定的锁解锁，然后让中断恢复到加锁前的状态。所以即使中断最初是被禁止的，代码也不会错误地激活它们，相反，会继续让它们禁止。注意，flags变量看起来像是由数值传递的，这是因为这些锁函数有些部分是通过宏的方式实现的。<br>在单处理器系统上，虽然在编译时抛弃掉了锁机制，但在上面例子中仍需要关闭中断，以禁止中断处理程序访问共享数据。加锁和解锁分别可以禁止和允许内核抢占。</p>
+<p><strong>锁什么？</strong><br>使用锁的时候一定要对症下药，要有针对性。要知道需要保护的是数据而不是代码。尽管本章的例子讲的都是保护临界区的重要性，但是真正需要保护的其实是临界区中的数据，而不是代码。<br>大原则：<code>针对代码加锁会使得程序难以理解，并且容易引发竞争条件，正确的做法应该是对数据而不是代码加锁</code>。<br>既然不是对代码加锁，那就一定要用特定的锁来保护自己的共享资源。例如，“struct foo 由loo_lock加锁”。无论你何时需要访问共享数据，一定要先保证数据是安全的。而保证数据安全往往就意味着在对数据进行操作前，首先占用恰当的锁，完成操作后再释放它。</p>
+<p>如果你能确定中断在加锁前是激活的，那就不需要在解锁后恢复中断以前的状态了。你可以无条件地在解锁时激活中断。这时，使用spin_lock_irq()和spin_unlock_irq()会更好一些。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">DEFINE_SPINLOCK(mr_lock);</span><br><span class="line"></span><br><span class="line">spin_lock_irq(&amp;mr_lock);</span><br><span class="line"><span class="comment">//关键节</span></span><br><span class="line">spin_unlock_irq(&amp;mr_lock);</span><br></pre></td></tr></table></figure>
+<p>由于内核变得庞大而复杂，因此，在内核的执行路线上，你很难搞清楚中断在当前调用点上到底是不是处于激活状态。也正因为如此，我们并不提倡使用spin_lock_irq()方法。如果你一定要使用它，那你应该确定中断原来就处于激活状态，否则当其他人期望中断处于未激活状态时却发现处于激活状态，可能会很不开心。</p>
+<p><strong>调试自旋锁</strong><br>配置选项CONFIG_DEBUG_SPINLOCK为使用自旋锁的代码加入许多调试检查手段。例如，激活了该选项，内核就会检查是否使用了未初始化的锁，是否在还没加锁的时候就要对锁执行开锁操作。在测试代码时，总是应该激活这个选项。如果需要进一步全程调试锁，还应该打开CONFIG_DEBUG_LOCK_ALLOC选项。</p>
+<h2 id="其他针对自旋锁的操作"><a href="#其他针对自旋锁的操作" class="headerlink" title="其他针对自旋锁的操作"></a>其他针对自旋锁的操作</h2><p>你可以使用是spin_lock_init()方法来初始化动态创建的自旋锁（此时你只有一个指向spinlock_t类型的指针，没有它的实体）。<br>spin_try_lock()试图获得某个特定的自旋锁，如果该锁已经被争用，那么该方法会立刻返回一个非0值，而不会自旋等待锁被释放；如果成功获得了这个自旋锁，该函数返回0。同理，spin_is_locked()方法用于检查特定的锁当前是否已经被占用，如果已经被占用，返回非0值；否则返回0。该方法只做判断，并不实际占用。<br>下表给出了标准的自旋锁操作的完整列表。</p>
+<p><strong>自旋锁方法列表</strong></p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>spin_lock()</td>
+<td>获取指定的自旋锁</td>
+</tr>
+<tr>
+<td>spin_lock_irq()</td>
+<td>禁止本地中断并获取指定的锁</td>
+</tr>
+<tr>
+<td>spin_lock_irqsave()</td>
+<td>保存本地中断的当前状态，禁止本地中断，并获取指定的锁</td>
+</tr>
+<tr>
+<td>spin_unlock()</td>
+<td>释放指定的锁</td>
+</tr>
+<tr>
+<td>spin_unlock_irq()</td>
+<td>释放指定的锁，并激活本地中断</td>
+</tr>
+<tr>
+<td>spin_unlock_irqrestore()</td>
+<td>释放指定的锁，并让本地中断恢复到以前状态</td>
+</tr>
+<tr>
+<td>spin_lock_init()</td>
+<td>动态初始化指定的spinlock_t</td>
+</tr>
+<tr>
+<td>sping_trylock()</td>
+<td>试图获取指定的锁，如果未获取，则返回非0</td>
+</tr>
+<tr>
+<td>spin_is_locked()</td>
+<td>如果指定的锁当前正在被获取，则返回非0，否则返回0</td>
+</tr>
+</tbody></table>
+<h2 id="自旋锁与下半部"><a href="#自旋锁与下半部" class="headerlink" title="自旋锁与下半部"></a>自旋锁与下半部</h2><p>在第8章中曾经提到过，在于下半部配合使用时，必须小心地使用锁机制。函数spin_lock_bh()用于获取指定锁，同时它会禁止所有下半部的执行。相应的spin_unlock_bh()函数执行相反的操作。<br>由于下半部可以抢占进程上下文中的代码，所以当下半部和进程上下文共享数据时，必须对进程上下文中的共享数据进行保护，所以需要加锁的同时还要禁止下半部执行，同样，由于中断处理程序可以抢占下半部，所以如果中断处理程序和下半部共享数据，那么就必须在获取恰当的锁的同时还要禁止中断。<br>回忆一下，同类的tasklet不可能同时运行，所以对于同类tasklet中的共享数据不需要保护。但是当数据被两个不同种类的tasklet共享时，就需要在访问下半部中的数据前先获得一个普通的自旋锁。这里不需要禁止下半部，因为在同一个处理器上绝不会有tasklet相互强占的情况。<br>对于软中断，无论是否同种类型，如果数据被软中断共享，那么它必须得到锁的保护。这是因为，即使是同种类型的两个软中断也可以同时运行在一个系统的多个处理上。但是，同一处理器上的一个软中断绝不会抢占另一个软中断，因此，根本没有必要禁止下半部。</p>
+<h1 id="读-写自旋锁"><a href="#读-写自旋锁" class="headerlink" title="读-写自旋锁"></a>读-写自旋锁</h1><p>有时，锁的用途可以明确地分为读取和写入两个场景。例如，对一个链表可能既要更新又要检索。当更新（写入）链表时，不能有其他代码并发地写链表或从链表中读取数据，写操作要求完全互斥。另一方面，当对其检索（读取）链表时，只要其他程序不对链表进行写操作就行了。只要没有写操作，多个并发的读操作都是安全的。任务链表的存取模式就非常类似于这种情况，它就是通过读-写自旋锁获得保护的。<br>当对某个数据结构的操作可以像这样被划分为读&#x2F;写或者消费者&#x2F;生产者两种类别时，类似读&#x2F;写锁这样的机制就很有帮助了。为此，Linux内核提供了专门的读-写自旋锁。这种自旋锁为读和写分别提供了不同的锁。一个或多个读任务可以并发地持有读者锁；相反，用于写的锁最多只能被一个写任务持有，而且此时不能有并发的读操作。有时把读&#x2F;写锁叫做共享&#x2F;排斥锁，或者并发&#x2F;排斥锁，因为这种锁以共享和排斥的形式获得使用。<br>读&#x2F;写自旋锁的使用方法类似于普通自旋锁，它们通过下面的方法初始化：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">DEFINE_RWLOCK(mr_rwlock);</span><br></pre></td></tr></table></figure>
+<p>然后，在读者的代码分支中使用如下函数：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">read_lock(&amp;mr_rwlock);</span><br><span class="line"><span class="comment">//临界区（只读）</span></span><br><span class="line">read_unlock(&amp;mr_rwlock);</span><br></pre></td></tr></table></figure>
+<p>最后，在写者的代码分支中使用如下函数：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">write_lock(&amp;mr_rwlock);</span><br><span class="line"><span class="comment">//临界区（读写）</span></span><br><span class="line">write_unlock(&amp;mr_rwlock);</span><br></pre></td></tr></table></figure>
+<p>通常情况下，读锁和写锁会位于完全分割开的代码分支中，如上例所示。<br>注意，不能把一个读锁“升级”为写锁。比如考虑下面这段代码：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">read_lock(&amp;mr_rwlock);</span><br><span class="line">write_lock(&amp;mr_rwlock);</span><br></pre></td></tr></table></figure>
+<p>执行上述两个函数将会带来死锁，因为写锁会不断自旋，等待所有的读者释放锁，其中也包括它自己。所以当确实需要写操作时，要在一开始就请求写锁。<code>如果写和读不能清晰地分开的话，那么就使用一般的自旋锁就行了，不要使用读写-自旋锁。</code><br>多个读者可以安全地获得同一个锁，事实上，即使一个线程递归地同一读锁也是安全的。这个特性使得读-写自旋锁真正地成为一种有用并且常用的优化手段。如果在中断处理程序中只有读操作而没有写操作，那么，就可以混合使用“中断禁止”锁，使用read_lock()而不是read_lock_irqsave()对读进行保护。不过，你还是需要用write_lock_irqsave()禁止有写操作的中断，否则，中断里的读操作就有可能锁死在写锁上。下表列出了针对读-写自旋锁的所有操作。<br><img src="/2022/11/18/%E5%86%85%E6%A0%B8%E5%90%8C%E6%AD%A5%E6%96%B9%E6%B3%95/5.jpeg" alt="img not found"><br>在使用Linux读-写自旋锁时，最后要考虑的一点是这种锁机制照顾读比照顾写要多一点。当读锁被持有时，写操作为了互斥访问只能等待，但是，读者却可以继续成功地占用锁。而自旋等待的写者在所有读者释放锁之前是无法获得锁的。所以，大量读者必定会使挂起的写者处于饥饿状态，在你自己设计锁时一定要记住这一点–有些时候这种行为是有益的，有时则会带来灾难。<br>自旋锁提供了一种快速简单的锁实现方法。如果加锁的时间不长并且代码不会睡眠（比如中断处理程序），利用自旋锁是最佳选择。如果加锁时间可能很长或者代码在持有锁时有可能睡眠，那么最好使用信号量来完成加锁功能。</p>
+<h1 id="信号量"><a href="#信号量" class="headerlink" title="信号量"></a>信号量</h1><p>Linux中的信号量是一种睡眠锁。如果有一个任务试图获得一个不可用（已经被占用）的信号量时，信号量会将其推进一个等待队列，然后让其睡眠。这时处理器能重获自由，从而去执行其他代码。当持有的信号量可用（被释放）后，处于等待队列中的那个任务将被唤醒，并获得该信号量。<br>让我们再一次回到门和钥匙的例子。当某个人到了门前，他抓取钥匙，然后进入房间。最大的差异在于当另一个人到了门前，但无法得到钥匙时会发生什么情况。在这种情况下，这家伙不是在徘徊等待，而是把自己的名字写在一个列表中，然后打盹去了。当里面的人离开房间时，就在门口查看一下列表。如果列表上有名字，他就对第一个名字仔细检查，并在胸部给他一拳，叫醒他，让他进入房间。在这种方式中，钥匙（信号量）继续确保一次只有一个人（执行线程）进入房间（临界区）。这就比自旋锁提供了更好的处理器利用率，因为没有把时间花费在忙等待上，但是，信号量比自旋锁有更大的开销。<br>我们可以从信号量的睡眠特性得出一些有意思的结论：</p>
+<ol>
+<li>由于争用信号量的进程在等待锁重新变为可用时会睡眠，所以信号量适用于锁会被长时间持有的情况。</li>
+<li>相反，锁被短时间持有时，使用信号量就不太适宜了。因为睡眠、维护等待队列以及唤醒所花费的开销可能比锁占用的全部时间还要长。</li>
+<li>由于执行线程在锁被争用会睡眠，所以只能在进程上下文中才能获得信号量锁，因为在中断上下文中是不能进行调度的。</li>
+<li>你可以在持有信号量时去睡眠（当然你也可能并不需要睡眠），因为当其他进程试图获得同一信号量时不会因此而死锁（因为该进程也只是去睡眠而已，而你最终会继续执行的）。</li>
+<li>在你占用信号量的同时不能占用自旋锁。因为你在等待信号量时可能会睡眠，而在持有自旋锁时是不允许睡眠的。</li>
+</ol>
+<p>以上这些结论阐明了信号量和自旋锁在使用上的差异，在使用信号量的大多数时候，你的选择余地不大。往往在需要和用户空间同步时，你的代码会需要睡眠，此时使用信号量是唯一的选择。由于不受睡眠的限制，使用信号量通常来说更加容易一些。如果需要在自旋锁和信号量中做选择，应该根据锁被持有的时间长短做判断。理想情况当然是所有的锁定操作都应该越短越好。但如果你用的是信号量，那么锁定的时间长一点也能接受。另外，信号量不同于自旋锁，它不会禁止内核抢占，所以持有信号量的代码可以被抢占。这意味着信号量不会对调度的等待时间带来负面影响。</p>
+<h2 id="计数信号量和二值信号量"><a href="#计数信号量和二值信号量" class="headerlink" title="计数信号量和二值信号量"></a>计数信号量和二值信号量</h2><p>最后要讨论的是信号量的一个有用特性，它可以同时允许任意数量的锁持有者，而自旋锁在一个时刻最多允许一个任务持有它。信号量同时允许的持有者数量可以在声明信号量时指定。这个值称为使用者数量（usage count）或简单地叫数量（count）。通常情况下，信号量和自旋锁一样，在一个时刻仅允许一个持有者。这时计数等于1，这样的信号量被称为二值信号量（因为它或者由一个任务持有，或者根本没有任务持有它）或者称为互斥信号量（因为它强制进行互斥）。另一方面，初始化的时候也可以把数量设置为大于1的非0值。这种情况，信号量被称为计数信号量，它允许在一个时刻至多有count个锁持有者。计数信号量不能用来进行强制互斥，因为它允许多个执行线程同时访问临界区。相反，这种信号量用来对特定代码加以限制，内核中使用它的机会不多。在使用信号量时，基本上用到的都是互斥信号量（计数等于1的信号量）。<br>信号量在1968年由Edsger Wybe Dijkstra提出，此后它逐渐成为一种常用的锁机制。<code>信号量支持两个原子操作P()和V()，这两个名字来自荷兰语Proberen和Vershogen</code>。前者叫做测试操作，后者叫做增加操作。后来的系统把两种操作分别叫做down()和up()，Linux也遵从这种叫法。down()操作通过对信号量计数减1来请求获得一个信号量。如果结果是0或者大于0，获得信号量锁，任务就可以进入临界区。如果结果是负数，任务会被放入等待队列，处理器执行其他任务。该函数如同一个动词，降低（down）一个信号量就等于获取该信号量。相反，当临界区中的操作完成后，up()操作用来释放信号量，该操作也被称作是提升信号量，因为它会增加信号量的计数值。如果在该信号量上的等待队列不为空，那么处于队列中等待的任务在被唤醒的同时会获得该信号量。</p>
+<h2 id="创建和初始化信号量"><a href="#创建和初始化信号量" class="headerlink" title="创建和初始化信号量"></a>创建和初始化信号量</h2><p>信号量的实现与体系结构相关的，具体实现定义在文件&lt;asm&#x2F;semaphore.h&gt;中。struct semaphore类型用来表示信号量。可以通过一下方式静态地声明信号量—-其中name是信号量变量名，count是信号量的使用数量：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">semaphore</span> <span class="title">name</span>;</span></span><br><span class="line">sema_init(&amp;name,count);</span><br></pre></td></tr></table></figure>
+<p>创建更为普通的互斥信号可以使用一下快捷方式，不用说，name仍然是互斥信号量的变量名：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="title function_">DECLARE_MUTEX</span><span class="params">(name)</span>;</span><br></pre></td></tr></table></figure>
+<p>更常见的情况是，信号量作为一个大数据结构的一部分动态创建。此时，只有指向该动态创建的信号量的间接指针，可以使用如下函数来对它进行初始化：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">sema_init(sem,count);</span><br></pre></td></tr></table></figure>
+<p>sem是指针，count是信号量的使用者数量。<br>与前面类似，初始化一个动态创建的互斥信号量时使用如下函数：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">init_MUTEX(sem);</span><br></pre></td></tr></table></figure>
+<p>我不明白为什么“mutex”在init_MUTEX()中是大写，或者为什么“init”在这个函数名中放在前面，而在sema_init()中放在后面。</p>
+<h2 id="使用信号量"><a href="#使用信号量" class="headerlink" title="使用信号量"></a>使用信号量</h2><p>函数down_interruptible()试图获取指定的信号量，如果信号量不可用，它将把调用进程置成TASK_INTERRUPTIBLE状态—-进入睡眠。这种进程状态意味着任务可以被信号唤醒，一般来说这是一件好事。如果进程在等待获取信号量的时候接收到了信号，那么该进程就会被唤醒，而函数down_interruptible()会返回-EINTR。另外一个函数down()会让进程在TASK_UNINTERRUPTIBLE状态下睡眠。你应该不希望这种情况发生，因为这样一来，进程在等待信号量的时候就不再响应信号了。因此，使用down_interruptible()比使用down()更为普遍（也更正确）。<br>使用down_trylock()函数，你可以尝试以堵塞方式来获取指定的信号量。在信号量已被占用时，它立刻返回非0值；否则，它返回0，而且让你成功持有信号量锁。<br>要释放指定的信号量，需要调用up()函数，例如：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//定义并声明一个信号量，名字为mr_sem，用于信号量计数</span></span><br><span class="line"><span class="type">static</span> <span class="title function_">DECLAER_MUTEX</span><span class="params">(mr_sem)</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//试图获取信号量</span></span><br><span class="line"><span class="keyword">if</span>(down_interruptible(&amp;mr_sem)) &#123;</span><br><span class="line">    <span class="comment">//信号被接收，信号量还未获取</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*临界区*/</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//释放给定的信号量</span></span><br><span class="line">up(&amp;mr_sem);</span><br></pre></td></tr></table></figure>
+<p>下表给出了针对信号量的方法的完整列表。<br><strong>信号量方法列表</strong></p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>sema_init(struct semaphore *,int)</td>
+<td>以指定的计数值初始化动态创建的信号量</td>
+</tr>
+<tr>
+<td>init_MUTEX(struct semaphore *)</td>
+<td>以计数值1初始化动态创建的信号量</td>
+</tr>
+<tr>
+<td>init_MUTEX_LOCKED(struct semaphore *)</td>
+<td>以计数值0初始化动态创建的信号量（初始为加锁状态）</td>
+</tr>
+<tr>
+<td>down_interruptible(struct semaphore *)</td>
+<td>以试图获得指定的信号量，如果信号量以被争用，则进入可中断睡眠状态</td>
+</tr>
+<tr>
+<td>down(struct semaphore *)</td>
+<td>以试图获得指定的信号量，如果信号量已被争用，则进入不可中断睡眠状态</td>
+</tr>
+<tr>
+<td>donw_trylock(struct semaphore *)</td>
+<td>以试图获得指定的信号量，如果信号量已被争用，则立刻返回非0值</td>
+</tr>
+<tr>
+<td>up(struct semaphore *)</td>
+<td>以释放指定的信号量，如果睡眠队列不为空，则唤醒其中一个任务</td>
+</tr>
+</tbody></table>
+<h1 id="读-写信号量"><a href="#读-写信号量" class="headerlink" title="读-写信号量"></a>读-写信号量</h1><p>与自旋锁一样，信号量也有区分读-写访问的可能。与读-写自旋锁和普通自旋锁之间的关系差不多，读-写信号量也要比普通信号量更具优势。<br>读-写信号量在内核中是由rw_semaphore结构表示的，定义在文件&lt;linux&#x2F;rwsem.h&gt;中。通过以下语句可以创建静态声明的读-写信号量：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="title function_">DECLARE_RWSEM</span><span class="params">(name)</span>;</span><br></pre></td></tr></table></figure>
+<p>其中name是新信号量名。<br>动态创建的读-写信号量可以通过一下函数初始化：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">init_rwsem(<span class="keyword">struct</span> rw_semaphore *sem);</span><br></pre></td></tr></table></figure>
+<p>所有的读-写信号量都是互斥信号量—-也就是说，它们的引用计数等于1，虽然它们只对写者互斥，不对读者。只要没有写者，并发持有读锁的读者数不限。相反，只有唯一的写者（在没有读者时）可以获得写锁。所有读-写锁的睡眠都不会被信号打断，所以它只有一个版本的down()操作，例如：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="title function_">DECLARE_RWSEM</span><span class="params">(mr_rwsem)</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//试图获取信号量用于读</span></span><br><span class="line">down_read(&amp;mr_rwsem);</span><br><span class="line"></span><br><span class="line"><span class="comment">/*临界区（只读）*/</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//释放信号量</span></span><br><span class="line">up_read(&amp;mr_rwsem);</span><br><span class="line"></span><br><span class="line"><span class="comment">//试图获取信号量用于写</span></span><br><span class="line">down_write(&amp;mr_rwsem);</span><br><span class="line"></span><br><span class="line"><span class="comment">/*临界区（读和写）*/</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//释放信号量</span></span><br><span class="line">up_write(&amp;mr_rwsem);</span><br></pre></td></tr></table></figure>
+<p>与标准信号量一样，读-写信号量也提供了down_read_trylock()和down_write_trylock()方法。这两个方法都需要一个指向读-写信号量的指针作为参数。如果成功获得了信号量锁，它们返回非0值；如果信号量锁被争用，则返回0。这与普通信号量的取消完全相反。<br>读-写信号量相比读-写自旋锁多一种特有的操作：downgrade_write()。这个函数可以动态地将获取的写锁转换为读锁。<br>读-写信号量与读-写自旋锁一样，除非代码中的读写操作能明白无误的区分开来，否则最好不要使用它们。再强调一次，读-写机制是有条件的，只有在你的代码可以自然地界定出读-写时才有价值。</p>
+<h1 id="互斥体"><a href="#互斥体" class="headerlink" title="互斥体"></a>互斥体</h1><p>直到最近，内核中唯一允许睡眠的锁是信号量。多数用户使用信号量只使用计数1，说白了是把其作为一个互斥的排他锁使用—-好比允许睡眠的自旋锁。不幸的是，信号量用途更通用，没多少使用限制。这点使得信号量适合用于那些较复杂的、未明情况下的互斥访问，比如内核于用户空间复杂的交互行为。但这也意味着简单的锁定而使用信号量并不方便，而信号量也缺乏强制的规则来形式任何形式的自动调试，即便是受限的调试也不可能。为了找到一个更简单的睡眠锁，内核开发者们引入了互斥体（mutex）。确实，这个名字容易和我们的习惯称呼混淆。所以这里我们澄清一下，“互斥体”这个称谓所指的是任何可以睡眠的强制互斥锁，比如使用计数是1的信号量。但在最新的Linux内核中，“互斥体”这个称谓现在也用于一种实现互斥的特定睡眠锁。也就是说，互斥体是一种互斥信号。<br>mutex在内核中对应数据结构mutex，其行为和使用计数为1的信号量类似，但操作接口更为简单，实现也更高效，而且使用限制更强。<br>静态地定义mutex，你需要做：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">DEFINE_MUTEX(name);</span><br></pre></td></tr></table></figure>
+<p>动态初始化mutex，你需要做：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">mutex_init(&amp;mutex);</span><br></pre></td></tr></table></figure>
+<p>对互斥锁锁定和解锁都不难：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">mutex_lock(&amp;mutex);</span><br><span class="line"><span class="comment">/*临界区*/</span></span><br><span class="line">mutex_unlock(&amp;mutex);</span><br></pre></td></tr></table></figure>
+<p>它就是一个简化版的信号量，因为不再需要管理任何使用计数。<br>下表是基本的mutex操作列表。</p>
+<p><strong>Mutex方法</strong></p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>mutex_lock(struct mutex *)</td>
+<td>为指定的mutex上锁，如果锁不可用则睡眠</td>
+</tr>
+<tr>
+<td>mutex_unlock(struct mutex *)</td>
+<td>为指定的mutex解锁</td>
+</tr>
+<tr>
+<td>mutex_trylock(struct mutex *)</td>
+<td>试图获取指定的mutex，如果成功则返回1；否则锁被获取，返回值是0</td>
+</tr>
+<tr>
+<td>mutex_is_locked(struct mutex *)</td>
+<td>如果锁已被争用，则返回1；否则返回0</td>
+</tr>
+</tbody></table>
+<p>mutex的简洁性和高效性源自于相比使用信号量更多的受限性。它不同于信号量，因为mutex仅仅实现了Dijkstra设计初衷中的最基本的行为。因此mutex的使用场景相对而言更严格、更定向了。</p>
+<ol>
+<li>任何时刻中只有一个任务可以持有mutex，也就是说，mutex的使用计数永远是1。</li>
+<li>给mutex上锁者必须负责给其再解锁—-你不能在一个上下文中锁定一个mutex，而在另一个上下文中给它解锁。这个限制使得mutex不适合内核同用户空间复杂的同步场景。最常使用的方式是：在同一个上下文中上锁和解锁。</li>
+<li>递归地上锁和解锁是不允许的。也就是说，你不能递归地持有同一个锁，同样你也不能再去解锁一个已经被解开的mutex。</li>
+<li>当持有一个mutex时，进程不可以退出。</li>
+<li>mutex不能在中断或者下半部使用，即使使用mutex_trylock()也不行。</li>
+<li>mutex只能通过官方API管理：它只能使用上下节中描述的方法初始化，不可被拷贝、手动初始化或者重复初始化。</li>
+</ol>
+<p>也许mutex结构最有用的特色是：通过一个特殊的调试模式，内核可以采用编程方式检查和警告任何践踏其约束法则的不老师行为。当打开内核配置选项CONFIG_DEBUG_MUTEXES后，就会有多种检测来确保这些约束得以遵守。这些调试手段无一能帮助你和其他mutex使用者们都能以规范的、简单化的使用模式对其使用。</p>
+<h2 id="信号量和互斥体"><a href="#信号量和互斥体" class="headerlink" title="信号量和互斥体"></a>信号量和互斥体</h2><p>互斥体和信号量很相似，内核中两者共存会令人混淆。所幸，它们的标准使用方式都有简单的规范：除非mutex的某个约束妨碍你使用，否则相比信号量要优先使用mutex。当你写新代码时，只有碰到特殊场合（一般是很底层代码）才会需要使用信号量。因此建议首选mutex。如果发现不能满足其约束条件，且没有其他别的选择时，再考虑选择信号量。</p>
+<h2 id="自旋锁和互斥体"><a href="#自旋锁和互斥体" class="headerlink" title="自旋锁和互斥体"></a>自旋锁和互斥体</h2><p>了解何时使用自旋锁，何时使用互斥体（或信号量）对编写优良代码很重要，但是多数情况下，并不需要太多的考虑，因为中断上下文中只能使用自旋锁，而在任务睡眠时只能使用互斥体。下表回顾一下各种锁的需求情况：<br><strong>使用什么，自旋锁与信号量的比较</strong></p>
+<table>
+<thead>
+<tr>
+<th>需求</th>
+<th>建议的加锁方法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>低开销加锁</td>
+<td>优先使用自旋锁</td>
+</tr>
+<tr>
+<td>短期锁定</td>
+<td>优先使用自旋锁</td>
+</tr>
+<tr>
+<td>长期加锁</td>
+<td>优先使用互斥体</td>
+</tr>
+<tr>
+<td>中断上下文中加锁</td>
+<td>使用自旋锁</td>
+</tr>
+<tr>
+<td>持有锁需要睡眠</td>
+<td>使用互斥体</td>
+</tr>
+</tbody></table>
+<h1 id="完成变量"><a href="#完成变量" class="headerlink" title="完成变量"></a>完成变量</h1><p>如果在内核中一个任务需要发出信号通知另一个任务发生了某个特定事件，利用<em>完成变量</em>是使两个任务得以同步的简单方法。如果一个任务要执行一些工作时，另一个任务就会在完成变量上等待。当这个任务完成工作之后，会使用完成变量去唤醒在等待的任务。这听起来很像一个信号量，的确如此—-思想是一样的。事实上，完成变量仅仅提供了代替信号量的的一个简单的解决方法。例如，当子进程执行或者退出时，vfork()系统调用使用完成变量唤醒父进程。<br>完成变量由结构completion表示，定义在&lt;linux&#x2F;completion.h&gt;中。通过以下宏静态地创建完成变量并初始化它：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">DECLARE_COMPLETION(mr_comp);</span><br></pre></td></tr></table></figure>
+<p>通过init_completion()动态创建并初始化完成变量。<br>在一个指定的完成变量上，需要等待的任务调用wait_for_completion()来等待特定事件。当特定事件发生后，产生事件的任务调用complete()来发送信号唤醒正在等待的任务。下表列出了完成变量的方法。<br><strong>完成变量方法</strong></p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>init_completion(struct completion *)</td>
+<td>初始化指定的动态创建的完成变量</td>
+</tr>
+<tr>
+<td>wait_for_completion(struct completion *)</td>
+<td>等待指定的完成变量接收信号</td>
+</tr>
+<tr>
+<td>complete(struct completion *)</td>
+<td>发信号唤醒任何等待任务</td>
+</tr>
+</tbody></table>
+<p>使用完成变量的例子可以参考<code>kernel/sched.c</code>和<code>kernel/fork.c</code>。完成变量的通常用法是，将完成变量作为数据结构中的一项动态创建，而完成数据结构初始化工作的内核代码将调用wait_for_completion()进行等待。初始化完成之后。初始化函数调用completion()唤醒在等待的内核任务。</p>
+<h1 id="BKL（Big-Kernel-Lock）：大内核锁"><a href="#BKL（Big-Kernel-Lock）：大内核锁" class="headerlink" title="BKL（Big Kernel Lock）：大内核锁"></a>BKL（Big Kernel Lock）：大内核锁</h1><p>欢迎来到内核的原始混沌时期。BKL是一个全局自旋锁，使用它主要是为了方便实现从Linux最初的SMP过渡到细粒度加锁机制。我们下面来介绍BKL的一些有趣的特性：</p>
+<ol>
+<li>持有BKL的任务仍然可以睡眠。因为当任务无法被调度时，所加锁会自动被丢弃；当任务被调度时，锁又会被重新获得。当然，这并不是说，当任务持有BKL时，睡眠是安全的，仅仅是可以这样做，因为睡眠不会造成任务死锁。</li>
+<li>BKL是一种递归锁。一个进程可以多次请求一个锁，并不会像自旋锁那样产生死锁现象。</li>
+<li>BKL只可以用在进程上下文中。和自旋锁不同，你不能在中断上下文中申请BKL。</li>
+<li>新的用户不允许使用BKL。随着内核版本的不断前进，越来越少的驱动和子系统在依赖于BKL。</li>
+</ol>
+<p>这些特性有助于2.0版本的内核向2.2版本过渡。在SMP支持被引入到2.0版本时，内核中一个时刻上只能有一个任务运行（当然，经过长期发展，现在内核已经被很好地线程化了）。2.2版本的目标是允许多处理器在内核中并发地执行程序。引入BKL是为了使到细粒度加锁机制的过渡更容易些，虽然当时BKL对内核过渡很有帮助，但是目前它已成为内核可扩展性的障碍了。<br>在内核中不鼓励使用BKL。事实上，新代码中不再使用BKL了，但是这种锁仍然在部分内核代码中得到沿用，所以我们仍然需要理解BKL以及它的接口。除了前面提到的以外，BKL的使用方式和自旋锁类似。函数lock_kernel()请求锁，unlock_kernel()释放锁。一个执行线程可以递归地请求锁，但是，释放锁时也必须调用同样次数的unlock_kernel()操作，在最后一个解锁操作完成后，锁才会被释放。函数kernel_locked()检测锁当前是否被持有，如果被持有，返回一个非0值，否则返回0。这些接口被声明在文件&lt;linux&#x2F;smp_lock.h&gt;中，简单的用法如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">lock_kernel();</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">    临界区，对所有其他的BKL用户进行同步</span></span><br><span class="line"><span class="comment">    注意，你可以安全地在此睡眠，锁会悄无声息地被释放</span></span><br><span class="line"><span class="comment">    当你的任务被重新调度时，锁又会被悄无声息地获取</span></span><br><span class="line"><span class="comment">    这意味着你不会处于死锁状态，但是，如果你需要锁保护这里的数据</span></span><br><span class="line"><span class="comment">    你还是不需要睡眠</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">unlock_kernel();</span><br></pre></td></tr></table></figure>
+<p>BKL在被持有时同样会禁止内核抢占。在单一处理器内核中，BKL并不执行实际的加锁操作。下表列出了所有BKL函数。</p>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>lock_kernel()</td>
+<td>获得BKL</td>
+</tr>
+<tr>
+<td>unlock_kernel()</td>
+<td>释放BKL</td>
+</tr>
+<tr>
+<td>kernel_locked()</td>
+<td>如果锁被持有返回非0值，否则返回0</td>
+</tr>
+</tbody></table>
+<p>对于BKL最主要的问题是确定BKL锁保护的到底是什么。多数情况下，BKL更像是保护代码而不保护数据。这个问题给利用自旋锁取代BKL造成了很大困难，因为很难判断BKL到底锁的是什么，更难的是，发现所有使用BKL的用户之间的关系。</p>
+<h1 id="顺序锁"><a href="#顺序锁" class="headerlink" title="顺序锁"></a>顺序锁</h1><p>顺序锁，通常简称seq锁，是在2.6版本内核中才引入的一种新型锁。这种锁提供了一种很简单的机制，用于读写共享数据。实现这种锁主要依靠一个序列计数器。当有疑义的数据被写入时，会得到一个锁，并且序列值会增加。在读取数据之前和之后，序列号都被读取。如果读取的序列号值相同，说明在读操作进行的过程中没有被写操作打断过。此外，如果读取的值是偶数，那么就表明写操作没有发生。<br>定义一个seq锁：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">seqlock_t</span> mr_seq_lock = DEFINE_SEQLOCK(mr_seq_lock);</span><br></pre></td></tr></table></figure>
+<p>然后，写锁的方法如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">write_seqlock(&amp;mr_seq_lock);</span><br><span class="line"><span class="comment">//写锁被获取</span></span><br><span class="line">write_sequnlock(&amp;mr_seq_lock);</span><br></pre></td></tr></table></figure>
+<p>这和普通自旋锁类似。不同的情况发生在读时，并且与自旋锁有很大不同：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> seq;</span><br><span class="line"><span class="keyword">do</span> &#123;</span><br><span class="line">    seq = read_seqbegin(&amp;mr_seq_lock);</span><br><span class="line">    <span class="comment">//读这里的数据</span></span><br><span class="line">&#125;<span class="keyword">while</span>(read_seqretry(&amp;mr_seq_lock,seq));</span><br></pre></td></tr></table></figure>
+<p>在多个读者和少数写者共享一把锁的时候，seq锁有助于提供一种非常轻量级和具有可扩展性的外观。但是seq锁对写者更有利。只要没有其他写者，写锁总是能够被成功获得。读者不会影响写锁，这点和读-写自旋锁及信号量一样。另外，挂起的写者会不断地使得读操作循环，直到不再有任何写者持有锁为止。<br>Seq锁在你遇到如下需求时将是最理想的选择：</p>
+<ol>
+<li>你的数据存在很多读者。</li>
+<li>你的数据写者很少。</li>
+<li>虽然写者很少，但是你希望写优先于读，而且不允许读者让写者饥饿。</li>
+<li>你的数据很简单，如简单结构，甚至是简单的整形—-在某些场合，你是不能使用原子量的。</li>
+</ol>
+<p>使用seq锁中最有说服力的是jiffies。该变量存储了Linux机器启动到当前的时间。Jiffies是使用一个64位的变量，记录了自系统启动以来的时钟节拍累加数。对于那些能自动读取全部64位jiffies_64变量的机器来说，需要用get_jiffies_64()方法完成，而且该方法的实现就是用了seq锁：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">u64 <span class="title function_">get_jiffies_64</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> seq;</span><br><span class="line">    u64 ret;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">        seq = read_seqbegin(&amp;xtime_lock);</span><br><span class="line">        ret = jiffies_64;</span><br><span class="line">    &#125;<span class="keyword">while</span>(read_seqretry(&amp;xtime_lock,seq));</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>定时器中断会更新jiffies的值，此刻，也需要使用seq变量：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">write_seqlock(&amp;xtime_lock);</span><br><span class="line">jiffies_64 += <span class="number">1</span>;</span><br><span class="line">write_sequnlock(&amp;xtime_lock);</span><br></pre></td></tr></table></figure>
+
+<h1 id="禁止抢占"><a href="#禁止抢占" class="headerlink" title="禁止抢占"></a>禁止抢占</h1><p>由于内核是抢占性的，内核中的进程在任何时刻都可能停下来以便另一个具有更高优先级的进程运行。这意味着一个任务与被抢占的任务可能会在同一临界区内运行。为了避免这种情况，内核抢占代码使用自旋锁作为非抢占区域的标记。如果一个自旋锁被持有，内核便不能进行抢占。因为内核抢占和SMP面对相同的并发问题，并且内核已经是SMP安全的，所以，这种简单的变化使得内核也是抢占安全的。<br>或许这就是我们希望的。实际中，某些情况并不需要自旋锁，但是仍然需要关闭内核抢占。最频繁出现的情况就是每个处理器上的数据。如果数据对每个处理器是唯一的，那么，这样的数据可能就不需要使用锁来保护，因为数据只能被一个处理器访问。如果自旋锁没有被持有，内核又是抢占式的，那么一个新调度的任务就可能访问同一个变量，如下所示：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">任务A对每个处理器中未被锁保护的变量foo进行操作</span><br><span class="line">任务A被抢占</span><br><span class="line">任务B被调度</span><br><span class="line">任务B操作变量foo</span><br><span class="line">任务B完成</span><br><span class="line">任务A被调度</span><br><span class="line">任务A继续操作变量foo</span><br></pre></td></tr></table></figure>
+<p>这样，即使这是一个单处理器计算机，变量foo也会被多个进程以伪并发的方式访问。通常，这个变量会请求得到一个自旋锁（防止多处理器机器上的真并发）。但是如果这是每个处理器上独立的变量，可能就不需要锁。<br>为了解决这个问题，可以通过preempt_disable()禁止内核抢占。这是一个可以嵌套调用的函数，可以调用任意次。每次调用都必须有一个相应的preempt_enable()调用。当最后一次preempt_enable()被调用后，内核抢占才重新启用。例如：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">preempt_disable();</span><br><span class="line"><span class="comment">//抢占被禁止</span></span><br><span class="line">preempt_enabel();</span><br></pre></td></tr></table></figure>
+<p>抢占计数存放着被持有锁的数量和preempt_disable()的调用次数，如果计数是0，那么内核可以进行抢占；如果为1或者更大的值，那么，内核就不会进行抢占。这个计数非常有用—-它是一种对原子操作和睡眠很有效的调试方法。函数preempt_count()返回这个值。下表列出了内核抢占相关的函数。</p>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>preempt_disable()</td>
+<td>增加抢占计数值，从而禁止内核抢占</td>
+</tr>
+<tr>
+<td>preempt_enable()</td>
+<td>减少抢占计数，并当该值降为0时检查和执行被挂起的需调度的任务</td>
+</tr>
+<tr>
+<td>preempt_enable_no_resched()</td>
+<td>激活内核抢占但是不再检查任何被挂起的需调度任务</td>
+</tr>
+<tr>
+<td>preempt_count()</td>
+<td>返回抢占计数</td>
+</tr>
+</tbody></table>
+<p>为了用更简洁的方式解决每个处理器上的数据访问问题，可以通过get_cpu()获得处理器编号（假定是用这种编号来对每个处理器的数据进行索引的）。这个函数在返回当前处理器号前首先会关闭内核抢占。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> cpu;</span><br><span class="line"><span class="comment">//禁止内核抢占，并将CPU设置为当前处理器</span></span><br><span class="line">cpu = get_cpu();</span><br><span class="line"><span class="comment">//对每个处理器的数据进行操作</span></span><br><span class="line"><span class="comment">//再给予内核抢占性，“CPU”可改变，故它不再有效</span></span><br><span class="line">put_cpu();</span><br></pre></td></tr></table></figure>
+
+<h1 id="顺序和屏障"><a href="#顺序和屏障" class="headerlink" title="顺序和屏障"></a>顺序和屏障</h1><p>当处理多处理器之间或硬件之间的同步问题时，有时需要在你的程序代码中以指定的顺序发出读内存（读入）和写内存（存储）指令。在和硬件交互时，时常需要确保一个给定的读操作发生在其他读操作或写操作之前。另外，在多处理器上，可能需要按写数据的顺序读数据（通常确保后来以同样的顺序进行读取）。但是，编译器和处理器为了提高效率，可能对读和写重新排序，这无疑使问题复杂化了。幸好，所有可能重新排序和写的处理器提供了机器指令来确保顺序要求。同样也可以指示编译器不要对给定点周围的指令序列进行重新排序。这些确保顺序的指令称作屏障。<br>基本上，在某些处理器上存在以下代码：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">a=<span class="number">1</span>;</span><br><span class="line">b=<span class="number">2</span>;</span><br></pre></td></tr></table></figure>
+<p>有可能会在a中存放新值之前就在b中存放新值。<br>编译器和处理器都看不出a和b之间的关系。编译器会在编译时按这种顺序编译，这种顺序会是静态的，编译的目标代码就只把a放在b之前。但是，处理器会重新动态排序，因为处理器在执行指令期间，会在取指令和分派时，把表面上看似无关的指令按自认为最好的顺序排列。大多数情况下，这样的排序是最佳的，因为a和b之间没有明显的关系。尽管有些时候程序员知道什么是最好的顺序。<br>尽管前面的例子可能被重新排序，但是在处理器和编译器绝不会对下面的代码重新排序：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">a = <span class="number">1</span>;</span><br><span class="line">b = a;</span><br></pre></td></tr></table></figure>
+<p>此处a和b均为全局变量，因为a与b之间有明确的数据依赖关系。</p>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>Linux内核设计与实现</category>
+        <category>第10章 内核同步方法</category>
       </categories>
       <tags>
         <tag>Linux Kernel</tag>
