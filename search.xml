@@ -75,25 +75,6 @@
       </tags>
   </entry>
   <entry>
-    <title>何谓硬解码和软解码</title>
-    <url>/2022/08/05/%E4%BD%95%E8%B0%93%E7%A1%AC%E8%A7%A3%E7%A0%81%E5%92%8C%E8%BD%AF%E8%A7%A3%E7%A0%81/</url>
-    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>关于“硬解码”与“软解码”。</p>
-<span id="more"></span>
-<p>软解码和硬解码的区别：</p>
-<ol>
-<li>软解码使用CPU进行解码。</li>
-<li>硬解码使用非CPU进行解码，如GPU、专用的DSP、FPGA、ASIC等芯片。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>学习</category>
-        <category>何谓硬解码和软解码</category>
-      </categories>
-      <tags>
-        <tag>多媒体编解码</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>GPIO接口</title>
     <url>/2022/08/10/GPIO%E6%8E%A5%E5%8F%A3/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《嵌入式Linux应用完全开发手册》第2篇第5章总结归纳</p>
@@ -149,6 +130,25 @@
       </tags>
   </entry>
   <entry>
+    <title>何谓硬解码和软解码</title>
+    <url>/2022/08/05/%E4%BD%95%E8%B0%93%E7%A1%AC%E8%A7%A3%E7%A0%81%E5%92%8C%E8%BD%AF%E8%A7%A3%E7%A0%81/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>关于“硬解码”与“软解码”。</p>
+<span id="more"></span>
+<p>软解码和硬解码的区别：</p>
+<ol>
+<li>软解码使用CPU进行解码。</li>
+<li>硬解码使用非CPU进行解码，如GPU、专用的DSP、FPGA、ASIC等芯片。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>何谓硬解码和软解码</category>
+      </categories>
+      <tags>
+        <tag>多媒体编解码</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Cpp设计模式之工厂模式</title>
     <url>/2022/08/16/Cpp%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>C++常用设计模式之工厂模式</p>
@@ -168,6 +168,35 @@
         <category>学习</category>
         <category>C++设计模式</category>
         <category>工厂模式</category>
+      </categories>
+      <tags>
+        <tag>C++</tag>
+        <tag>面向对象编程</tag>
+        <tag>设计模式</tag>
+        <tag>应用开发</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Cpp设计模式之策略模式</title>
+    <url>/2022/08/22/Cpp%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>C++常用设计模式之策略模式</p>
+<span id="more"></span>
+<h1 id="序言"><a href="#序言" class="headerlink" title="序言"></a>序言</h1><p>策略模式是指定义一系列的算法，把它们一个个的封装起来，并且使它们可以互相替换。本模式可以使得算法独立于它的客户而变化。也就是说这些算法完成的功能一样，对外的接口一样，只是各自实现实现上存在差异。用策略模式来封装算法，效果比较好。<br>下面以高速缓存（Cache）的替换算法为例，实现策略模式。<br>所谓Cache的替换算法，就是当Cache发生缺失时，Cache控制器必须选择Cache中的一行并用欲获得的数据替换它。所采用的选择策略就是Cache的替换算法。相应的UML类图如下：<br><img src="/2022/08/22/Cpp%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F/1.jpeg" alt="img not found"></p>
+<h1 id="算法定义"><a href="#算法定义" class="headerlink" title="算法定义"></a>算法定义</h1><p>这里首先给出算法的定义。</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">ReplaceAlgorithm</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">replace</span><span class="params">()</span> </span>= <span class="number">0</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">LRU_ReplaceAlgorithm</span> : <span class="keyword">public</span> ReplaceAlgorithm</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">repace</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        cout&lt;&lt;<span class="string">&quot;Least Recently Used replace algorithm&quot;</span>&lt;&lt;endl;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">FIFO_ReplaceAlgorithm</span> : <span class="keyword">public</span> ReplaceAlgorithm</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">repace</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        cout&lt;&lt;<span class="string">&quot;First in First out replace algorithm&quot;</span>&lt;&lt;endl;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Random_ReplaceAlgorithm</span> : <span class="keyword">public</span> ReplaceAlgorithm</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">repace</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        cout&lt;&lt;<span class="string">&quot;Random replace algorithm&quot;</span>&lt;&lt;endl;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h1 id="实现方式1"><a href="#实现方式1" class="headerlink" title="实现方式1"></a>实现方式1</h1><p>接着给出Cache的定义，这里很关键，Cache的实现方式直接影响了客户的使用方式，其关键在于怎么指定替换算法。</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Cache</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">Cache</span>(ReplaceAlgorithm *ra)</span><br><span class="line">    &#123;</span><br><span class="line">        m_ra = ra;</span><br><span class="line">    &#125;</span><br><span class="line">    ~<span class="built_in">Cache</span>()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">delete</span> m_ra;</span><br><span class="line">        m_ra = <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">Replace</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        m_ra-&gt;<span class="built_in">replace</span>();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    ReplaceAlgorithm *m_ra;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="function">Cache <span class="title">cache</span><span class="params">(<span class="keyword">new</span> LRU_ReplaceAlgorithm())</span></span>; <span class="comment">//暴露了算法的定义  </span></span><br><span class="line">    cache.<span class="built_in">Replace</span>();  </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这种方式暴露给了客户具体的算法的定义。</p>
+<h1 id="实现方式2"><a href="#实现方式2" class="headerlink" title="实现方式2"></a>实现方式2</h1><figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="comment">//Cache需要用到替换算法  </span></span><br><span class="line"></span><br><span class="line"><span class="keyword">enum</span> <span class="title class_">RA</span> &#123;LRU, FIFO, RANDOM&#125;; <span class="comment">//标签  </span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Cache</span>  </span><br><span class="line">&#123;  </span><br><span class="line"><span class="keyword">private</span>:  </span><br><span class="line">    ReplaceAlgorithm *m_ra;  </span><br><span class="line"><span class="keyword">public</span>:  </span><br><span class="line">    <span class="built_in">Cache</span>(<span class="keyword">enum</span> RA ra)   </span><br><span class="line">    &#123;   </span><br><span class="line">        <span class="keyword">if</span>(ra == LRU)  </span><br><span class="line">            m_ra = <span class="keyword">new</span> <span class="built_in">LRU_ReplaceAlgorithm</span>();  </span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span>(ra == FIFO)  </span><br><span class="line">            m_ra = <span class="keyword">new</span> <span class="built_in">FIFO_ReplaceAlgorithm</span>();  </span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span>(ra == RANDOM)  </span><br><span class="line">            m_ra = <span class="keyword">new</span> <span class="built_in">Random_ReplaceAlgorithm</span>();  </span><br><span class="line">        <span class="keyword">else</span>   </span><br><span class="line">            m_ra = <span class="literal">NULL</span>;  </span><br><span class="line">    &#125;  </span><br><span class="line">    ~<span class="built_in">Cache</span>() &#123; <span class="keyword">delete</span> m_ra; &#125;  </span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">Replace</span><span class="params">()</span> </span>&#123; m_ra-&gt;<span class="built_in">Replace</span>(); &#125;  </span><br><span class="line">&#125;; </span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span>  </span></span><br><span class="line"><span class="function"></span>&#123;  </span><br><span class="line">    <span class="function">Cache <span class="title">cache</span><span class="params">(LRU)</span></span>; <span class="comment">//指定标签即可  </span></span><br><span class="line">    cache.<span class="built_in">Replace</span>();  </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;  </span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
+<p>这种方式也是通过参数指定，不过不是传入指针，而是传入算法的枚举。这样客户就不需要知道算法的具体定义，只需要知道算法的标签即可。</p>
+<h1 id="实现方式3"><a href="#实现方式3" class="headerlink" title="实现方式3"></a>实现方式3</h1><p>以上两种实现方式都需要构造函数传参才能实现，是否可以不需要构造函数传参的方式来实现？<br>利用模板来实现。算法通过模板的实参指定，虽然还是使用了参数，但是不是构造函数的参数。在策略模式中，参数的传递难以避免，客户必须指定某种算法。</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="comment">//Cache需要用到的替换算法</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="title class_">RA</span>&gt;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Cache</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    RA m_ra;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">Cache</span>()&#123;&#125;</span><br><span class="line">    ~<span class="built_in">Cache</span>()&#123;&#125;</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">Replace</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        m_ra.<span class="built_in">repalce</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Cache &lt;Random_ReplaceAlgorithm&gt; cache;<span class="comment">//模板实参</span></span><br><span class="line">    cache.<span class="built_in">replace</span>();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>C++设计模式</category>
+        <category>策略模式</category>
       </categories>
       <tags>
         <tag>C++</tag>
@@ -203,35 +232,6 @@
         <category>学习</category>
         <category>C++设计模式</category>
         <category>单例模式</category>
-      </categories>
-      <tags>
-        <tag>C++</tag>
-        <tag>面向对象编程</tag>
-        <tag>设计模式</tag>
-        <tag>应用开发</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Cpp设计模式之策略模式</title>
-    <url>/2022/08/22/Cpp%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F/</url>
-    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>C++常用设计模式之策略模式</p>
-<span id="more"></span>
-<h1 id="序言"><a href="#序言" class="headerlink" title="序言"></a>序言</h1><p>策略模式是指定义一系列的算法，把它们一个个的封装起来，并且使它们可以互相替换。本模式可以使得算法独立于它的客户而变化。也就是说这些算法完成的功能一样，对外的接口一样，只是各自实现实现上存在差异。用策略模式来封装算法，效果比较好。<br>下面以高速缓存（Cache）的替换算法为例，实现策略模式。<br>所谓Cache的替换算法，就是当Cache发生缺失时，Cache控制器必须选择Cache中的一行并用欲获得的数据替换它。所采用的选择策略就是Cache的替换算法。相应的UML类图如下：<br><img src="/2022/08/22/Cpp%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F/1.jpeg" alt="img not found"></p>
-<h1 id="算法定义"><a href="#算法定义" class="headerlink" title="算法定义"></a>算法定义</h1><p>这里首先给出算法的定义。</p>
-<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">ReplaceAlgorithm</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">replace</span><span class="params">()</span> </span>= <span class="number">0</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">LRU_ReplaceAlgorithm</span> : <span class="keyword">public</span> ReplaceAlgorithm</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">repace</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        cout&lt;&lt;<span class="string">&quot;Least Recently Used replace algorithm&quot;</span>&lt;&lt;endl;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">FIFO_ReplaceAlgorithm</span> : <span class="keyword">public</span> ReplaceAlgorithm</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">repace</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        cout&lt;&lt;<span class="string">&quot;First in First out replace algorithm&quot;</span>&lt;&lt;endl;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Random_ReplaceAlgorithm</span> : <span class="keyword">public</span> ReplaceAlgorithm</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">repace</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        cout&lt;&lt;<span class="string">&quot;Random replace algorithm&quot;</span>&lt;&lt;endl;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-
-<h1 id="实现方式1"><a href="#实现方式1" class="headerlink" title="实现方式1"></a>实现方式1</h1><p>接着给出Cache的定义，这里很关键，Cache的实现方式直接影响了客户的使用方式，其关键在于怎么指定替换算法。</p>
-<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Cache</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">Cache</span>(ReplaceAlgorithm *ra)</span><br><span class="line">    &#123;</span><br><span class="line">        m_ra = ra;</span><br><span class="line">    &#125;</span><br><span class="line">    ~<span class="built_in">Cache</span>()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">delete</span> m_ra;</span><br><span class="line">        m_ra = <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">Replace</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        m_ra-&gt;<span class="built_in">replace</span>();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    ReplaceAlgorithm *m_ra;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="function">Cache <span class="title">cache</span><span class="params">(<span class="keyword">new</span> LRU_ReplaceAlgorithm())</span></span>; <span class="comment">//暴露了算法的定义  </span></span><br><span class="line">    cache.<span class="built_in">Replace</span>();  </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这种方式暴露给了客户具体的算法的定义。</p>
-<h1 id="实现方式2"><a href="#实现方式2" class="headerlink" title="实现方式2"></a>实现方式2</h1><figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="comment">//Cache需要用到替换算法  </span></span><br><span class="line"></span><br><span class="line"><span class="keyword">enum</span> <span class="title class_">RA</span> &#123;LRU, FIFO, RANDOM&#125;; <span class="comment">//标签  </span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Cache</span>  </span><br><span class="line">&#123;  </span><br><span class="line"><span class="keyword">private</span>:  </span><br><span class="line">    ReplaceAlgorithm *m_ra;  </span><br><span class="line"><span class="keyword">public</span>:  </span><br><span class="line">    <span class="built_in">Cache</span>(<span class="keyword">enum</span> RA ra)   </span><br><span class="line">    &#123;   </span><br><span class="line">        <span class="keyword">if</span>(ra == LRU)  </span><br><span class="line">            m_ra = <span class="keyword">new</span> <span class="built_in">LRU_ReplaceAlgorithm</span>();  </span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span>(ra == FIFO)  </span><br><span class="line">            m_ra = <span class="keyword">new</span> <span class="built_in">FIFO_ReplaceAlgorithm</span>();  </span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span>(ra == RANDOM)  </span><br><span class="line">            m_ra = <span class="keyword">new</span> <span class="built_in">Random_ReplaceAlgorithm</span>();  </span><br><span class="line">        <span class="keyword">else</span>   </span><br><span class="line">            m_ra = <span class="literal">NULL</span>;  </span><br><span class="line">    &#125;  </span><br><span class="line">    ~<span class="built_in">Cache</span>() &#123; <span class="keyword">delete</span> m_ra; &#125;  </span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">Replace</span><span class="params">()</span> </span>&#123; m_ra-&gt;<span class="built_in">Replace</span>(); &#125;  </span><br><span class="line">&#125;; </span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span>  </span></span><br><span class="line"><span class="function"></span>&#123;  </span><br><span class="line">    <span class="function">Cache <span class="title">cache</span><span class="params">(LRU)</span></span>; <span class="comment">//指定标签即可  </span></span><br><span class="line">    cache.<span class="built_in">Replace</span>();  </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;  </span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
-<p>这种方式也是通过参数指定，不过不是传入指针，而是传入算法的枚举。这样客户就不需要知道算法的具体定义，只需要知道算法的标签即可。</p>
-<h1 id="实现方式3"><a href="#实现方式3" class="headerlink" title="实现方式3"></a>实现方式3</h1><p>以上两种实现方式都需要构造函数传参才能实现，是否可以不需要构造函数传参的方式来实现？<br>利用模板来实现。算法通过模板的实参指定，虽然还是使用了参数，但是不是构造函数的参数。在策略模式中，参数的传递难以避免，客户必须指定某种算法。</p>
-<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="comment">//Cache需要用到的替换算法</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="title class_">RA</span>&gt;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Cache</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    RA m_ra;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">Cache</span>()&#123;&#125;</span><br><span class="line">    ~<span class="built_in">Cache</span>()&#123;&#125;</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">Replace</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        m_ra.<span class="built_in">repalce</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Cache &lt;Random_ReplaceAlgorithm&gt; cache;<span class="comment">//模板实参</span></span><br><span class="line">    cache.<span class="built_in">replace</span>();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>学习</category>
-        <category>C++设计模式</category>
-        <category>策略模式</category>
       </categories>
       <tags>
         <tag>C++</tag>
@@ -502,6 +502,62 @@
       <tags>
         <tag>嵌入式Linux</tag>
         <tag>bug定位</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>定时器和时间管理</title>
+    <url>/2022/11/23/%E5%AE%9A%E6%97%B6%E5%99%A8%E5%92%8C%E6%97%B6%E9%97%B4%E7%AE%A1%E7%90%86/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>时间管理在内核中占有非常重要的地位。相对于事件驱动而言，内核中有大量的函数都是基于时间驱动的。其中有些函数是周期执行的，像对调度程序中的运行队列进行平衡调整或对屏幕进行刷新这样的函数，都需要定期执行，比如说，每秒执行100次；而另外一些函数，比如需要推后执行的磁盘I&#x2F;O操作等，则需要等待一个相对时间后才运行—-比如说，内核会在500ms后再执行某个任务。除了上述两种函数需要内核提供时间外，内核还必须管理系统的运行时间以及当前日期和时间。<br>请注意相对时间和绝对时间之间的差别。如果某个事件在5s后被调度执行，那么系统所需要的不是绝对时间，而是相对时间；相反，如果要求管理当前日期和当前时间，则内核不但要计算流逝的时间而且还要计算绝对时间。所以这两种时间概念对内核时间管理来说都至关重要。<br>另外，还请注意周期性产生的事件与内核调度程序推迟到某个确定点执行的事件之间的差别。周期性产生的事件—-比如每10ms一次—-都是由系统定时器决定的。系统定时器是一种可编程硬件芯片，它能以固定频率产生中断。该中断就是所谓的定时器中断，它所对应中断处理程序负责更新系统时间，也负责执行需要周期性运行的任务。系统定时器和时钟中断处理程序是Linux系统内核管理机制中的中枢，本章将着重讨论它们。<br>本章关注的另外一个焦点是动态定时器—-一种用来推迟执行程序的工具。比如说，如果软驱马达在一定时间内都未活动，那么软盘驱动程序会使用动态定时器关闭软驱马达。内核可以动态创建或撤销动态定时器。本章将介绍动态定时器在内核中的实现，同时给出在内核代码中可供使用的定时器接口。</p>
+<span id="more"></span>
+
+<h1 id="内核中的时间概念"><a href="#内核中的时间概念" class="headerlink" title="内核中的时间概念"></a>内核中的时间概念</h1><p>时间概念对计算机来说有点模糊，事实上内核必须在硬件的帮助下才能计算和管理时间。硬件为内核提供了一个系统定时器用以计算流逝的时间，该时钟在内核中可看成一个电子时间资源，比如数字时钟或处理器频率等。系统定时器以某种频率自行触发时钟中断，该频率可以通过编程预定，称作节拍率。当时钟中断发生时，内核就通过一种特殊的中断处理程序对其进行处理。<br>因为预编的节拍率对内核来说是可知的，所以内核知道连续两次时钟中断的时间间隔。这个间隔时间就称为节拍，它等于节拍率分之一秒。正如你所看到的，内核就是靠这种已知的时钟中断间隔来计算墙上时间和系统运行时间的。墙上时间对用户空间的应用程序来说是最重要的。内核通过控制时钟中断维护实际时间，另外内核也为用户空间提供了一组系统调用以获取实际日期和实际时间。系统运行时间（自系统运行开始所经过的时间）对用户空间和内核都很有用，因为许多程序必须清楚流逝的时间。通过两次（现在和以后）读取运行时间再计算它们的差，就可以得到相对的流逝的时间了。</p>
+<ol>
+<li>时钟中断对于管理操作系统尤为重要，大量内核函数的生命周期都离不开流逝的时间的控制。下面给出一些利用时间中断周期执行的工作。</li>
+<li>更新系统运行时间。</li>
+<li>更新实际时间。</li>
+<li>在smp系统上，均衡调度程序中各处理器上的运行队列。如果运行队列负载不均衡的话，尽量使它们均衡。</li>
+<li>检查当前进程是否用尽了自己的时间片。如果用尽，就重新进行调度。</li>
+<li>运行超时的动态定时器。</li>
+<li>更新资源消耗和处理器时间的统计值。</li>
+</ol>
+<p>这其中有些工作在每次的时钟中断处理程序中都要被处理—-也就是说，这些工作随时钟的频率反复运行。另一些也是周期性地执行，但只需要每n次时钟中断运行一次，也就是说，这些函数在累计一定数量的时钟节拍数才能被执行。在“定时器中断处理程序”这一小节中，我们将详细讨论时钟中断处理程序。</p>
+<h1 id="节拍率：HZ"><a href="#节拍率：HZ" class="headerlink" title="节拍率：HZ"></a>节拍率：HZ</h1><p>系统定时器频率（节拍率）是通过静态预处理定义的，也就是HZ（赫兹），在系统启动时按照HZ值对也就进行设置。体系结构不同，HZ的值也不同，实际上，对于某些体系结构来说，甚至是机器的不同，它的值也会不一样。<br>内核在&lt;asm&#x2F;param.h&gt;文件中定义了这个值。节拍率有一个HZ频率，一个周期为1&#x2F;HZ秒。例如，在x86体系结构中，系统定时器频率默认100。因此，x86时钟中断的频率就为100HZ，也就是说在i386处理器上的每秒钟时钟中断100次（百分之一秒，即10ms产生一次）。但其他体系结构的节拍率为250和1000，分别对应4ms和1ms。下表给出了各种体系结构与各自对应节拍率的完整列表。<br><img src="/2022/11/23/%E5%AE%9A%E6%97%B6%E5%99%A8%E5%92%8C%E6%97%B6%E9%97%B4%E7%AE%A1%E7%90%86/1.jpeg" alt="img not found"><br>编写内核代码时，不要认为HZ值是一个固定不变的值。这不是一个常见的错误，因为大多数体系结构的节拍率都是可调的。但是在过去，只有Alpha一种机型的节拍率不等于100，所以，很多本该使用HZ的地方，都错误地在代码中直接硬编码（hard-code）成100这个值。稍后，我们会给出内核代码中使用HZ的例子。<br>正如我们所看到的，时钟中断能处理许多内核事务，所以它对内核来说极为重要。事实上，内核中的全部时间概念都来源于周期运行的系统时钟。所以选择一个合适的频率，就如同在人际交往中建立和谐关系一样，必须取得各方面的折中。</p>
+<h2 id="理想的HZ值"><a href="#理想的HZ值" class="headerlink" title="理想的HZ值"></a>理想的HZ值</h2><p>自Linux问世以来，i386体系结构中时钟中断频率就设定为100HZ，但是在2.5开发版内核中，中断频率被提高到1000HZ。当然，是否应该提高频率是饱受争议的。由于内核中众多子系统都必须依赖于时钟中断工作，所以改变中断频率必然会对这个系统造成很大的冲击。但是，任何事情总是有两面性的，我们接下来就来分析系统定时器使用高频率与使用低频率各有哪些优劣。<br>提高节拍率意味着时钟中断产生得更加频繁，所以中断处理程序也会更频繁地执行。如此一来会给整个系统带来如下好处：</p>
+<ol>
+<li>更高的时钟中断解析度可提高时间驱动事件的解析度。</li>
+<li>提高了时间驱动事件的准确度。</li>
+</ol>
+<p>提高节拍率等同于提高中断解析度。比如HZ&#x3D;100的时钟的执行粒度为10ms，即系统中的周期事件最快为每10ms运行一次，而不可能由更高的精度，但是当HZ&#x3D;100时，解析度就为1ms—-精细了10倍。虽然内核可以提高额度为1ms的时钟，但是并没有证据显示对系统中所有程序而言，频率为1000Hz的时钟频率相比频率为100Hz的时钟都更合适。<br>另外，提高解析度的同时也提高了准确度。假定内核在某个随机时刻触发定时器，而它可能在任何时间超时，但由于只有在时钟中断到来时才可能执行它，所以平均误差大约为半个时钟中断周期。比如说，如果时钟周期为HZ&#x3D;100，那么事件平均在设定时刻的+&#x2F;-5ms内发生，所以误差为5ms。如果HZ&#x3D;1000，那么平均误差可降低到0.5ms—-准确度提高了10倍。</p>
+<h2 id="高HZ的优势"><a href="#高HZ的优势" class="headerlink" title="高HZ的优势"></a>高HZ的优势</h2><p>更高的时钟中断频度和更高的准确度又会带来如下优点：</p>
+<ol>
+<li>内核定时器能够以更高的频度和更高的准确度运行。</li>
+<li>依赖定时值执行的系统调用，比如poll()和select()，能够以更高的精度运行。</li>
+<li>对诸如资源消耗和系统运行时间等的测量会有更精细的解析度。</li>
+<li>提高进程抢占的准确度。</li>
+</ol>
+<p>对poll()和select()超时精度的提高会给系统性能带来极大的好处。提高精度可以大幅度提高系统性能。频繁使用上述两种系统调用的应用程序，往往在等待时钟中断上浪费大量的时间，而事实上，定时值可能早就超时了。回忆一下，平均误差可是时钟周期的一半。<br>更高的准确率也使进程抢占更准确，同时还会加快调度响应时间。时钟中断处理程序负责减少当前进程的时间片计数。当时间片计数跌到0时，而又设置了need_resched标志的话，内核便立刻重新运行调度程序。假定有一个正在运行的进程，它的时间片只剩下2ms了，此时调度程序又要求抢占该进程，然后去运行另一个新进程；然而，该抢占行为不会在下一个时钟中断到来前发生，也就是说，在这2ms内不可能进行抢占。实际上，对于频率为100HZ的时钟来说，最坏要在10ms后，当下一个时钟中断到来时才能进行抢占，所以新进程也就可能要求的晚10ms才能执行。当然，进程之间也是平等的，因为所有的进程都是一视同仁的待遇，调度起来都不是很明确—-但关键不在于此。问题在于由于耽误了抢占，所以对于类似于填充音频缓冲区这样有严格时间要求的任务来说，结果是无法接受的。如果将节拍率提高到1000HZ，在最坏情况下，也能将调度延误时间降低到1ms，而在平均情况下，只能降低到0.5ms左右。</p>
+<h2 id="高HZ的劣势"><a href="#高HZ的劣势" class="headerlink" title="高HZ的劣势"></a>高HZ的劣势</h2><p>提高节拍率会产生副作用。事实上，把节拍率提高到1000HZ，甚至更高，会带来一个大问题：节拍率越高，意味着时钟中断频率越高，也就意味着系统负担越重。 因为处理器必须花时间来执行时钟中断处理程序，所以节拍率越高，中断处理程序占用的处理器的时间越多。这样不但减少了处理器处理其他工作的时间，而且还会更频繁地打乱处理器高速缓存并增加耗电。负载造成的影响值得进一步探讨。将时钟频率从100HZ提高到1000HZ必然会是时钟中断的负载增加10倍。可是增加前的系统负载又是多少呢？最后的结论是：至少在现代计算机系统上，时钟频率为1000HZ不会导致难以接受的负担，并且不会对系统性能造成较大的影响。尽管如此，在2.6版本内核中还是运行在编译内核时选定不同的HZ值。</p>
+<p><strong>无节拍的OS？</strong><br>也许你疑惑操作系统是否一定要有固定时钟。尽管40年来，几乎所有的通用操作系统都使用与本章所描述的系统类似的时钟中断，但Linux内核支持“无节拍操作”这样的选项。当编译内核时设置了CONFIG_HZ配置选项，系统就根据这个选项动态调度时钟中断。并不是每隔固定的时间间隔触发时钟中断，而是按需动态调度和重新设置。如果下一个时钟频率设置为3ms，就每3ms触发一次时钟中断。之后，如果50ms内都无事可做，内核以50ms重新调度时钟中断。<br>减少开销总是受欢迎的，但是实质性收益还是省电，特别是在系统空闲时。在基于节拍的标准系统中，即使在系统空闲期间，内核也需要为时钟中断提供服务。对于无节拍的系统而言，空闲档期不会被不必要的时钟中断所打断，于是减少了系统的能耗。且不论空闲期是200ms还是200s，随着时间的推移，所省的电是实实在在的。</p>
+<h1 id="jiffies"><a href="#jiffies" class="headerlink" title="jiffies"></a>jiffies</h1><p>全局变量jiffies用来记录自系统启动以来产生的节拍的总数。启动时，内核将该变量初始化为0，此后，每次时钟中断处理程序就会增加该变量的值。因为一秒内时钟中断的次数等于HZ，所以jiffies一秒内增加的值也就为HZ。系统运行时间以秒为单位计算，就等于jiffies&#x2F;HZ。实际出现的情况可能稍微复杂些：内核给jiffies赋一个特殊的初值，引起这个变量不断地溢出，由此捕捉bug。当找到实际的jiffies值后，就首先把这个“偏差”减去。</p>
+<p><strong>Jiffy的语源</strong><br>术语jiffy起源是未知的。据说这个短语起源于18世纪的英国。最初，jiffy所指含义不明确，但简单地表示时间周期。<br>在科学应用中，jiffy表示各种时间间隔，通常指10ms。在物理中，jiffy有时表示光传播某一特定距离所花的时间。<br>在计算机工程中，jiffy常常是两次连续的时钟周期之间的时间。在电机工程中，jiffy是完成一次AC（交流电）周期的时间。<br>在操作系统中，尤其是Unix中，jiffy是两次连续的时钟节拍之间的时间。历史上，这是10ms。但是，我们在本章中已经看到，jiffy在Linux中已经有所变化。<br>jiffies定义于文件&lt;linux&#x2F;jiffies.h&gt;中：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">extern</span> <span class="type">unsigned</span> <span class="type">long</span> <span class="keyword">volatile</span> jiffies;</span><br></pre></td></tr></table></figure>
+<p>现在我们先来看一些用到jiffies的内核代码。下面表达式将以秒为单位的时间转化为jiffies：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">(seconds * HZ)</span><br></pre></td></tr></table></figure>
+<p>相反，下面表达式将jiffies转换为以秒为单位的时间：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">(jiffies/HZ)</span><br></pre></td></tr></table></figure>
+<p>比较而言，内核中将秒转换为jiffies用得多一些，比如代码经常需要设置一些将来的时间：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> time_stamp = jiffies;         <span class="comment">//现在</span></span><br><span class="line"><span class="type">unsigned</span> <span class="type">long</span> next_tick = jiffies + <span class="number">1</span>;      <span class="comment">//从现在开始1个节拍</span></span><br><span class="line"><span class="type">unsigned</span> <span class="type">long</span> later = jiffies + <span class="number">5</span>*HZ;       <span class="comment">//从现在开始5秒</span></span><br><span class="line"><span class="type">unsigned</span> <span class="type">long</span> fraction = jiffies + HZ/<span class="number">10</span>;   <span class="comment">//从现在开始1/10秒</span></span><br></pre></td></tr></table></figure>
+<p>把时钟转化为秒经常会用在内核和用户空间进行交互的时候，而内核本身很少用到绝对时间。<br>注意，jiffies类型为无符号长整型，用其他任何类型存放它都不正确。</p>
+<h2 id="jiffies的内部表示"><a href="#jiffies的内部表示" class="headerlink" title="jiffies的内部表示"></a>jiffies的内部表示</h2>]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>Linux内核设计与实现</category>
+        <category>第11章 定时器和时间管理</category>
+      </categories>
+      <tags>
+        <tag>Linux Kernel</tag>
+        <tag>操作系统</tag>
       </tags>
   </entry>
   <entry>
@@ -7258,7 +7314,12 @@ s3cmci.c中的函数会将GPG8引脚设置为外部中断EINT16，设置双边�
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line">a=<span class="number">1</span>;</span><br><span class="line">b=<span class="number">2</span>;</span><br></pre></td></tr></table></figure>
 <p>有可能会在a中存放新值之前就在b中存放新值。<br>编译器和处理器都看不出a和b之间的关系。编译器会在编译时按这种顺序编译，这种顺序会是静态的，编译的目标代码就只把a放在b之前。但是，处理器会重新动态排序，因为处理器在执行指令期间，会在取指令和分派时，把表面上看似无关的指令按自认为最好的顺序排列。大多数情况下，这样的排序是最佳的，因为a和b之间没有明显的关系。尽管有些时候程序员知道什么是最好的顺序。<br>尽管前面的例子可能被重新排序，但是在处理器和编译器绝不会对下面的代码重新排序：</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line">a = <span class="number">1</span>;</span><br><span class="line">b = a;</span><br></pre></td></tr></table></figure>
-<p>此处a和b均为全局变量，因为a与b之间有明确的数据依赖关系。</p>
+<p>此处a和b均为全局变量，因为a与b之间有明确的数据依赖关系。<br>但是不管是编译器还是处理器都不知道其他上下文中的相关代码。偶然情况下，有必要让写操作被其他代码识别，也让所期望的指定顺序之外的代码识别。这种情况常常发生在硬件设备上，但是在多处理器上也很常见。<br>rmb()方法提供了一个“读”内存屏障，它确保跨越rmb()的载入动作不会发生重排序。也就是说，在rmb()之前的载入操作不会被重新排在该调用之后，同理，在rmb()之后的载入操作不会被重新排在该调用之前。<br>wmb()方法提供了一个“写”内存屏障，这个函数的功能和rmb()类似，区别仅仅是它是针对存储而非载入—-它确保跨越屏障的存储不发生重新排序。<br>mb()方法既提供了读屏障也提供了写屏障。载入和存储动作都不会跨越屏障重新排序。这是因为一条单独的指令（通常和rmb()使用同一指令）既可以提供载入屏障，也可以提供存储屏障。<br>read_barrier_depends()是rmb()的变种，它提供了一个读屏障，但是仅仅是针对后续读操作所依靠的那些载入。因为屏障后的读操作依赖于屏障前的读操作，因此，该屏障确保屏障前的读操作在屏障后的读操作之前完成。基本上说，该函数设置了一个读屏障，如rmb()，但是只针对特定的读—-也就是那些相互依赖的读操作。在有些体系结构上，read_barrier_depends()比rmb()执行得快，因为它仅仅是个空操作，实际并不需要。<br>看看使用了mb()和rmb()的一个例子，其中a的初始值是1，b的初始值是2。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">线程<span class="number">1</span>               线程<span class="number">2</span></span><br><span class="line">a = <span class="number">3</span>;              ----</span><br><span class="line">mb();               ----</span><br><span class="line">b = <span class="number">4</span>;              c = b;</span><br><span class="line">----                rmb();</span><br><span class="line">----                d = a;</span><br></pre></td></tr></table></figure>
+<p>如果不使用内存屏障，在某些处理器上，c可能接收了b的新值，而d接收了a原来的值。比如c可能等于4（正是我们希望的），然而d可能等于1（不是我们希望的）。使用mb()能确保a和b按照预定的顺序写入，而rmb()确保c和d按照预定的顺序读取。<br>这种重排序的发生是因为现代处理器为了优化器传送管道（pipeline），打乱了分派和提交指令的顺序。如果上例中读入a、b时的顺序被打乱的话，又会发生什么情况呢？rmb()或wmb()函数相当于指令，它们告诉处理器在继续执行前提交所有尚未处理的载入或存储指令。<br>看到一个类似的例子，但是其中一个线程用read_barrier_depends()代替了rmb()。例子中a的初始值是1，b是2，p是&amp;b。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">线程<span class="number">1</span>               线程<span class="number">2</span></span><br><span class="line">a = <span class="number">3</span>;              ----</span><br><span class="line">mb();               ----</span><br><span class="line">p = &amp;a;             pp = p;</span><br><span class="line">----                read_barrier_depends();</span><br><span class="line">----                b = *pp;</span><br></pre></td></tr></table></figure>
+<p>再一次声明，如果没有内存屏障，有可能在pp被设置成p前，b就被设置为pp了。由于载入*pp依靠载入p，所以read_barrier_depends()提供了一个有效的屏障。虽然使用rmb()同样有效，但是因为读是数据相关的，所以我们使用read_barrier_depends()可能更快。注意，不管在哪种情况下，左边的线程都需要mb()操作来确保预定的载入或存储顺序。<br>宏smp_rmb()、smp_wmb()、smp_mb()和smp_read_barrier_depends()提供了一个有用的优化。在SMP内核中它们被定义成常用的内存屏障，而在单处理机内核中，它们被定义成编译器的屏障。对于SMP系统，在有顺序限定要求时，可以使用SMP的变种。<br>barrier()方法可以防止编译器跨屏障对载入或存储操作进行优化。编译器不会重新组织存储或载入操作，为防止改变C代码的效果和现有数据的依赖关系。但是，它不知道在当前上下文之外会发生什么事。例如，编译器不可能知道有中断发生，这个中断有可能在读取正在被写入的数据。这时就要求存储操作发生在读取操作前。前面讨论的内存屏障可以完成编译器屏障的功能，但是编译器屏障要比内存屏障轻量得多。实际上，编译器屏障几乎是空闲的，因为它只防止编译器可能重排指令。<br>下表给出了内核中所有体系结构提供的完整的内存和编译器屏障方法。<br><strong>内存和编译器屏障方法</strong><br><img src="/2022/11/18/%E5%86%85%E6%A0%B8%E5%90%8C%E6%AD%A5%E6%96%B9%E6%B3%95/6.jpeg" alt="img not found"><br>注意，对于不同体系结构，屏障的实际效果差别很大。例如，如果一个体系结构不执行打乱存储，那么wmb()就什么都不做。但应该为最坏的情况使用恰当的内存屏蔽，这样代码才能在编译时执行针对体系结构的优化。</p>
+<h1 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h1><p>本章应用了第9章的概念和原理，这使得你能理解Linux内核用于同步和并发的具体方法。我们一开始先讲述了最简单的确保同步的方法—-原子操作，然后考察了自旋锁，这是内核中最普通的锁，它提供了轻量级单独持有者的锁，即争用时忙等。我们接着还讨论了信号量（这是一种睡眠锁）以及更通用的衍生锁—-mutex。至于专用的加锁原语像完成变量、seq锁，只是稍稍提及。我们取笑BKL，考察了禁止抢占，并理解了屏障，它曾难以驾驭。<br>以第9章和第10章的同步方法为基础，就可以编写避免竞争条件、确保正确同步，而且能在多处理器上安全运行的内核代码了。</p>
 ]]></content>
       <categories>
         <category>学习</category>
