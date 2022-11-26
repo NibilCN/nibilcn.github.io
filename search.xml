@@ -505,6 +505,115 @@
       </tags>
   </entry>
   <entry>
+    <title>内存管理</title>
+    <url>/2022/11/26/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>在内核里分配内存可不像在其他地方分配内存那么容易。造成这种局面的因素很多。从根本上讲，是因为内核本身不能像用户空间那样奢侈地使用内存。内核与用户空间不同，它不具备这种能力，它不支持简单便捷的内存分配方式。比如，内核一般不能睡眠。此外，处理内存分配错误对内核来说也绝非易事。正是由于这种限制，再加上内存分配机制不能太复杂，所以在内核中获取内存要比在用户空间复杂得多。不过，从程序开发者角度来看，也不是说内核的内存分配就困难得不得了，只是在用户空间中的内存分配不太一样而已。<br>本章讨论的是在内核之中获取内存的方法。在深入探究实际的分配接口之前，我们需要理解内核是如何管理内存的。</p>
+<span id="more"></span>
+
+<h1 id="页"><a href="#页" class="headerlink" title="页"></a>页</h1><p>内核把物理页作为内存管理的基本单位。尽管处理器的最小可寻址单位通常为字（甚至是字节），但是，内存管理单元（MMU，管理内存并把物理内存转换为虚拟内存的硬件）通常以页为单位进行处理。正因为如此，MMU以页（page）大小为单位来管理系统中的页表（这也是页表名的来由）。从虚拟内存的角度来看，页就是最小单位。<br>在第19章我们将会看到，体系结构不同，支持的页的大小也不尽相同，还有些体系结构甚至支持几种不同的页大小。大多数32位体系结构支持4KB的页，而64位体系结构一般会支持8KB的页。这就意味着，在支持4KB页大小并有1GB物理内存的机器上，物理内存会被划分为262144个页。<br>内核用<code>struct page</code>结构表示系统中的每个物理页，该结构位于&lt;linux&#x2F;mm_types.h&gt;中—-我简化了定义，去除了两个容易混淆我们讨论主题的联合结构体：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">page</span> &#123;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>           flags;</span><br><span class="line">    <span class="type">atomic_t</span>                _count;</span><br><span class="line">    <span class="type">atomic_t</span>                _mapcount;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>           private;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">address_space</span>    *<span class="title">mapping</span>;</span></span><br><span class="line">    <span class="type">pgoff_t</span>                 index;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>        <span class="title">lru</span>;</span></span><br><span class="line">    <span class="type">void</span>                    *virtual;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>让我们看一下其中比较重要的域。flag域用来存放页的状态。这些状态包括页是不是脏的，是不是被锁定在内存中等。flag的每一位单独表示一种状态，所以它至少可以同时表示出32种不同的状态。这些标志定义在&lt;linux&#x2F;page-flags&gt;中。<br>_count域存放页的引用计数—-也就是这一页被引用了多少次。当计数值变为-1时，就说明当前内核并没有引用这一页，于是，在新的分配中就可以使用它。内核代码不应当直接检查该域，而是调用page_count()函数检查，该函数唯一的参数就是page结构。当页空闲时，尽管该结构内部的_count值是负的，但是对page_count()函数而言，返回0表示页空闲，返回一个正整数表示页在使用。一个页可以由页缓存使用（这时，mapping域指向和这个页关联的address_space对象），或者作为私有数据（由private指向），或者作为进程页表中的映射。<br>virtual域是页的虚拟地址。通常情况下，它就是页在虚拟内存中的地址。有些内存（即所谓的高端内存）并不永久地映射到内核地址空间上。在这种情况下，这个域的值为NULL，需要的时候，必须动态地映射这些页。稍后我们将谈论高端内存。<br>必须要理解的一点是page结构与物理页有关，而并非与虚拟页相关。因此，该结构对页的描述只是短暂的。即使页中所包含的数据继续存在，由于交换等原因，它们也可能并不再和同一个page结构相关联。内核仅仅用这个数据结构来描述当前时刻在相关物理页中存放的东西。这个数据结构的目的在于描述物理内存本身，而不是描述包含在其中的数据。<br>内核用这一结构来管理系统中所有的页，因为内核需要直到一个页是否空闲（也就是页有没有被分配）。如果页已经被分配，内核还需要直到谁拥有这个页。<code>拥有者可能是用户空间进程、动态分配的内核数据、静态内核代码或页高速缓存等</code>。<br>系统中的每个物理页都要分配一个这样的结构体，开发者常常对此感到惊讶。他们会想“这得浪费多少内存呀”！让我们来算算对所有这些页都这么做，到底要消耗多少内存。就算<code>struct page</code>占40字节的内存吧，假定系统的物理页为8KB大小，系统有4GB物理内存。那么，系统中共有页面524288个，而描述这么多页面的page结构体消耗的内存只不过是20MB：也许绝对值不小，而相对系统4GB内存而言，仅是很小的一部分罢了。因此，要管理系统中这么多物理页面，这个代价并不算太高。</p>
+<h1 id="区"><a href="#区" class="headerlink" title="区"></a>区</h1><p>由于硬件的限制，内核并不能对所有的页一视同仁。有些页位于内存中特定的物理地址上，所以不能将其用于一些特定的任务。由于存在这种限制，所以内核把页划分为不同的区（zone）。内核使用区对具有相似特性的页进行分组。Linux必须处理如下两种由于硬件存在缺陷而引起的内存寻址问题：</p>
+<ol>
+<li>一些硬件只能用某些特定的内存地址来执行DMA（直接内存访问）。</li>
+<li>一些体系结构的内存的物理寻址范围比虚拟寻址范围大得多。这样，就有一些内存不能永久地映射到内核空间上。</li>
+</ol>
+<p>因为存在这些制约条件，Linux主要使用了四种区：</p>
+<ol>
+<li>ZONE_DMA—-这个区包含的页能用来执行DMA操作。</li>
+<li>ZONE_DMA32—-和ZONE_DMA类似，该区包含的页面可用来执行DMA操作；而和ZONE_DMA不同之处在于，这些页面只能被32位设备访问。在某些体系结构中，该区将比ZONE_DMA更大。</li>
+<li>ZONE_NORMAL—-这个区包含的都是能正常映射的页。</li>
+<li>ZONE_HIGHMEM—-这个区包含“高端内存”，其中的页并不能永久地映射到内核地址空间。</li>
+</ol>
+<p>这些区（还有两种不大重要的）在&lt;linux&#x2F;mmzone.h&gt;中定义。<br>区的实际使用和分布是与体系结构相关的。例如，某些体系结构在内存的任何地址上执行DMA都没有问题。在这些体系结构中，ZONE_DMA为空，ZONE_NORMAL就可以直接用于分配。与此相反，在x86体系结构上，ISA设备就不能在整个32位的地址空间中执行DMA，因为ISA设备只能访问物理内存的前16MB。因此，ZONE_DMA在x86上包含的页都在0-16MB的内存范围里。<br>ZONE_HIGHMEM的工作方式也差不多。能否直接映射取决于体系结构。在32位x86系统上，ZONE_HIGHMEM为高于896MB的所有物理内存。在其他体系结构上，由于所有内存都被直接映射，所以ZONE_HIGHMEM为空。ZONE_HIGHMEM所在的内存就是所谓的高端内存（high memory）。系统的其余内存就是所谓的低端内存（low memory）。<br>前两个区各取所需后，剩余的就由ZONE_NORMAL区独享了。在x86上，ZONE_NORMAL是从16MB到896MB的所有物理内存。在其他的体系结构上，ZONE_NORMAL是所有的可用物理地址。下表是每个区及其在x86-32上所占的页的列表。</p>
+<table>
+<thead>
+<tr>
+<th>区</th>
+<th>描述</th>
+<th>物理内存</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ZONE_DMA</td>
+<td>DMA使用的页</td>
+<td>&lt;16MB</td>
+</tr>
+<tr>
+<td>ZONE_NORMAL</td>
+<td>正常可寻址的页</td>
+<td>16-896MB</td>
+</tr>
+<tr>
+<td>ZONE_HIGHMEM</td>
+<td>动态映射的页</td>
+<td>&gt;896MB</td>
+</tr>
+</tbody></table>
+<p>Linux把系统的页划分为区，形成不同的内存池，这样就可以根据用途进行分配了。例如，ZONE_DMA内存池让内核有能力为DMA分配所需的内存。如果需要这样的内存，那么，内核就可以从ZONE_DMA中按照请求的数目取出页。注意，区的划分没有任何物理意义，这只不过是内核为了管理而采取的一种逻辑上的分组。<br>某些分配可能需要从特定的区中获取页，而另外一些分配则可以从多个区中获取页。比如，尽管用于DMA的内存必须从ZONE_DMA中进行分配，但是一般用途的内存却既能从ZONE_DMA分配，也能从ZONE_NORMAL分配，不过不可能同时从两个区分配，因为分配是不能跨区界限的。当然，内核更希望一般用途的内存从常规区分配，这样能节省ZONE_DMA中的页，保证满足DMA的使用需求。但是，如果可供分配的资源不够用了（如果内存已经变得很少了），那么，内核就会占用其他可用区的内存。<br>不是所有的体系结构都定义了全部区，有些64位的体系结构，如Intel的x86-64体系结构可以映射和处理64位的内存空间，所以x86-64没有ZONE_HIGHMEM区，所有的物理内存都处于ZONE_DMA和ZONE_NORMAL区。<br>每个区都用<code>struct zone</code>表示，在&lt;linux&#x2F;mmzone.h&gt;中定义：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">zone</span> &#123;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               watermark[NR_WMARK];</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               lowmem_reserve[MAX_NR_ZONES];</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">per_cpu_pageset</span>      <span class="title">pageset</span>[<span class="title">NR_CPUS</span>];</span></span><br><span class="line">    <span class="type">spinlock_t</span>                  lock;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">free_area</span>            <span class="title">free_area</span>[<span class="title">MAX_ORDER</span>];</span></span><br><span class="line">    <span class="type">spinlock_t</span>                  lru_lock;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zone_lru</span> &#123;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>        <span class="title">list</span>;</span></span><br><span class="line">        <span class="type">unsigned</span> <span class="type">long</span>           nr_saved_scan;</span><br><span class="line">    &#125;lru[NR_LRU_LISTS];         </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zone_reclaim_stat</span>    <span class="title">reclaim_stat</span>;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               pages_scanned;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               flags;</span><br><span class="line">    <span class="type">atomic_long_t</span>               vm_stat[NR_VM_ZONE_STAT_ITEMS];</span><br><span class="line">    <span class="type">int</span>                         prev_priority;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span>                inactive_ratio;</span><br><span class="line">    <span class="type">wait_queue_head_t</span>           *wait_table;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               wait_table_hash_nr_entries;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               wait_table_bits;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">pglist_data</span>          *<span class="title">zone_pgdat</span>;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               zone_start_pfn;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               spanned_pages;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               present_pages;</span><br><span class="line">    <span class="type">const</span> <span class="type">char</span>                  *name;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>这个结构体很大，但是，系统中只有三个区，因此，也只有三个这样的结构。让我们看一下其中一些重要的域。<br>lock域是一个自旋锁，它防止该结构被并发访问。注意，这个域只保护结构，而不保护驻留在这个区中的所有页。没有特定的锁来保护单个页，但是，部分内核可以锁住在页中驻留的数据。<br>watermark数值持有该区的最小值、最低和最高水位值。内核使用水位为每个内存区设置合适的内存消耗基准。该水位随空闲内存的多少而变化。<br>name域是一个以NULL结束的字符串表示这个区的名字。内核启动期间初始化这个值，其代码位于<code>mm/page_alloc.c</code>中。三个区的名字分别为“DMA”、“Normal”和“HighMem”。</p>
+<h1 id="获得页"><a href="#获得页" class="headerlink" title="获得页"></a>获得页</h1><p>我们已经对内核如果管理内存（页、区等）有所了解了，现在让我们看一下内核实现的接口，我们正是通过这些接口在内核内分配和释放内存的。<br>内核提供了一种请求内存地底层机制，并提供了对它进行访问的几个接口。所有这些接口都以页为单位分配内存，定义于&lt;linux&#x2F;gfp.h&gt;中。最核心的函数是：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">struct</span> page *<span class="title function_">alloc_pages</span><span class="params">(<span class="type">gfp_t</span> gfp_mask,<span class="type">unsigned</span> <span class="type">int</span> order)</span>;</span><br></pre></td></tr></table></figure>
+<p>该函数分配2的order（1 &lt;&lt; order）次方个连续的物理页，并返回一个指针，该指针指向第一个页page结构体；如果出错，就返回NULL。在12.4节中我们再研究gft_t类型和gft_mask参数，你可以用下面这个函数把给定的页转换为它的逻辑地址：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> *<span class="title function_">page_address</span><span class="params">(<span class="keyword">struct</span> page *page)</span>;</span><br></pre></td></tr></table></figure>
+<p>该函数返回一个指针，指向给定物理页当前所在的逻辑地址。如果你无须用到<code>struct page</code>，你可以调用：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> __get_free_pages(<span class="type">gfp_t</span> gfp_mask,<span class="type">unsigned</span> <span class="type">int</span> order);</span><br></pre></td></tr></table></figure>
+<p>这个函数与alloc_pages()作用相同，不过它直接返回所请求的第一个页的逻辑地址。因为页是连续的，所以其他页也会紧随其后。<br>如果你只需要一页，就可以用下面两个封装好的函数，它能让你少敲几下键盘：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">struct</span> page *<span class="title function_">alloc_page</span><span class="params">(<span class="type">gfp_t</span> gfp_mask)</span>;</span><br><span class="line"><span class="type">unsigned</span> <span class="type">long</span> __get_free_page(<span class="type">gfp_t</span> gfp_mask);</span><br></pre></td></tr></table></figure>
+<p>这两个函数与其兄弟函数工作方式相同，只不过传递给order的值为0。</p>
+<h2 id="获得填充为0的页"><a href="#获得填充为0的页" class="headerlink" title="获得填充为0的页"></a>获得填充为0的页</h2><p>如果你需要让返回的页的内容全为0，请用下面的这个函数：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> <span class="title function_">get_zeroed_page</span><span class="params">(<span class="type">unsigned</span> <span class="type">int</span> gfp_mask)</span>;</span><br></pre></td></tr></table></figure>
+<p>这个函数与__get_free_page()工作方式相同，只不过把分配好的页都填充成了0—-字节中的每一位都要取消设置。如果分配的页是给用户空间的，这个函数就非常有用了。虽说分配好的页应该包含的都是随机产生的垃圾信息，但其实这些信息可能并不是完全随机的—-它很可能“随机地”包含某些敏感数据。用户空间的页在返回之前，所有数据必须填充为0，或做其他清理工作，在保障系统安全这一点上，我们绝不妥协。下表是所有底层的页分配方法的列表。</p>
+<p><strong>低级页分配方法</strong></p>
+<table>
+<thead>
+<tr>
+<th>标志</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>alloc_page(gfp_mask)</td>
+<td>只分配一页，返回指向页结构的指针</td>
+</tr>
+<tr>
+<td>alloc_pages(gfp_mask,order)</td>
+<td>分配2的order次方个页，返回指向第一页页机构的指针</td>
+</tr>
+<tr>
+<td>__get_free_page(gfp_mask)</td>
+<td>只分配一页，返回指向其逻辑地址的指针</td>
+</tr>
+<tr>
+<td>__get_free_pages(gfp_mask,order)</td>
+<td>分配2的order次方个页，返回指向第一页逻辑地址的指针</td>
+</tr>
+<tr>
+<td>get_zeroed_page(gfp_mask)</td>
+<td>只分配一页，让其内容填充0，返回指向其逻辑地址的指针</td>
+</tr>
+</tbody></table>
+<h2 id="释放页"><a href="#释放页" class="headerlink" title="释放页"></a>释放页</h2><p>当你不再需要页时可以用下面的函数释放它们：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> __free_pages(<span class="keyword">struct</span> page *page,<span class="type">unsigned</span> <span class="type">int</span> order);</span><br><span class="line"><span class="type">void</span> <span class="title function_">free_pages</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> addr,<span class="type">unsigned</span> <span class="type">int</span> order)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">free_page</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> addr)</span>;</span><br></pre></td></tr></table></figure>
+<p>释放页时要谨慎，只能释放属于你的页。传递了错误的<code>struct page</code>或地址，用了错误的order值，这些都可能导致系统崩溃。请记住，内核是完全信赖自己的。这点与用户空间不同，如果你有非法操作，内核会开开心心地把自己挂起来，停止运行。<br>让我们看一个例子。其中，我们想得到8个页：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> page;</span><br><span class="line"></span><br><span class="line">page = __get_free_pages(GFP_KERNEL,<span class="number">3</span>);</span><br><span class="line"><span class="keyword">if</span>(!page) &#123;</span><br><span class="line">    <span class="comment">//没有足够的内存，你必须处理这种错误</span></span><br><span class="line">    <span class="keyword">return</span> -ENOMEM;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//page 现在指向8个连续页的第1个页的地址</span></span><br></pre></td></tr></table></figure>
+<p>在此，我们使用完这8个页之后释放它们：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">free_page(page,<span class="number">3</span>);</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">    页已经被释放了，我们不应该再访问存放在“page”中的地址了</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+<p>GFP_KERNEL参数是gfp_mask标志中的一个例子。前面我们已经简要讨论过了。<br>调用__get_free_pages()之后要注意进行错误检查。内核分配可能失败，因此你的代码必须进行检查并做相应的处理。这意味在此之前，你所做的所有工作可能前功尽弃，甚至还需要回归到原来的状态。正因为如此，在程序开始时就先进行内存分配是很有意义的，这能让错误处理得容易一点。如果你不这么做，那么在你想要分配内存的时候如果失败了，局面可能就难以控制了。<br>在你需要以页为单位的一族连续物理页时，尤其是在你只需要一两页时，这些低级页函数就很有用。对于常用的以字节为单位的分配来说，内核提供的函数是kmalloc()。</p>
+<h1 id="kmalloc"><a href="#kmalloc" class="headerlink" title="kmalloc()"></a>kmalloc()</h1>]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>Linux内核设计与实现</category>
+        <category>第12章 内存管理</category>
+      </categories>
+      <tags>
+        <tag>Linux Kernel</tag>
+        <tag>操作系统</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>设备与模块</title>
     <url>/2022/08/02/%E8%AE%BE%E5%A4%87%E4%B8%8E%E6%A8%A1%E5%9D%97/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《Linux内核设计与实现》第17章总结归纳</p>

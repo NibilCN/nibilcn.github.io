@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":false,"version":"8.12.2","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"mac"},"bookmark":{"enable":true,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="在内核里分配内存可不像在其他地方分配内存那么容易。造成这种局面的因素很多。从根本上讲，是因为内核本身不能像用户空间那样奢侈地使用内存。内核与用户空间不同，它不具备这种能力，它不支持简单便捷的内存分配方式。比如，内核一般不能睡眠。此外，处理内存分配错误对内核来说也绝非易事。正是由于这种限制，再加上内存分配机制不能太复杂，所以在内核中获取内存要比在用户空间复杂得多。不过，从程序开发者角度来看，也不是说">
+<meta property="og:type" content="article">
+<meta property="og:title" content="内存管理">
+<meta property="og:url" content="http://example.com/2022/11/26/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/index.html">
+<meta property="og:site_name" content="Laugh Tale">
+<meta property="og:description" content="在内核里分配内存可不像在其他地方分配内存那么容易。造成这种局面的因素很多。从根本上讲，是因为内核本身不能像用户空间那样奢侈地使用内存。内核与用户空间不同，它不具备这种能力，它不支持简单便捷的内存分配方式。比如，内核一般不能睡眠。此外，处理内存分配错误对内核来说也绝非易事。正是由于这种限制，再加上内存分配机制不能太复杂，所以在内核中获取内存要比在用户空间复杂得多。不过，从程序开发者角度来看，也不是说">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-11-26T01:42:19.000Z">
+<meta property="article:modified_time" content="2022-11-26T01:42:19.000Z">
+<meta property="article:author" content="Nibil">
+<meta property="article:tag" content="Linux Kernel">
+<meta property="article:tag" content="操作系统">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2022/11/26/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":"","permalink":"http://example.com/2022/11/26/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/","path":"2022/11/26/内存管理/","title":"内存管理"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>内存管理 | Laugh Tale</title>
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+  <!--pjax：防止跳转页面音乐暂停-->
+  <script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.js"></script>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Laugh Tale</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">A Nibil's Sharing Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%A1%B5"><span class="nav-number">1.</span> <span class="nav-text">页</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8C%BA"><span class="nav-number">2.</span> <span class="nav-text">区</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%8E%B7%E5%BE%97%E9%A1%B5"><span class="nav-number">3.</span> <span class="nav-text">获得页</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%8E%B7%E5%BE%97%E5%A1%AB%E5%85%85%E4%B8%BA0%E7%9A%84%E9%A1%B5"><span class="nav-number">3.1.</span> <span class="nav-text">获得填充为0的页</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%87%8A%E6%94%BE%E9%A1%B5"><span class="nav-number">3.2.</span> <span class="nav-text">释放页</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#kmalloc"><span class="nav-number">4.</span> <span class="nav-text">kmalloc()</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Nibil</p>
+  <div class="site-description" itemprop="description">A Nibil's Sharing Blog</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">50</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/NibilCN" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;NibilCN" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-inner">
+      <!-- require APlayer -->
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css">
+      <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
+      <!-- require MetingJS -->
+      <script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+      <!--网易云-->   
+      <meting-js
+        server="netease"
+        id="7593069088"
+        type="playlist" 
+        mini="false"
+        fixed="false"
+        list-folded="true"
+        autoplay="true"
+        volume="0.4"
+        theme="#FADFA3"
+        order="random"
+        loop="all"
+        preload="auto"
+        mutex="true">
+      </meting-js>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/NibilCN" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/11/26/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Nibil">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Laugh Tale">
+      <meta itemprop="description" content="A Nibil's Sharing Blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="内存管理 | Laugh Tale">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          内存管理
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-11-26 09:42:19" itemprop="dateCreated datePublished" datetime="2022-11-26T09:42:19+08:00">2022-11-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">学习</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/" itemprop="url" rel="index"><span itemprop="name">书籍</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/Linux%E5%86%85%E6%A0%B8%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/" itemprop="url" rel="index"><span itemprop="name">Linux内核设计与实现</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/Linux%E5%86%85%E6%A0%B8%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/%E7%AC%AC12%E7%AB%A0-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">第12章 内存管理</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>6.6k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>6 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>在内核里分配内存可不像在其他地方分配内存那么容易。造成这种局面的因素很多。从根本上讲，是因为内核本身不能像用户空间那样奢侈地使用内存。内核与用户空间不同，它不具备这种能力，它不支持简单便捷的内存分配方式。比如，内核一般不能睡眠。此外，处理内存分配错误对内核来说也绝非易事。正是由于这种限制，再加上内存分配机制不能太复杂，所以在内核中获取内存要比在用户空间复杂得多。不过，从程序开发者角度来看，也不是说内核的内存分配就困难得不得了，只是在用户空间中的内存分配不太一样而已。<br>本章讨论的是在内核之中获取内存的方法。在深入探究实际的分配接口之前，我们需要理解内核是如何管理内存的。</p>
+<span id="more"></span>
+
+<h1 id="页"><a href="#页" class="headerlink" title="页"></a>页</h1><p>内核把物理页作为内存管理的基本单位。尽管处理器的最小可寻址单位通常为字（甚至是字节），但是，内存管理单元（MMU，管理内存并把物理内存转换为虚拟内存的硬件）通常以页为单位进行处理。正因为如此，MMU以页（page）大小为单位来管理系统中的页表（这也是页表名的来由）。从虚拟内存的角度来看，页就是最小单位。<br>在第19章我们将会看到，体系结构不同，支持的页的大小也不尽相同，还有些体系结构甚至支持几种不同的页大小。大多数32位体系结构支持4KB的页，而64位体系结构一般会支持8KB的页。这就意味着，在支持4KB页大小并有1GB物理内存的机器上，物理内存会被划分为262144个页。<br>内核用<code>struct page</code>结构表示系统中的每个物理页，该结构位于&lt;linux&#x2F;mm_types.h&gt;中—-我简化了定义，去除了两个容易混淆我们讨论主题的联合结构体：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">page</span> &#123;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>           flags;</span><br><span class="line">    <span class="type">atomic_t</span>                _count;</span><br><span class="line">    <span class="type">atomic_t</span>                _mapcount;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>           private;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">address_space</span>    *<span class="title">mapping</span>;</span></span><br><span class="line">    <span class="type">pgoff_t</span>                 index;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>        <span class="title">lru</span>;</span></span><br><span class="line">    <span class="type">void</span>                    *virtual;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>让我们看一下其中比较重要的域。flag域用来存放页的状态。这些状态包括页是不是脏的，是不是被锁定在内存中等。flag的每一位单独表示一种状态，所以它至少可以同时表示出32种不同的状态。这些标志定义在&lt;linux&#x2F;page-flags&gt;中。<br>_count域存放页的引用计数—-也就是这一页被引用了多少次。当计数值变为-1时，就说明当前内核并没有引用这一页，于是，在新的分配中就可以使用它。内核代码不应当直接检查该域，而是调用page_count()函数检查，该函数唯一的参数就是page结构。当页空闲时，尽管该结构内部的_count值是负的，但是对page_count()函数而言，返回0表示页空闲，返回一个正整数表示页在使用。一个页可以由页缓存使用（这时，mapping域指向和这个页关联的address_space对象），或者作为私有数据（由private指向），或者作为进程页表中的映射。<br>virtual域是页的虚拟地址。通常情况下，它就是页在虚拟内存中的地址。有些内存（即所谓的高端内存）并不永久地映射到内核地址空间上。在这种情况下，这个域的值为NULL，需要的时候，必须动态地映射这些页。稍后我们将谈论高端内存。<br>必须要理解的一点是page结构与物理页有关，而并非与虚拟页相关。因此，该结构对页的描述只是短暂的。即使页中所包含的数据继续存在，由于交换等原因，它们也可能并不再和同一个page结构相关联。内核仅仅用这个数据结构来描述当前时刻在相关物理页中存放的东西。这个数据结构的目的在于描述物理内存本身，而不是描述包含在其中的数据。<br>内核用这一结构来管理系统中所有的页，因为内核需要直到一个页是否空闲（也就是页有没有被分配）。如果页已经被分配，内核还需要直到谁拥有这个页。<code>拥有者可能是用户空间进程、动态分配的内核数据、静态内核代码或页高速缓存等</code>。<br>系统中的每个物理页都要分配一个这样的结构体，开发者常常对此感到惊讶。他们会想“这得浪费多少内存呀”！让我们来算算对所有这些页都这么做，到底要消耗多少内存。就算<code>struct page</code>占40字节的内存吧，假定系统的物理页为8KB大小，系统有4GB物理内存。那么，系统中共有页面524288个，而描述这么多页面的page结构体消耗的内存只不过是20MB：也许绝对值不小，而相对系统4GB内存而言，仅是很小的一部分罢了。因此，要管理系统中这么多物理页面，这个代价并不算太高。</p>
+<h1 id="区"><a href="#区" class="headerlink" title="区"></a>区</h1><p>由于硬件的限制，内核并不能对所有的页一视同仁。有些页位于内存中特定的物理地址上，所以不能将其用于一些特定的任务。由于存在这种限制，所以内核把页划分为不同的区（zone）。内核使用区对具有相似特性的页进行分组。Linux必须处理如下两种由于硬件存在缺陷而引起的内存寻址问题：</p>
+<ol>
+<li>一些硬件只能用某些特定的内存地址来执行DMA（直接内存访问）。</li>
+<li>一些体系结构的内存的物理寻址范围比虚拟寻址范围大得多。这样，就有一些内存不能永久地映射到内核空间上。</li>
+</ol>
+<p>因为存在这些制约条件，Linux主要使用了四种区：</p>
+<ol>
+<li>ZONE_DMA—-这个区包含的页能用来执行DMA操作。</li>
+<li>ZONE_DMA32—-和ZONE_DMA类似，该区包含的页面可用来执行DMA操作；而和ZONE_DMA不同之处在于，这些页面只能被32位设备访问。在某些体系结构中，该区将比ZONE_DMA更大。</li>
+<li>ZONE_NORMAL—-这个区包含的都是能正常映射的页。</li>
+<li>ZONE_HIGHMEM—-这个区包含“高端内存”，其中的页并不能永久地映射到内核地址空间。</li>
+</ol>
+<p>这些区（还有两种不大重要的）在&lt;linux&#x2F;mmzone.h&gt;中定义。<br>区的实际使用和分布是与体系结构相关的。例如，某些体系结构在内存的任何地址上执行DMA都没有问题。在这些体系结构中，ZONE_DMA为空，ZONE_NORMAL就可以直接用于分配。与此相反，在x86体系结构上，ISA设备就不能在整个32位的地址空间中执行DMA，因为ISA设备只能访问物理内存的前16MB。因此，ZONE_DMA在x86上包含的页都在0-16MB的内存范围里。<br>ZONE_HIGHMEM的工作方式也差不多。能否直接映射取决于体系结构。在32位x86系统上，ZONE_HIGHMEM为高于896MB的所有物理内存。在其他体系结构上，由于所有内存都被直接映射，所以ZONE_HIGHMEM为空。ZONE_HIGHMEM所在的内存就是所谓的高端内存（high memory）。系统的其余内存就是所谓的低端内存（low memory）。<br>前两个区各取所需后，剩余的就由ZONE_NORMAL区独享了。在x86上，ZONE_NORMAL是从16MB到896MB的所有物理内存。在其他的体系结构上，ZONE_NORMAL是所有的可用物理地址。下表是每个区及其在x86-32上所占的页的列表。</p>
+<table>
+<thead>
+<tr>
+<th>区</th>
+<th>描述</th>
+<th>物理内存</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ZONE_DMA</td>
+<td>DMA使用的页</td>
+<td>&lt;16MB</td>
+</tr>
+<tr>
+<td>ZONE_NORMAL</td>
+<td>正常可寻址的页</td>
+<td>16-896MB</td>
+</tr>
+<tr>
+<td>ZONE_HIGHMEM</td>
+<td>动态映射的页</td>
+<td>&gt;896MB</td>
+</tr>
+</tbody></table>
+<p>Linux把系统的页划分为区，形成不同的内存池，这样就可以根据用途进行分配了。例如，ZONE_DMA内存池让内核有能力为DMA分配所需的内存。如果需要这样的内存，那么，内核就可以从ZONE_DMA中按照请求的数目取出页。注意，区的划分没有任何物理意义，这只不过是内核为了管理而采取的一种逻辑上的分组。<br>某些分配可能需要从特定的区中获取页，而另外一些分配则可以从多个区中获取页。比如，尽管用于DMA的内存必须从ZONE_DMA中进行分配，但是一般用途的内存却既能从ZONE_DMA分配，也能从ZONE_NORMAL分配，不过不可能同时从两个区分配，因为分配是不能跨区界限的。当然，内核更希望一般用途的内存从常规区分配，这样能节省ZONE_DMA中的页，保证满足DMA的使用需求。但是，如果可供分配的资源不够用了（如果内存已经变得很少了），那么，内核就会占用其他可用区的内存。<br>不是所有的体系结构都定义了全部区，有些64位的体系结构，如Intel的x86-64体系结构可以映射和处理64位的内存空间，所以x86-64没有ZONE_HIGHMEM区，所有的物理内存都处于ZONE_DMA和ZONE_NORMAL区。<br>每个区都用<code>struct zone</code>表示，在&lt;linux&#x2F;mmzone.h&gt;中定义：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">zone</span> &#123;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               watermark[NR_WMARK];</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               lowmem_reserve[MAX_NR_ZONES];</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">per_cpu_pageset</span>      <span class="title">pageset</span>[<span class="title">NR_CPUS</span>];</span></span><br><span class="line">    <span class="type">spinlock_t</span>                  lock;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">free_area</span>            <span class="title">free_area</span>[<span class="title">MAX_ORDER</span>];</span></span><br><span class="line">    <span class="type">spinlock_t</span>                  lru_lock;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zone_lru</span> &#123;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>        <span class="title">list</span>;</span></span><br><span class="line">        <span class="type">unsigned</span> <span class="type">long</span>           nr_saved_scan;</span><br><span class="line">    &#125;lru[NR_LRU_LISTS];         </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zone_reclaim_stat</span>    <span class="title">reclaim_stat</span>;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               pages_scanned;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               flags;</span><br><span class="line">    <span class="type">atomic_long_t</span>               vm_stat[NR_VM_ZONE_STAT_ITEMS];</span><br><span class="line">    <span class="type">int</span>                         prev_priority;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span>                inactive_ratio;</span><br><span class="line">    <span class="type">wait_queue_head_t</span>           *wait_table;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               wait_table_hash_nr_entries;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               wait_table_bits;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">pglist_data</span>          *<span class="title">zone_pgdat</span>;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               zone_start_pfn;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               spanned_pages;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               present_pages;</span><br><span class="line">    <span class="type">const</span> <span class="type">char</span>                  *name;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>这个结构体很大，但是，系统中只有三个区，因此，也只有三个这样的结构。让我们看一下其中一些重要的域。<br>lock域是一个自旋锁，它防止该结构被并发访问。注意，这个域只保护结构，而不保护驻留在这个区中的所有页。没有特定的锁来保护单个页，但是，部分内核可以锁住在页中驻留的数据。<br>watermark数值持有该区的最小值、最低和最高水位值。内核使用水位为每个内存区设置合适的内存消耗基准。该水位随空闲内存的多少而变化。<br>name域是一个以NULL结束的字符串表示这个区的名字。内核启动期间初始化这个值，其代码位于<code>mm/page_alloc.c</code>中。三个区的名字分别为“DMA”、“Normal”和“HighMem”。</p>
+<h1 id="获得页"><a href="#获得页" class="headerlink" title="获得页"></a>获得页</h1><p>我们已经对内核如果管理内存（页、区等）有所了解了，现在让我们看一下内核实现的接口，我们正是通过这些接口在内核内分配和释放内存的。<br>内核提供了一种请求内存地底层机制，并提供了对它进行访问的几个接口。所有这些接口都以页为单位分配内存，定义于&lt;linux&#x2F;gfp.h&gt;中。最核心的函数是：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> page *<span class="title function_">alloc_pages</span><span class="params">(<span class="type">gfp_t</span> gfp_mask,<span class="type">unsigned</span> <span class="type">int</span> order)</span>;</span><br></pre></td></tr></table></figure>
+<p>该函数分配2的order（1 &lt;&lt; order）次方个连续的物理页，并返回一个指针，该指针指向第一个页page结构体；如果出错，就返回NULL。在12.4节中我们再研究gft_t类型和gft_mask参数，你可以用下面这个函数把给定的页转换为它的逻辑地址：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> *<span class="title function_">page_address</span><span class="params">(<span class="keyword">struct</span> page *page)</span>;</span><br></pre></td></tr></table></figure>
+<p>该函数返回一个指针，指向给定物理页当前所在的逻辑地址。如果你无须用到<code>struct page</code>，你可以调用：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> __get_free_pages(<span class="type">gfp_t</span> gfp_mask,<span class="type">unsigned</span> <span class="type">int</span> order);</span><br></pre></td></tr></table></figure>
+<p>这个函数与alloc_pages()作用相同，不过它直接返回所请求的第一个页的逻辑地址。因为页是连续的，所以其他页也会紧随其后。<br>如果你只需要一页，就可以用下面两个封装好的函数，它能让你少敲几下键盘：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> page *<span class="title function_">alloc_page</span><span class="params">(<span class="type">gfp_t</span> gfp_mask)</span>;</span><br><span class="line"><span class="type">unsigned</span> <span class="type">long</span> __get_free_page(<span class="type">gfp_t</span> gfp_mask);</span><br></pre></td></tr></table></figure>
+<p>这两个函数与其兄弟函数工作方式相同，只不过传递给order的值为0。</p>
+<h2 id="获得填充为0的页"><a href="#获得填充为0的页" class="headerlink" title="获得填充为0的页"></a>获得填充为0的页</h2><p>如果你需要让返回的页的内容全为0，请用下面的这个函数：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> <span class="title function_">get_zeroed_page</span><span class="params">(<span class="type">unsigned</span> <span class="type">int</span> gfp_mask)</span>;</span><br></pre></td></tr></table></figure>
+<p>这个函数与__get_free_page()工作方式相同，只不过把分配好的页都填充成了0—-字节中的每一位都要取消设置。如果分配的页是给用户空间的，这个函数就非常有用了。虽说分配好的页应该包含的都是随机产生的垃圾信息，但其实这些信息可能并不是完全随机的—-它很可能“随机地”包含某些敏感数据。用户空间的页在返回之前，所有数据必须填充为0，或做其他清理工作，在保障系统安全这一点上，我们绝不妥协。下表是所有底层的页分配方法的列表。</p>
+<p><strong>低级页分配方法</strong></p>
+<table>
+<thead>
+<tr>
+<th>标志</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>alloc_page(gfp_mask)</td>
+<td>只分配一页，返回指向页结构的指针</td>
+</tr>
+<tr>
+<td>alloc_pages(gfp_mask,order)</td>
+<td>分配2的order次方个页，返回指向第一页页机构的指针</td>
+</tr>
+<tr>
+<td>__get_free_page(gfp_mask)</td>
+<td>只分配一页，返回指向其逻辑地址的指针</td>
+</tr>
+<tr>
+<td>__get_free_pages(gfp_mask,order)</td>
+<td>分配2的order次方个页，返回指向第一页逻辑地址的指针</td>
+</tr>
+<tr>
+<td>get_zeroed_page(gfp_mask)</td>
+<td>只分配一页，让其内容填充0，返回指向其逻辑地址的指针</td>
+</tr>
+</tbody></table>
+<h2 id="释放页"><a href="#释放页" class="headerlink" title="释放页"></a>释放页</h2><p>当你不再需要页时可以用下面的函数释放它们：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> __free_pages(<span class="keyword">struct</span> page *page,<span class="type">unsigned</span> <span class="type">int</span> order);</span><br><span class="line"><span class="type">void</span> <span class="title function_">free_pages</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> addr,<span class="type">unsigned</span> <span class="type">int</span> order)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">free_page</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> addr)</span>;</span><br></pre></td></tr></table></figure>
+<p>释放页时要谨慎，只能释放属于你的页。传递了错误的<code>struct page</code>或地址，用了错误的order值，这些都可能导致系统崩溃。请记住，内核是完全信赖自己的。这点与用户空间不同，如果你有非法操作，内核会开开心心地把自己挂起来，停止运行。<br>让我们看一个例子。其中，我们想得到8个页：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> page;</span><br><span class="line"></span><br><span class="line">page = __get_free_pages(GFP_KERNEL,<span class="number">3</span>);</span><br><span class="line"><span class="keyword">if</span>(!page) &#123;</span><br><span class="line">    <span class="comment">//没有足够的内存，你必须处理这种错误</span></span><br><span class="line">    <span class="keyword">return</span> -ENOMEM;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//page 现在指向8个连续页的第1个页的地址</span></span><br></pre></td></tr></table></figure>
+<p>在此，我们使用完这8个页之后释放它们：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">free_page(page,<span class="number">3</span>);</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">    页已经被释放了，我们不应该再访问存放在“page”中的地址了</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+<p>GFP_KERNEL参数是gfp_mask标志中的一个例子。前面我们已经简要讨论过了。<br>调用__get_free_pages()之后要注意进行错误检查。内核分配可能失败，因此你的代码必须进行检查并做相应的处理。这意味在此之前，你所做的所有工作可能前功尽弃，甚至还需要回归到原来的状态。正因为如此，在程序开始时就先进行内存分配是很有意义的，这能让错误处理得容易一点。如果你不这么做，那么在你想要分配内存的时候如果失败了，局面可能就难以控制了。<br>在你需要以页为单位的一族连续物理页时，尤其是在你只需要一两页时，这些低级页函数就很有用。对于常用的以字节为单位的分配来说，内核提供的函数是kmalloc()。</p>
+<h1 id="kmalloc"><a href="#kmalloc" class="headerlink" title="kmalloc()"></a>kmalloc()</h1>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux-Kernel/" rel="tag"># Linux Kernel</a>
+              <a href="/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" rel="tag"># 操作系统</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/11/23/%E5%AE%9A%E6%97%B6%E5%99%A8%E5%92%8C%E6%97%B6%E9%97%B4%E7%AE%A1%E7%90%86/" rel="prev" title="定时器和时间管理">
+                  <i class="fa fa-chevron-left"></i> 定时器和时间管理
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Nibil</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">617k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">9:21</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.0/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+</body>
+</html>
