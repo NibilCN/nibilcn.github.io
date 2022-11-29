@@ -16,6 +16,25 @@
       </tags>
   </entry>
   <entry>
+    <title>何谓硬解码和软解码</title>
+    <url>/2022/08/05/%E4%BD%95%E8%B0%93%E7%A1%AC%E8%A7%A3%E7%A0%81%E5%92%8C%E8%BD%AF%E8%A7%A3%E7%A0%81/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>关于“硬解码”与“软解码”。</p>
+<span id="more"></span>
+<p>软解码和硬解码的区别：</p>
+<ol>
+<li>软解码使用CPU进行解码。</li>
+<li>硬解码使用非CPU进行解码，如GPU、专用的DSP、FPGA、ASIC等芯片。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>何谓硬解码和软解码</category>
+      </categories>
+      <tags>
+        <tag>多媒体编解码</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>嵌入式Linux开发概述</title>
     <url>/2022/08/04/%E5%B5%8C%E5%85%A5%E5%BC%8FLinux%E5%BC%80%E5%8F%91%E6%A6%82%E8%BF%B0/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《嵌入式Linux应用完全开发手册》第1篇第1章总结归纳</p>
@@ -72,25 +91,6 @@
       </categories>
       <tags>
         <tag>嵌入式Linux</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>何谓硬解码和软解码</title>
-    <url>/2022/08/05/%E4%BD%95%E8%B0%93%E7%A1%AC%E8%A7%A3%E7%A0%81%E5%92%8C%E8%BD%AF%E8%A7%A3%E7%A0%81/</url>
-    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>关于“硬解码”与“软解码”。</p>
-<span id="more"></span>
-<p>软解码和硬解码的区别：</p>
-<ol>
-<li>软解码使用CPU进行解码。</li>
-<li>硬解码使用非CPU进行解码，如GPU、专用的DSP、FPGA、ASIC等芯片。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>学习</category>
-        <category>何谓硬解码和软解码</category>
-      </categories>
-      <tags>
-        <tag>多媒体编解码</tag>
       </tags>
   </entry>
   <entry>
@@ -2789,98 +2789,6 @@ kgdb_io_opsj结构将在<code>kernel/kgdb.c</code>中被用到，这个结构封
       </tags>
   </entry>
   <entry>
-    <title>LCD和USB驱动程序移植</title>
-    <url>/2022/10/19/LCD%E5%92%8CUSB%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E7%A7%BB%E6%A4%8D/</url>
-    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>嵌入式Linux设备驱动开发之LCD和USB驱动程序移植</p>
-<p>《嵌入式Linux应用完全开发手册》第4篇第24章总结归纳</p>
-<span id="more"></span>
-
-<h1 id="本章目标"><a href="#本章目标" class="headerlink" title="本章目标"></a>本章目标</h1><ol>
-<li>了解TTY层下LCD和USB键盘驱动程序的框架</li>
-<li>掌握移植LCD驱动程序的方法</li>
-<li>使用LCD和USB设备</li>
-</ol>
-<h1 id="LCD驱动程序移植"><a href="#LCD驱动程序移植" class="headerlink" title="LCD驱动程序移植"></a>LCD驱动程序移植</h1><h2 id="LCD和USB键盘驱动程序框架"><a href="#LCD和USB键盘驱动程序框架" class="headerlink" title="LCD和USB键盘驱动程序框架"></a>LCD和USB键盘驱动程序框架</h2><h3 id="框架概述"><a href="#框架概述" class="headerlink" title="框架概述"></a>框架概述</h3><p>具备人机交互功能的串口可以作为控制台和终端，同样，LCD和键盘组合起来也可以。<br>对LCD的操作可以像串口一样，通过终端设备层的封装（&#x2F;dev&#x2F;ttyx设备）来输出内容，也可以通过frame buffer（&#x2F;dev&#x2F;fbx）直接再显存上绘制图像。<br>frame buffer即帧缓冲，是一种独立于硬件的抽象图形设备，它使得应用程序可以通过一组定义良好的接口访问各类图形设备，不需要了解底层硬件细节。从用户的观点来看，frame buffer设备与&#x2F;dev目录下其他设备没有区别，通过&#x2F;dev&#x2F;fbx设备文件来访问它（fb0表示第一个frame buffer设备、fb1表示第二个、…）。<br>frame buffer设备提供了一些ioctl接口来查询、设置图形设备的属性，比如分辨率、像素位宽等，另外，它属于“普通的”内存设备，类似&#x2F;dev&#x2F;mem：可以读（read）、写（write）、移动访问位置（seek）以及将这块内存映射给用户（mmap）。不同的是frame buffer的内存不是所有的内存，而是显卡专用的内存。应用程序可以直接更改frame buffer内存中的数据，效果立刻就能在显示器中看到。<br>&#x2F;de&#x2F;&#x2F;tty1等终端设备文件通过显示驱动程序和键盘驱动程序（还有其他输入设备，比如触摸屏）为它们提供输出、输入功能。<br>TTY和frame buffer驱动程序的框架如下图所示，输入设备以USB键盘为例：<br><img src="/2022/10/19/LCD%E5%92%8CUSB%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E7%A7%BB%E6%A4%8D/1.jpeg" alt="img not found"><br><code>drivers/char/vt.c</code>用来支持显示器&#x2F;键盘组成的终端设备，之所以被称为“虚拟终端”，是因为可以在一个物理终端设备上运行多个“虚拟终端”（也叫虚拟控制台），比如可以使用第一个虚拟终端来显示系统信息，使用第2个虚拟终端来运行文本模式程序，第3个虚拟终端来运行图形程序。它们可以同时运行，使用一些组合键可以切换到某个虚拟终端上。<br>虚拟终端层管理着这些虚拟终端，比如为它们分配缓冲区、切换虚拟终端时把它的内容输出到显示器、键盘有输入时把数据填入到当前终端的缓冲区中。它向上提供了封装好的接口，向下通过调用显示器&#x2F;键盘的接口完成输入输出功能。</p>
-<ol>
-<li>显示驱动程序<br><code>drivers/console/fbcon.c</code>文件向上提供了一个很重要的数据结构fb_con，所有的输出都是通过fb_con中的成员函数来实现的，bitblit.c、font.c也都处于<code>drivers/console</code>目录下，它们和<code>drivers/video/fbmem.c</code>一起，实现fb_con结构中的函数。另外，fbmem.c是frame buffer驱动程序，它向应用层提供&#x2F;dev&#x2F;fbx设备的访问接口，应用程序可以通过它绘制图形。<br><code>drivers/video/s3c2410fb.c</code>文件是架构相关的代码，它实现LCD控制器的初始化、向fbmem.c注册frame buffer设备，并提供一些与架构相关的函数，比如设置分辨率、像素位宽等需要设置操作寄存器的函数。</li>
-<li>键盘驱动程序<br><code>drivers/input/input.c</code>表示“输入设备”，有键盘、鼠标等。<code>drivers/keyboard.c</code>是键盘驱动程序的封装，在它的下边，可以是一般的键盘，也可以是符合HID规范的键盘。HID是英文“Human Interface Device”得缩写，它通常指USB-HID规范，但是也有其他类型的遵循HID规范的设备（比如蓝牙键盘、蓝牙鼠标）。所以<code>drivers/hid-core.c</code>、<code>hid-input.c</code>两个文件将HID规范的共性提炼出来，它们的下面是各类具体实现，比如USB的<code>drivers/hid/hidusb/hid-core.c</code>、<code>hid-quirks.c</code>等。</li>
-</ol>
-<h3 id="操作实例"><a href="#操作实例" class="headerlink" title="操作实例"></a>操作实例</h3><p>下面以几个操作的函数调用过程来理解TTY和frame buffer驱动程序的层次结构。注意：这只是为了在阅读内核源码时，给读者提供一些函数调用间的脉络关系。刚接触某类驱动时，了解各函数、结构间的调用关系是一件困难的事情。</p>
-<ol>
-<li>注册frame buffer设备时，显示LOGO的过程<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">s3c2410fb_probe(video/s3c2410fb.c) -&gt;</span><br><span class="line">     register_framebuffer(fbmem.c) -&gt;</span><br><span class="line">         fb_info-&gt;node = i;<span class="comment">//registered_fb[i]为空项，本例中i=0</span></span><br><span class="line">         registered_fb[i] = fb_info;</span><br><span class="line">         fb_notifier_call_chain(fb_notify.c) -&gt;<span class="comment">//它会调用fbcon_event_notify(fbcon.c)</span></span><br><span class="line">             fbcon_fb_registered(video/console/fbcon.c)</span><br><span class="line">                 info_idx = idx<span class="comment">//即info-&gt;node，值为上面的i</span></span><br><span class="line">                 fbcon_takeover(<span class="number">1</span>)(video/console/fbcon.c) -&gt;</span><br><span class="line">                     con2fb_map[i] = info_idx;<span class="comment">//i=0，info_idx=0</span></span><br><span class="line">                     take_over_console(<span class="type">char</span>/vt.c) -&gt;</span><br><span class="line">                         register_con_driver(<span class="type">char</span>/vt.c) -&gt;</span><br><span class="line">                             csw-&gt;con_startup(...) -&gt;<span class="comment">//即fbcon_startup(video/console/fbcon.c)</span></span><br><span class="line">                                 info = registered_fb[info_idx];</span><br><span class="line">                                 info-&gt;fbops-&gt;fb_open(...)(video/s3c2410fb.c)</span><br><span class="line">                         bind_con_driver(<span class="type">char</span>/vt.c) -&gt;</span><br><span class="line">                             visual_init(<span class="type">char</span>/vt.c) -&gt;</span><br><span class="line">                                 vc-&gt;vc_sw-&gt;con_init <span class="comment">//即fbcon_init</span></span><br><span class="line">                                 fbcon_init(video/console/fbcon.c) -&gt;</span><br><span class="line">                                 <span class="comment">//以下准备LOGO</span></span><br><span class="line">                                 fbcon_prepare_logo(video/console/fbcon.c) -&gt;</span><br><span class="line">                                     fb_prepare_logo(video/fbmem.c) -&gt;</span><br><span class="line">                                         fb_logo.logo = fb_find_logo(depth);<span class="comment">//logo.c</span></span><br><span class="line">                             <span class="comment">//打印Console：swicthing to colour frame buffer device 30x40</span></span><br><span class="line">                             update_screen(vc);(include/linux/vt_kern.h) -&gt;</span><br><span class="line">                             redraw_screen(<span class="type">char</span>/vt.c) -&gt;</span><br><span class="line">                                 vc-&gt;vc_sw-&gt;con_switch(vc);-&gt;<span class="comment">//即fbcon_switch(fbcon.c)</span></span><br><span class="line">                                     fb_show_logo(video/fbmem.c)<span class="comment">//显示LOGO</span></span><br></pre></td></tr></table></figure></li>
-<li>对&#x2F;dev&#x2F;ttyx调用write函数时的过程<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">tty_write(<span class="type">char</span>/tty_io.c)-&gt;</span><br><span class="line"> ld = tty_ldisc_ref_wait(tty)<span class="comment">//它就是char/n_tty.c中的tty_ldisc_N_TTY</span></span><br><span class="line"> do_tty_write(ld-&gt;write,tty,file,buf,count)(<span class="type">char</span>/tty_io.c)-&gt;</span><br><span class="line">     write_chan(就是上面的ld-&gt;write,<span class="type">char</span>/n_tty.c中tty_ldisc_N_TTY的成员函数)-&gt;</span><br><span class="line">         tty-&gt;driver-&gt;write(即con_write，<span class="type">char</span>/vt.c)-&gt;</span><br><span class="line">             do_con_write(<span class="type">char</span>/vt.c)-&gt;</span><br><span class="line">                 vc-&gt;vc_sw-&gt;con_putcs(即fbcon_putcs，video/console/fbcon.c)-&gt;</span><br><span class="line">                     ops-&gt;putcs(即bit_putcs,video/console/bitblit.c)-&gt;</span><br><span class="line">                         dst = fb_get_buffer_offset(video/fbmem.c)<span class="comment">//获取要写入的显存位置</span></span><br><span class="line">                         bit_putcs_aligned/bit_putcs_unaligned(video/console/bitblit.c)</span><br><span class="line">                             src = vc-&gt;vc_font.data + (src_readw(s++)&amp;charmask)*cellsize;<span class="comment">//获得字符的点阵</span></span><br><span class="line">                             __fb_pad_aligned_buffer(fb.h)<span class="comment">//将点阵写入显存</span></span><br></pre></td></tr></table></figure>
-在使用&#x2F;dev&#x2F;ttyx作为控制台的shell中，运行某个程序时，如果里面有“printf(“hello world!”)”字样的语句，它会调用到内核的tty_write函数。<br>然后会调用行规程的write_chan函数，它又会调用“tty-&gt;driver-&gt;write”，对于串口，它是<code>drivers/serial/serial_core.c</code>中的uart_write函数，它直接输出ASCII字符；对于显示器，它是<code>drivers/char/vt.c</code>中的con_write函数，它更复杂。在LCD显示器上显示字符时，先要根据这些字符得到它们的点阵，然后再将它们画出来。<br><code>drivers/video/console/fbcon.c</code>中的fbcon_putcs函数通过<code>drivers/video/console/bitblit.c</code>、<code>drivers/video/fbmem.c</code>提供的一些函数来获得点阵、写到显存中去。其中的“vc-&gt;vc_font.data”指向某个字库，以字符为索引即可找到它的点阵。在<code>drivers/video/console/fonts.c</code>文件中定义了一个fonts数组，每个表项是一个字库，比如font_vga_8x8、font_vga_8x16等。在<code>devices/video/fbcon.c</code>中初始化frame buffer控制台时，会把vc-&gt;vc_font.data指向某个字库。</li>
-<li>USB键盘按下时的函数调用过程<br>与串口相似，键盘的读取以中断来驱动。以USB键盘为例，调用过程如下：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">hid_irq_in(hid/usbhid/hid-core.c) -&gt;</span><br><span class="line">     hid_input_report(hid/hid-core.c) -&gt;</span><br><span class="line">         hid_input_field(hid/hid-core.c) -&gt;</span><br><span class="line">             hid_process_event(hid/hid-core.c) -&gt;</span><br><span class="line">                 hidinput_hid_evenet(hid/hid-input) -&gt;</span><br><span class="line">                     input_event(input/input.c) -&gt;</span><br><span class="line">                         dev-&gt;event(...)</span><br><span class="line">                         handle-&gt;handler-&gt;event，即kbd_event(<span class="type">char</span>/keyboard.c) -&gt;</span><br><span class="line">                             kbd_rawcode/kbd_keycode(<span class="type">char</span>/keyboard.c) -&gt;</span><br><span class="line">                                 put_queue(vc,data)(<span class="type">char</span>/keyboard.c) -&gt;<span class="comment">//数据放入终端缓冲区</span></span><br><span class="line">                                     tty_insert_flip_char(include/linux/tty_flip.h)<span class="comment">//放数据</span></span><br><span class="line">                                     con_schedule_flip(kbd_kern.h)<span class="comment">//唤醒等待数据的进程</span></span><br></pre></td></tr></table></figure>
-hid_irq_in是USB中断传输方式的中断处理函数，当键盘被按下时，它导致后续的一系列函数被调用，与图24.1对应，它从底层的<code>drivers/hid/usbhid/hid-core.c</code>一直向上调用到<code>drivers/input/input.c</code>中的input_event函数，接着input_event函数根据调用<code>drivers/char/keyboard.c</code>注册的处理函数将数据放入虚拟终端设备的缓冲区中，然后等待数据的进程。</li>
-</ol>
-<h2 id="S3C2410-x2F-S3C2440-LCD控制器驱动程序移植"><a href="#S3C2410-x2F-S3C2440-LCD控制器驱动程序移植" class="headerlink" title="S3C2410&#x2F;S3C2440 LCD控制器驱动程序移植"></a>S3C2410&#x2F;S3C2440 LCD控制器驱动程序移植</h2><p>从图24.1可知，架构相关的代码为<code>drivers/video/s3c2410fb.c</code>，移植的思想是一样的：先确定LCD控制器所用的资源，然后把它们加入平台设备结构，最后修改代码是这些资源可用。<br>硬件连线图如下图所示：<br><img src="/2022/10/19/LCD%E5%92%8CUSB%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E7%A7%BB%E6%A4%8D/2.jpeg" alt="img not found"></p>
-<h2 id="平台设备结构"><a href="#平台设备结构" class="headerlink" title="平台设备结构"></a>平台设备结构</h2><p>LCD控制器的平台设备在<code>arch/arm/plat-s3c24xx/devs.c</code>中定义，它所用的资源都是固定的，不需要任何改动。它的平台设备结构定义如下：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* LCD Controller */</span></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">resource</span> <span class="title">s3c_lcd_resource</span>[] =</span> &#123;</span><br><span class="line">    [<span class="number">0</span>] = &#123;</span><br><span class="line">        .start = S3C24XX_PA_LCD,</span><br><span class="line">        .end = S3C24XX_PA_LCD + S3C24XX_SZ_LCD - <span class="number">1</span>,</span><br><span class="line">        .flag = IORESOURCE_MEM,</span><br><span class="line">    &#125;,</span><br><span class="line">    [<span class="number">1</span>] = &#123;</span><br><span class="line">        .start = IRQ_LCD,</span><br><span class="line">        .end = IRQ_LCD,</span><br><span class="line">        .flag = IORESOURCE_IRQ,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> u64 s3c_device_lcd_dmamask = <span class="number">0xffffffff</span>UL;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">platform_device</span> <span class="title">s3c_device_lcd</span> =</span> &#123;</span><br><span class="line">    .name = <span class="string">&quot;s3c2410-lcd&quot;</span>,</span><br><span class="line">    .id = <span class="number">-1</span>,</span><br><span class="line">    .num_resources = ARRAY_SIZE(s3c_lcd_resource),</span><br><span class="line">    .resource = s3c_lcd_resource,</span><br><span class="line">    .dev = &#123;</span><br><span class="line">        .dma_mask = &amp;s3c_device_lcd_dmamask,</span><br><span class="line">        .coherent_dma_mask = <span class="number">0xffffffff</span>UL,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<p><code>s3c_device_lcd</code>结构，已经加入了S3C2410、S3C2440开发板的设备列表中了。</p>
-<ol>
-<li><code>arch/arm/mach-s3c2410/mach-smdk2410.c</code><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">platform_device</span> *<span class="title">smdk2410_devices</span>[] __<span class="title">initdata</span> =</span> &#123;</span><br><span class="line">     ...</span><br><span class="line">     &amp;s3c_device_lcd,</span><br><span class="line">     ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></li>
-<li><code>arch/arm/mach-s3c2440/mach-smdk2440.c</code><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">platform_device</span> *<span class="title">smdk2440_devices</span>[] __<span class="title">initdata</span> =</span> &#123;</span><br><span class="line">     ...</span><br><span class="line">     &amp;s3c_device_lcd,</span><br><span class="line">     ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-而LCD控制器驱动程序<code>drivers/video/s3c2410fb.c</code>的入口函数为：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">platform_driver</span> <span class="title">s3c2410fb_driver</span> =</span> &#123;</span><br><span class="line">	.probe		= s3c2410fb_probe,</span><br><span class="line">	.remove		= s3c2410fb_remove,</span><br><span class="line">	.suspend	= s3c2410fb_suspend,</span><br><span class="line">	.resume		= s3c2410fb_resume,</span><br><span class="line">	.driver		= &#123;</span><br><span class="line">		.name	= <span class="string">&quot;s3c2410-lcd&quot;</span>,</span><br><span class="line">		.owner	= THIS_MODULE,</span><br><span class="line">	&#125;,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> __devinit <span class="title function_">s3c2410fb_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">return</span> platform_driver_register(&amp;s3c2410fb_driver);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-平台设备s3c_device_lcd和平台驱动s3c2410fb_driver的名字都是“s3c2410-lcd”，所以注册了s3c2410fb_driver之后，它的s3c2410fb_probe函数将被调用来设置LCD控制器。</li>
-</ol>
-<h3 id="底层驱动代码分析及修改"><a href="#底层驱动代码分析及修改" class="headerlink" title="底层驱动代码分析及修改"></a>底层驱动代码分析及修改</h3><p>s3c2410fb_probe函数完成初始化LCD控制器、注册中断处理函数、注册frame buffer设备等工作，它的流程图如下图所示：<br><img src="/2022/10/19/LCD%E5%92%8CUSB%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E7%A7%BB%E6%A4%8D/3.jpeg" alt="img not found"><br>这个函数中，与单板相关的就是其中的mach-info结构。它是平台设备s3c_device_lcd结构中的dev.platform_data成员，读者可以查看s3c2410fb_init_registers函数来了解它的功能。但是在前面看到的s3c_device_lcd结构中，并没有指定这个成员。它在其他函数中设置；对于S3C2440，单板初始化函数smdk2440_machine_init调用s3c24xx_fb_set_platdata函数来设置；对于S3C2410，没有设置。<br>smdk2440_machine_init函数在<code>arch/arm/mach-s3c2440/mach-smdk2440.c</code>中，如下所示：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> __init <span class="title function_">smdk2440_machine_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    s3c24xx_fb_set_platdata(&amp;smdk2440_lcd_cfg);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>smdk2440_lcd_cfg结构表示LCD控制器的一些配置，比如分辨率、时间特性等。<br>s3c24xx_fb_set_platdata函数在<code>arch/arm/plat-s3c24xx/devs.c</code>中，它直接将参数smdk2440_lcd_cfg赋给设置平台设备s3c_device_lcd结构中的dev.platform_data成员。代码如下：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> __init <span class="title function_">s3c24xx_fb_set_platdata</span><span class="params">(<span class="keyword">struct</span> s3c2410fb_mach_info *pd)</span></span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="built_in">memcpy</span>(npd,pd,<span class="keyword">sizeof</span>(*npd));</span><br><span class="line">    s3c_device_lcd.dev.platform_data = npd;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>所以，对于S3C2440，需要修改smdk2440_lcd_cfg结构；对于S3C2410，仿照S3C2410增加一个smdk2410_lcd_cfg结构，并调用s3c24xx_fb_set_platdata函数来设置它。<br>smdk2440_lcd_cfg是s3c2410fb_mach_info结构类型，这个类型在<code>include/asm-arm/arch-s3c2410/fb.h</code>文件中定义，下面分析它的各个成员的意义。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">s3c2410fb_mach_info</span> &#123;</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">char</span>	fixed_syncs;	<span class="comment">/* do not update sync/border */</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/* LCD types */</span></span><br><span class="line">	<span class="type">int</span>		type;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Screen size */</span></span><br><span class="line">	<span class="type">int</span>		width;</span><br><span class="line">	<span class="type">int</span>		height;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Screen info */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">s3c2410fb_val</span> <span class="title">xres</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">s3c2410fb_val</span> <span class="title">yres</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">s3c2410fb_val</span> <span class="title">bpp</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/* lcd configuration registers */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">s3c2410fb_hw</span>  <span class="title">regs</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/* GPIOs */</span></span><br><span class="line"></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>	gpcup;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>	gpcup_mask;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>	gpccon;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>	gpccon_mask;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>	gpdup;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>	gpdup_mask;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>	gpdcon;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>	gpdcon_mask;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* lpc3600 control register */</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>	lpcsel;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<p><code>fixed_syncs</code>被设为1时表示“固定的”时间参数和边框大小，这意味着用户程序无法调整分辨率等参数，因为底层驱动不修改时间参数和边框大小。从s3c2410fb.c中的相关代码来看，它就是不在重新设置LCDCON2&#x2F;3&#x2F;4寄存器中的相关位。<br><code>type</code>表示LCD的类型，从LCDCON1寄存器位[6:5]可以知道它有4种取值，如下所示：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">00 = 4-bit dual scan display mode (STN)</span><br><span class="line">01 = 4-bit single scan display mode (STN)</span><br><span class="line">10 = 8-bit single scan display mode (STN)</span><br><span class="line">11 = TFT LCD panel</span><br></pre></td></tr></table></figure>
-<p><code>width</code>、<code>height</code>用来设置图像的宽度和高度，它们取xres、yres的默认值。<br><code>s3c2410fb_val</code>结构的定义如下，xres、yres和bpp分别表示图像宽度、高度和像素位宽的最小、最大、默认值。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">s3c2410fb_val</span> &#123;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span> defval;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span> min;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span> max;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<p><code>struct s3c2410fb_hw regs</code>表示LCDCON1-LCDCON5共5个LCD控制器的控制寄存器。它们用来设置LCD类型、像素数据的格式。<br><code>gpcup</code>、<code>gpcup_mask</code>、<code>gpccon</code>、<code>gpccon_mask</code>、<code>gpdup</code>、<code>gpdup_mask</code>、<code>gpdcon</code>、<code>gpdcon_mask</code>用来设置GPC、GPD两组GPIO引脚，<code>gpcup</code>和<code>gpccon_mask</code>两个成员被用来设置GPCUP寄存器：<code>gpcup</code>表示新值，<code>gpccon_mask</code>表示要设置的位。<br><code>lpcsel</code>表示LPCSEL寄存器，它用来支持SEC公司生产的TFT LCD，对于一般的LCD，不用设置这个寄存器。<br>本开发板使用240x320，16bpp的TFT LCD，内核自带的smdk2440_lcd_cfg结构并不适用于这个开发板，并且它的设置有一些错误：没有指定GPIO寄存器的值，“type”设置错了。原来的值如下：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">s3c2410fb_mach_info</span> <span class="title">smdk2440_lcd_cfg</span> __<span class="title">initdata</span> =</span> &#123;</span><br><span class="line">...</span><br><span class="line"><span class="meta">#<span class="keyword">if</span> 0</span></span><br><span class="line">	<span class="comment">/* currently setup by downloader */</span></span><br><span class="line">	.gpccon		= <span class="number">0xaa940659</span>,</span><br><span class="line">	.gpccon_mask	= <span class="number">0xffffffff</span>,</span><br><span class="line">	.gpcup		= <span class="number">0x0000ffff</span>,</span><br><span class="line">	.gpcup_mask	= <span class="number">0xffffffff</span>,</span><br><span class="line">	.gpdcon		= <span class="number">0xaa84aaa0</span>,</span><br><span class="line">	.gpdcon_mask	= <span class="number">0xffffffff</span>,</span><br><span class="line">	.gpdup		= <span class="number">0x0000faff</span>,</span><br><span class="line">	.gpdup_mask	= <span class="number">0xffffffff</span>,</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">...</span><br><span class="line">	.type		= S3C2410_LCDCON1_TFT16BPP,</span><br><span class="line">...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<p>它把GPIO的值屏蔽掉了，原因是“currently setup by downloader”，这也许是这个驱动的开发者在调试时，另外使用某种下载器来设置GPIO。<br>上面的<code>type</code>被设置为<code>S3C2410_LCDCON1_TFT16BPP</code>，这是错误的，“type”表示“类型”，而“S3C2410_LCDCON1_TFT16BPP”表示“TFT”类型下数据的格式。应该设为以下4个值之一：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> S3C2410_LCDCON1_DSCAN4	   (0&lt;&lt;5)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> S3C2410_LCDCON1_STN4	   (1&lt;&lt;5)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> S3C2410_LCDCON1_STN8	   (2&lt;&lt;5)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> S3C2410_LCDCON1_TFT	       (3&lt;&lt;5)</span></span><br></pre></td></tr></table></figure>
-<p>下面修改代码</p>
-<ol>
-<li>对于S3C2440单板<br>修改smdk2440_lcd_cfg结构，它在<code>arch/arm/mach-s3c2440/mach-smdk2440.c</code>文件中，修改后的代码如下：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* LCD driver info */</span></span><br><span class="line"> <span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">s3c2410fb_mach_info</span> <span class="title">smdk2440_lcd_cfg</span> __<span class="title">initdata</span> =</span> &#123;</span><br><span class="line">     .regs	= &#123;</span><br><span class="line"></span><br><span class="line">         .lcdcon1	= S3C2410_LCDCON1_TFT16BPP |</span><br><span class="line">                 S3C2410_LCDCON1_TFT |</span><br><span class="line">                 S3C2410_LCDCON1_CLKVAL(<span class="number">0x04</span>),</span><br><span class="line"></span><br><span class="line">         .lcdcon2	= S3C2410_LCDCON2_VBPD(<span class="number">1</span>) |</span><br><span class="line">                 S3C2410_LCDCON2_LINEVAL(<span class="number">319</span>) |</span><br><span class="line">                 S3C2410_LCDCON2_VFPD(<span class="number">5</span>) |</span><br><span class="line">                 S3C2410_LCDCON2_VSPW(<span class="number">1</span>),</span><br><span class="line"></span><br><span class="line">         .lcdcon3	= S3C2410_LCDCON3_HBPD(<span class="number">36</span>) |</span><br><span class="line">                 S3C2410_LCDCON3_HOZVAL(<span class="number">239</span>) |</span><br><span class="line">                 S3C2410_LCDCON3_HFPD(<span class="number">19</span>),</span><br><span class="line"></span><br><span class="line">         .lcdcon4	= S3C2410_LCDCON4_MVAL(<span class="number">13</span>) |</span><br><span class="line">                 S3C2410_LCDCON4_HSPW(<span class="number">5</span>),</span><br><span class="line"></span><br><span class="line">         .lcdcon5	= S3C2410_LCDCON5_FRM565 |</span><br><span class="line">                 S3C2410_LCDCON5_INVVLINE |</span><br><span class="line">                 S3C2410_LCDCON5_INVVFRAME |</span><br><span class="line">                 S3C2410_LCDCON5_PWREN |</span><br><span class="line">                 S3C2410_LCDCON5_HWSWP,</span><br><span class="line">     &#125;,</span><br><span class="line"></span><br><span class="line">     <span class="comment">/* currently setup by downloader */</span></span><br><span class="line">     .gpccon		= <span class="number">0xaaaaaaaa</span>,</span><br><span class="line">     .gpccon_mask	= <span class="number">0xffffffff</span>,</span><br><span class="line">     .gpcup		= <span class="number">0xffffffff</span>,</span><br><span class="line">     .gpcup_mask	= <span class="number">0xffffffff</span>,</span><br><span class="line">     .gpdcon		= <span class="number">0xaaaaaaaa</span>,</span><br><span class="line">     .gpdcon_mask	= <span class="number">0xffffffff</span>,</span><br><span class="line">     .gpdup		= <span class="number">0xffffffff</span>,</span><br><span class="line">     .gpdup_mask	= <span class="number">0xffffffff</span>,</span><br><span class="line"></span><br><span class="line">     .fixed_syncs = <span class="number">1</span>,</span><br><span class="line">     .type		= S3C2410_LCDCON1_TFT,</span><br><span class="line"></span><br><span class="line">     .width		= <span class="number">240</span>,</span><br><span class="line">     .height		= <span class="number">320</span>,</span><br><span class="line"></span><br><span class="line">     .xres		= &#123;</span><br><span class="line">         .min	= <span class="number">240</span>,</span><br><span class="line">         .max	= <span class="number">240</span>,</span><br><span class="line">         .defval	= <span class="number">240</span>,</span><br><span class="line">     &#125;,</span><br><span class="line"></span><br><span class="line">     .yres		= &#123;</span><br><span class="line">         .min	= <span class="number">320</span>,</span><br><span class="line">         .max	= <span class="number">320</span>,</span><br><span class="line">         .defval = <span class="number">320</span>,</span><br><span class="line">     &#125;,</span><br><span class="line"></span><br><span class="line">     .bpp		= &#123;</span><br><span class="line">         .min	= <span class="number">16</span>,</span><br><span class="line">         .max	= <span class="number">16</span>,</span><br><span class="line">         .defval = <span class="number">16</span>,</span><br><span class="line">     &#125;,</span><br><span class="line"> &#125;;</span><br></pre></td></tr></table></figure></li>
-<li>对于S3C2410单板<br>仿照<code>arch/arm/mach-s3c2440/mach-smdk2440.c</code>来修改<code>arch/arm/mach-s3c2410/mach-smdk2410.c</code><br>①增加smdk2410_lcd_cfg结构<br>直接把smdk2440_lcd_cfg的内容搬到mach-smdk2410.c中，改名为smdk2410_lcd_cfg即可。<br>②使用smdk2410_lcd_cfg结构<br>在S3C2410单板初始化函数smdk2410_init中，调用s3c24xx_fb_set_platdata函数。除增加的smdk2410_lcd_cfg结构外，还要增加如下所示的代码：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;asm/arch/fb.h&gt;</span></span></span><br><span class="line">...</span><br><span class="line"><span class="comment">/* LCD driver info */</span></span><br><span class="line"> <span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">s3c2410fb_mach_info</span> <span class="title">smdk2440_lcd_cfg</span> __<span class="title">initdata</span> =</span> &#123;</span><br><span class="line">     ...</span><br><span class="line"> &#125;;</span><br><span class="line"> ...</span><br><span class="line"> <span class="type">static</span> <span class="type">void</span> __init <span class="title function_">smdk2410_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line"> &#123;</span><br><span class="line">     s3c24xx_fb_set_platdata(&amp;smdk2410_lcd_cfg);</span><br><span class="line">     ...</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure></li>
-</ol>
-<h3 id="配置内核以使用LCD"><a href="#配置内核以使用LCD" class="headerlink" title="配置内核以使用LCD"></a>配置内核以使用LCD</h3><p>对LCD的配置有两方面，一是frame buffer方面的配置，二是控制台方面的配置。<br>配置内容如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Device Drivers ---&gt;</span><br><span class="line">    Graphics support ---&gt;</span><br><span class="line">        &lt;*&gt; Support for frame buffer devices    //支持frame buffer</span><br><span class="line">        &lt;*&gt; S3c2410 LCD frame buffer support    //支持S3C24xx</span><br><span class="line">            Console display driver support ---&gt;</span><br><span class="line">            &lt;*&gt; Frame buffer Console support    //支持frame buffer控制它</span><br><span class="line">            [ ] Select Compile-in fonts         //选择字库，默认为VGA 8x8、VGA 8x16字库</span><br><span class="line">        [*] Bootup logo ---&gt;                    //启动时显示LOGO</span><br><span class="line">            [*] Standard 224-color Linux logo   //选择LOGO图像，有单色、16色、244色</span><br></pre></td></tr></table></figure>
-<ol>
-<li>通过LCD显示内核信息<br>以前使用串口作为控制台（打印内核信息）时，命令行参数为“console&#x3D;ttySAC0”，现在可以多加一项，比如“console&#x3D;ttySAC0 console&#x3D;tty1”。tty1表示第一个虚拟终端，tty2表示第二个虚拟终端，而tty0表示当前的虚拟终端。</li>
-<li>操作&#x2F;dev&#x2F;tty1输出字符：如果使用mdev机制，这个步骤可以省略。<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">mknod /dev/tty0 c <span class="number">4</span> <span class="number">0</span></span><br><span class="line">mknod /dev/tty1 c <span class="number">4</span> <span class="number">1</span></span><br><span class="line">mknod /dev/tty2 c <span class="number">4</span> <span class="number">2</span></span><br><span class="line">mknod /dev/tty3 c <span class="number">4</span> <span class="number">3</span></span><br><span class="line">mknod /dev/tty4 c <span class="number">4</span> <span class="number">4</span></span><br><span class="line">mknod /dev/tty5 c <span class="number">4</span> <span class="number">5</span></span><br><span class="line">mknod /dev/tty6 c <span class="number">4</span> <span class="number">6</span></span><br></pre></td></tr></table></figure>
-在串口控制台，使用“echo hello &gt; &#x2F;dev&#x2F;tty0”命令可以在LCD上显示“hello”字符串。</li>
-<li>操作&#x2F;dev&#x2F;fb0绘制图像<br>首先如下创建设备文件，如果使用mdev机制，这个步骤可以省略：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">mknod /dev/fb0 c <span class="number">29</span> <span class="number">0</span></span><br></pre></td></tr></table></figure>
-然后使用frame buffer测试程序执行“fb_test &#x2F;dev&#x2F;fb0”即可在LCD上看到很多同心圆，并且在控制台打印出frame buffer的属性。</li>
-</ol>
-<h1 id="USB驱动程序移植"><a href="#USB驱动程序移植" class="headerlink" title="USB驱动程序移植"></a>USB驱动程序移植</h1><h2 id="USB驱动程序概述"><a href="#USB驱动程序概述" class="headerlink" title="USB驱动程序概述"></a>USB驱动程序概述</h2><p>USB（Universal Serial Bus）即“通用串行外部总线”，在各种场所已经大量使用。它接口简单（只有5V和GND、两根数据线D+和D-），可以外接硬盘、键盘、鼠标、打印机等多种设备。要使用尽可能少的接口支持尽可能多的外设，USB是一个好的选择，在嵌入式设备中尤其如此。<br>USB总线规范有1.1版和2.0版。USB1.1支持两种传输速率：低速（Low Speed）1.5Mbit&#x2F;s、全速12Mbit&#x2F;s，对于鼠标、键盘、CD-ROM等设备，这样的速率足够。但是在访问硬盘、摄像机时，就显得很慢。为此，USB2.0提供了一种更高的传输速率：高速，它可以达到480Mbit&#x2F;s。USB2.0向下兼容USB1.1，可以遵循USB1.1规范的设备连接到USB2.0控制器上，也可以把USB2.0的设备USB1.1控制器上。<br>USB总线的硬件拓扑结构如下图所示。<br>USB主机控制器（USB Host Controller）通过根集线器（Root Hub）与其他设备相连接。集线器也属于USB设备，通过它可以在一个USB接口上扩展出多个接口。除根集线器外，最多可以层叠5个集线器，每条USB电缆的最大长度是5m，所以USB总线的最大距离为30m。一条USB总线上可以外接127个设备，包括根集线器和其他集线器。整个结构图就是一个星状结构，一条USB总线上所有设备共享一条通往主机的数据通道，同一时刻只能有一个设备与主机通信。<br><img src="/2022/10/19/LCD%E5%92%8CUSB%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E7%A7%BB%E6%A4%8D/4.jpeg" alt="img not found"><br>通过USB主机控制器来管理外接的USB设备，USB主机控制器共分3种，UHCI、OHCI和EHCI，其中的“HCI”表示“Host Controller Interface”。UHCI、OHCI属于USB1.1的主机控制器规范，而EHCI是USB2.0的主机控制规范。UHCI（Universal HCI），它是由Intel公司制定得标准，它的硬件做的事情少，这使得软件比较复杂。与之相对的是OHC（Open HCI）,它由Compaq、Microsoft和National Semiconductor联合制定，在硬件方面它具备更多的智能，使得软件相对简单。<br><em><strong>这些差别只存在于底层的USB主机控制器的驱动程序，对它之上的软件没有影响。USB2.0的主机控制程序只有EHCI（Enhanced HCI）一种</strong></em><br>在配置内核的时候，经常可以看到“HCD”字样，它表示“Host Controller Drivers”，即主机控制器驱动程序。比如有uhci-hcd、ohci-hcd、ehci-hcd等驱动模块。<br>USB驱动程序分两类：USB主机控制器驱动程序（Host Controller Drivers）、USB设备驱动程序（USB device drivers）。它们在内核中的层次如图所示。<br><img src="/2022/10/19/LCD%E5%92%8CUSB%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E7%A7%BB%E6%A4%8D/5.jpeg" alt="img not found"><br>USB主机控制器驱动程序提供访问USB设备的接口，它只是一个“数据通道”，至于这些数据有什么用，这要靠上层的USB设备驱动程序来解释。USB设备驱动程序使用下层驱动提供的接口来访问USB设备，不需要关心传输的具体细节。</p>
-<h2 id="配置内核支持USB键盘、USB鼠标和USB硬盘"><a href="#配置内核支持USB键盘、USB鼠标和USB硬盘" class="headerlink" title="配置内核支持USB键盘、USB鼠标和USB硬盘"></a>配置内核支持USB键盘、USB鼠标和USB硬盘</h2><p>S3C2410&#x2F;S3C2440的USB控制器有如下特性<br><strong>符合OHCI1.0规范</strong><br><strong>支持USB1.1版本</strong><br><strong>有两个插口</strong><br><strong>支持低速设备和全速设备</strong></p>
-<p>Linux内核中对OHCI主机控制器支持完善，并有多种USB设备驱动程序。Linux2.6.22.6也已经支持S3C2410&#x2F;S3C2440的USB控制器，只不过第二个插口上电后默认为USB Device插口，如果要将它改为USB Host插口（比如没有USB集线器，却需要同时接入USB键盘、USB鼠标时），只要设置MISCCR寄存器的位3即可，所有的修改都在文件<code>drivers/usb/host/ohci-s3c2410.c</code>中完成，代码如下：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;asm/arch/regs-gpio.h&gt;</span></span></span><br><span class="line">...</span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">usb_hcd_s3c2410_probe</span><span class="params">(<span class="type">const</span> <span class="keyword">struct</span> hc_driver *driver,</span></span><br><span class="line"><span class="params">                <span class="keyword">struct</span> platform_device *dev)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">usb_hcd</span> *<span class="title">hcd</span> =</span> <span class="literal">NULL</span>;</span><br><span class="line">    <span class="type">int</span> retval;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 2 host port */</span>    </span><br><span class="line">    writel(readl(S3C2410_MISCCR) | S3C2410_MISCCR_USBHOST, S3C2410_MISCCR);</span><br><span class="line"></span><br><span class="line">    s3c2410_usb_set_power(dev-&gt;dev.platfrom_data,<span class="number">1</span>,<span class="number">1</span>);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>现在只需要配置内核启用它们：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Device Drivers ---&gt;</span><br><span class="line">    SCSI device support ---&gt;</span><br><span class="line">        &lt;*&gt; SCSI device support         //要支持USB磁盘，这项要选上</span><br><span class="line">        [*] legacy /proc/scsi/ support  //在/proc/scsi 目录下提供以下信息</span><br><span class="line">        &lt;*&gt; SCSI disk support           //SCSI硬盘，要支持U盘等，这项要选上</span><br><span class="line">    </span><br><span class="line">    USB support ---&gt;</span><br><span class="line">        &lt;*&gt; Support for Host-side USB   //USB主机控制器</span><br><span class="line">        [*] USB device filesystem       //在/proc文件系统中提供一些信息，调试用</span><br><span class="line">        &lt;*&gt; OHCI HCD support            //OHCI主机控制器驱动程序</span><br><span class="line">        &lt;*&gt; USB mass Storage support    //USB存储设备</span><br><span class="line"></span><br><span class="line">    HID Devices ---&gt;</span><br><span class="line">        &lt;*&gt; USB Human Interface Device (full HID) support   //USB键盘、USB鼠标等HID设备</span><br><span class="line">        [*] /dev/hiddev raw HID device support              //以原始（raw）的方式访问HID设备</span><br></pre></td></tr></table></figure>
-<p>USB控制器的时钟是在U-Boot中设置的，UCLK必须设为48MHZ。</p>
-<h2 id="USB设备的使用"><a href="#USB设备的使用" class="headerlink" title="USB设备的使用"></a>USB设备的使用</h2><p>连接USB设备时需要注意：S3C2410&#x2F;S3C2440既可以作为USB主机，也可以作为USB设备。作为USB主机时对外提供两个接口，对应板上叠起来的两个USB接口，下面的称为HOST1，上面的称为HOST2；作为USB设备时，对外也提供一个接口，对应板上的USB_DEVICE接口。<br>HOST2和USB_DEVICE在S3C2410&#x2F;S3C2440上的引脚是复用的。要在开发板上使用两个USB设备时，除HOST1外，可以设置跳线使用HOST2；要使用更多的USB设备，必须通过USB集线器来连接。</p>
-<h3 id="使用LCD和USB键盘作为终端"><a href="#使用LCD和USB键盘作为终端" class="headerlink" title="使用LCD和USB键盘作为终端"></a>使用LCD和USB键盘作为终端</h3><p>现有的内核已经支持LCD和USB键盘，可以使用它们来作为控制台、终端了。前面说过，在命令行参数中增加“console&#x3D;tty1”就可以在LCD上显示内核信息，不过要想使用它们来登录系统，需要修改&#x2F;etc&#x2F;inittab文件，增加以下6行：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">tty1::askfirst:-/bin/sh</span><br><span class="line">tty2::askfirst:-/bin/sh</span><br><span class="line">tty3::askfirst:-/bin/sh</span><br><span class="line">tty4::askfirst:-/bin/sh</span><br><span class="line">tty5::askfirst:-/bin/sh</span><br><span class="line">tty6::askfirst:-/bin/sh</span><br></pre></td></tr></table></figure>
-<p>它们在6个虚拟终端上启动shell程序，接上USB键盘和LCD后，可以看到如下字样的提示信息：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Please press Enter to activate this consorl</span><br></pre></td></tr></table></figure>
-<p>在键盘上按回车键，就可以像在串口终端上一样使用USB键盘、LCD来控制系统了。</p>
-<h3 id="使用U盘"><a href="#使用U盘" class="headerlink" title="使用U盘"></a>使用U盘</h3><p>首先在开发板上创建如下设备文件</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mknod /dev/sda b 8 0</span><br><span class="line">mknod /dev/sda1 b 8 1</span><br><span class="line">mknod /dev/sda2 b 8 2</span><br><span class="line">mknod /dev/sda3 b 8 3</span><br><span class="line">mknod /dev/sda4 b 8 4</span><br></pre></td></tr></table></figure>
-<p>接U盘后，即可像前面使用硬盘、SD卡一样来使用U盘了。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">fdsik /dev/sda              //进入菜单，对U盘进行分区，修改分了一个主分区/dev/sda1</span><br><span class="line">mkdosfs -F 32 /dev/sda1     //格式化为FAT32文件系统</span><br><span class="line">mount /dev/sda1 /mnt        //挂接</span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>学习</category>
-        <category>书籍</category>
-        <category>嵌入式Linux应用完全开发手册</category>
-        <category>第4篇第24章 LCD和USB驱动程序移植</category>
-      </categories>
-      <tags>
-        <tag>嵌入式Linux</tag>
-        <tag>Linux Driver</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Linux应用程序调试技术</title>
     <url>/2022/10/20/Linux%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E8%B0%83%E8%AF%95%E6%8A%80%E6%9C%AF/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>嵌入式Linux系统应用开发之Linux应用程序调试技术</p>
@@ -2975,6 +2883,98 @@ hid_irq_in是USB中断传输方式的中断处理函数，当键盘被按下时�
       <tags>
         <tag>嵌入式Linux</tag>
         <tag>Linux 应用程序</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>LCD和USB驱动程序移植</title>
+    <url>/2022/10/19/LCD%E5%92%8CUSB%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E7%A7%BB%E6%A4%8D/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>嵌入式Linux设备驱动开发之LCD和USB驱动程序移植</p>
+<p>《嵌入式Linux应用完全开发手册》第4篇第24章总结归纳</p>
+<span id="more"></span>
+
+<h1 id="本章目标"><a href="#本章目标" class="headerlink" title="本章目标"></a>本章目标</h1><ol>
+<li>了解TTY层下LCD和USB键盘驱动程序的框架</li>
+<li>掌握移植LCD驱动程序的方法</li>
+<li>使用LCD和USB设备</li>
+</ol>
+<h1 id="LCD驱动程序移植"><a href="#LCD驱动程序移植" class="headerlink" title="LCD驱动程序移植"></a>LCD驱动程序移植</h1><h2 id="LCD和USB键盘驱动程序框架"><a href="#LCD和USB键盘驱动程序框架" class="headerlink" title="LCD和USB键盘驱动程序框架"></a>LCD和USB键盘驱动程序框架</h2><h3 id="框架概述"><a href="#框架概述" class="headerlink" title="框架概述"></a>框架概述</h3><p>具备人机交互功能的串口可以作为控制台和终端，同样，LCD和键盘组合起来也可以。<br>对LCD的操作可以像串口一样，通过终端设备层的封装（&#x2F;dev&#x2F;ttyx设备）来输出内容，也可以通过frame buffer（&#x2F;dev&#x2F;fbx）直接再显存上绘制图像。<br>frame buffer即帧缓冲，是一种独立于硬件的抽象图形设备，它使得应用程序可以通过一组定义良好的接口访问各类图形设备，不需要了解底层硬件细节。从用户的观点来看，frame buffer设备与&#x2F;dev目录下其他设备没有区别，通过&#x2F;dev&#x2F;fbx设备文件来访问它（fb0表示第一个frame buffer设备、fb1表示第二个、…）。<br>frame buffer设备提供了一些ioctl接口来查询、设置图形设备的属性，比如分辨率、像素位宽等，另外，它属于“普通的”内存设备，类似&#x2F;dev&#x2F;mem：可以读（read）、写（write）、移动访问位置（seek）以及将这块内存映射给用户（mmap）。不同的是frame buffer的内存不是所有的内存，而是显卡专用的内存。应用程序可以直接更改frame buffer内存中的数据，效果立刻就能在显示器中看到。<br>&#x2F;de&#x2F;&#x2F;tty1等终端设备文件通过显示驱动程序和键盘驱动程序（还有其他输入设备，比如触摸屏）为它们提供输出、输入功能。<br>TTY和frame buffer驱动程序的框架如下图所示，输入设备以USB键盘为例：<br><img src="/2022/10/19/LCD%E5%92%8CUSB%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E7%A7%BB%E6%A4%8D/1.jpeg" alt="img not found"><br><code>drivers/char/vt.c</code>用来支持显示器&#x2F;键盘组成的终端设备，之所以被称为“虚拟终端”，是因为可以在一个物理终端设备上运行多个“虚拟终端”（也叫虚拟控制台），比如可以使用第一个虚拟终端来显示系统信息，使用第2个虚拟终端来运行文本模式程序，第3个虚拟终端来运行图形程序。它们可以同时运行，使用一些组合键可以切换到某个虚拟终端上。<br>虚拟终端层管理着这些虚拟终端，比如为它们分配缓冲区、切换虚拟终端时把它的内容输出到显示器、键盘有输入时把数据填入到当前终端的缓冲区中。它向上提供了封装好的接口，向下通过调用显示器&#x2F;键盘的接口完成输入输出功能。</p>
+<ol>
+<li>显示驱动程序<br><code>drivers/console/fbcon.c</code>文件向上提供了一个很重要的数据结构fb_con，所有的输出都是通过fb_con中的成员函数来实现的，bitblit.c、font.c也都处于<code>drivers/console</code>目录下，它们和<code>drivers/video/fbmem.c</code>一起，实现fb_con结构中的函数。另外，fbmem.c是frame buffer驱动程序，它向应用层提供&#x2F;dev&#x2F;fbx设备的访问接口，应用程序可以通过它绘制图形。<br><code>drivers/video/s3c2410fb.c</code>文件是架构相关的代码，它实现LCD控制器的初始化、向fbmem.c注册frame buffer设备，并提供一些与架构相关的函数，比如设置分辨率、像素位宽等需要设置操作寄存器的函数。</li>
+<li>键盘驱动程序<br><code>drivers/input/input.c</code>表示“输入设备”，有键盘、鼠标等。<code>drivers/keyboard.c</code>是键盘驱动程序的封装，在它的下边，可以是一般的键盘，也可以是符合HID规范的键盘。HID是英文“Human Interface Device”得缩写，它通常指USB-HID规范，但是也有其他类型的遵循HID规范的设备（比如蓝牙键盘、蓝牙鼠标）。所以<code>drivers/hid-core.c</code>、<code>hid-input.c</code>两个文件将HID规范的共性提炼出来，它们的下面是各类具体实现，比如USB的<code>drivers/hid/hidusb/hid-core.c</code>、<code>hid-quirks.c</code>等。</li>
+</ol>
+<h3 id="操作实例"><a href="#操作实例" class="headerlink" title="操作实例"></a>操作实例</h3><p>下面以几个操作的函数调用过程来理解TTY和frame buffer驱动程序的层次结构。注意：这只是为了在阅读内核源码时，给读者提供一些函数调用间的脉络关系。刚接触某类驱动时，了解各函数、结构间的调用关系是一件困难的事情。</p>
+<ol>
+<li>注册frame buffer设备时，显示LOGO的过程<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">s3c2410fb_probe(video/s3c2410fb.c) -&gt;</span><br><span class="line">     register_framebuffer(fbmem.c) -&gt;</span><br><span class="line">         fb_info-&gt;node = i;<span class="comment">//registered_fb[i]为空项，本例中i=0</span></span><br><span class="line">         registered_fb[i] = fb_info;</span><br><span class="line">         fb_notifier_call_chain(fb_notify.c) -&gt;<span class="comment">//它会调用fbcon_event_notify(fbcon.c)</span></span><br><span class="line">             fbcon_fb_registered(video/console/fbcon.c)</span><br><span class="line">                 info_idx = idx<span class="comment">//即info-&gt;node，值为上面的i</span></span><br><span class="line">                 fbcon_takeover(<span class="number">1</span>)(video/console/fbcon.c) -&gt;</span><br><span class="line">                     con2fb_map[i] = info_idx;<span class="comment">//i=0，info_idx=0</span></span><br><span class="line">                     take_over_console(<span class="type">char</span>/vt.c) -&gt;</span><br><span class="line">                         register_con_driver(<span class="type">char</span>/vt.c) -&gt;</span><br><span class="line">                             csw-&gt;con_startup(...) -&gt;<span class="comment">//即fbcon_startup(video/console/fbcon.c)</span></span><br><span class="line">                                 info = registered_fb[info_idx];</span><br><span class="line">                                 info-&gt;fbops-&gt;fb_open(...)(video/s3c2410fb.c)</span><br><span class="line">                         bind_con_driver(<span class="type">char</span>/vt.c) -&gt;</span><br><span class="line">                             visual_init(<span class="type">char</span>/vt.c) -&gt;</span><br><span class="line">                                 vc-&gt;vc_sw-&gt;con_init <span class="comment">//即fbcon_init</span></span><br><span class="line">                                 fbcon_init(video/console/fbcon.c) -&gt;</span><br><span class="line">                                 <span class="comment">//以下准备LOGO</span></span><br><span class="line">                                 fbcon_prepare_logo(video/console/fbcon.c) -&gt;</span><br><span class="line">                                     fb_prepare_logo(video/fbmem.c) -&gt;</span><br><span class="line">                                         fb_logo.logo = fb_find_logo(depth);<span class="comment">//logo.c</span></span><br><span class="line">                             <span class="comment">//打印Console：swicthing to colour frame buffer device 30x40</span></span><br><span class="line">                             update_screen(vc);(include/linux/vt_kern.h) -&gt;</span><br><span class="line">                             redraw_screen(<span class="type">char</span>/vt.c) -&gt;</span><br><span class="line">                                 vc-&gt;vc_sw-&gt;con_switch(vc);-&gt;<span class="comment">//即fbcon_switch(fbcon.c)</span></span><br><span class="line">                                     fb_show_logo(video/fbmem.c)<span class="comment">//显示LOGO</span></span><br></pre></td></tr></table></figure></li>
+<li>对&#x2F;dev&#x2F;ttyx调用write函数时的过程<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">tty_write(<span class="type">char</span>/tty_io.c)-&gt;</span><br><span class="line"> ld = tty_ldisc_ref_wait(tty)<span class="comment">//它就是char/n_tty.c中的tty_ldisc_N_TTY</span></span><br><span class="line"> do_tty_write(ld-&gt;write,tty,file,buf,count)(<span class="type">char</span>/tty_io.c)-&gt;</span><br><span class="line">     write_chan(就是上面的ld-&gt;write,<span class="type">char</span>/n_tty.c中tty_ldisc_N_TTY的成员函数)-&gt;</span><br><span class="line">         tty-&gt;driver-&gt;write(即con_write，<span class="type">char</span>/vt.c)-&gt;</span><br><span class="line">             do_con_write(<span class="type">char</span>/vt.c)-&gt;</span><br><span class="line">                 vc-&gt;vc_sw-&gt;con_putcs(即fbcon_putcs，video/console/fbcon.c)-&gt;</span><br><span class="line">                     ops-&gt;putcs(即bit_putcs,video/console/bitblit.c)-&gt;</span><br><span class="line">                         dst = fb_get_buffer_offset(video/fbmem.c)<span class="comment">//获取要写入的显存位置</span></span><br><span class="line">                         bit_putcs_aligned/bit_putcs_unaligned(video/console/bitblit.c)</span><br><span class="line">                             src = vc-&gt;vc_font.data + (src_readw(s++)&amp;charmask)*cellsize;<span class="comment">//获得字符的点阵</span></span><br><span class="line">                             __fb_pad_aligned_buffer(fb.h)<span class="comment">//将点阵写入显存</span></span><br></pre></td></tr></table></figure>
+在使用&#x2F;dev&#x2F;ttyx作为控制台的shell中，运行某个程序时，如果里面有“printf(“hello world!”)”字样的语句，它会调用到内核的tty_write函数。<br>然后会调用行规程的write_chan函数，它又会调用“tty-&gt;driver-&gt;write”，对于串口，它是<code>drivers/serial/serial_core.c</code>中的uart_write函数，它直接输出ASCII字符；对于显示器，它是<code>drivers/char/vt.c</code>中的con_write函数，它更复杂。在LCD显示器上显示字符时，先要根据这些字符得到它们的点阵，然后再将它们画出来。<br><code>drivers/video/console/fbcon.c</code>中的fbcon_putcs函数通过<code>drivers/video/console/bitblit.c</code>、<code>drivers/video/fbmem.c</code>提供的一些函数来获得点阵、写到显存中去。其中的“vc-&gt;vc_font.data”指向某个字库，以字符为索引即可找到它的点阵。在<code>drivers/video/console/fonts.c</code>文件中定义了一个fonts数组，每个表项是一个字库，比如font_vga_8x8、font_vga_8x16等。在<code>devices/video/fbcon.c</code>中初始化frame buffer控制台时，会把vc-&gt;vc_font.data指向某个字库。</li>
+<li>USB键盘按下时的函数调用过程<br>与串口相似，键盘的读取以中断来驱动。以USB键盘为例，调用过程如下：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">hid_irq_in(hid/usbhid/hid-core.c) -&gt;</span><br><span class="line">     hid_input_report(hid/hid-core.c) -&gt;</span><br><span class="line">         hid_input_field(hid/hid-core.c) -&gt;</span><br><span class="line">             hid_process_event(hid/hid-core.c) -&gt;</span><br><span class="line">                 hidinput_hid_evenet(hid/hid-input) -&gt;</span><br><span class="line">                     input_event(input/input.c) -&gt;</span><br><span class="line">                         dev-&gt;event(...)</span><br><span class="line">                         handle-&gt;handler-&gt;event，即kbd_event(<span class="type">char</span>/keyboard.c) -&gt;</span><br><span class="line">                             kbd_rawcode/kbd_keycode(<span class="type">char</span>/keyboard.c) -&gt;</span><br><span class="line">                                 put_queue(vc,data)(<span class="type">char</span>/keyboard.c) -&gt;<span class="comment">//数据放入终端缓冲区</span></span><br><span class="line">                                     tty_insert_flip_char(include/linux/tty_flip.h)<span class="comment">//放数据</span></span><br><span class="line">                                     con_schedule_flip(kbd_kern.h)<span class="comment">//唤醒等待数据的进程</span></span><br></pre></td></tr></table></figure>
+hid_irq_in是USB中断传输方式的中断处理函数，当键盘被按下时，它导致后续的一系列函数被调用，与图24.1对应，它从底层的<code>drivers/hid/usbhid/hid-core.c</code>一直向上调用到<code>drivers/input/input.c</code>中的input_event函数，接着input_event函数根据调用<code>drivers/char/keyboard.c</code>注册的处理函数将数据放入虚拟终端设备的缓冲区中，然后等待数据的进程。</li>
+</ol>
+<h2 id="S3C2410-x2F-S3C2440-LCD控制器驱动程序移植"><a href="#S3C2410-x2F-S3C2440-LCD控制器驱动程序移植" class="headerlink" title="S3C2410&#x2F;S3C2440 LCD控制器驱动程序移植"></a>S3C2410&#x2F;S3C2440 LCD控制器驱动程序移植</h2><p>从图24.1可知，架构相关的代码为<code>drivers/video/s3c2410fb.c</code>，移植的思想是一样的：先确定LCD控制器所用的资源，然后把它们加入平台设备结构，最后修改代码是这些资源可用。<br>硬件连线图如下图所示：<br><img src="/2022/10/19/LCD%E5%92%8CUSB%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E7%A7%BB%E6%A4%8D/2.jpeg" alt="img not found"></p>
+<h2 id="平台设备结构"><a href="#平台设备结构" class="headerlink" title="平台设备结构"></a>平台设备结构</h2><p>LCD控制器的平台设备在<code>arch/arm/plat-s3c24xx/devs.c</code>中定义，它所用的资源都是固定的，不需要任何改动。它的平台设备结构定义如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* LCD Controller */</span></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">resource</span> <span class="title">s3c_lcd_resource</span>[] =</span> &#123;</span><br><span class="line">    [<span class="number">0</span>] = &#123;</span><br><span class="line">        .start = S3C24XX_PA_LCD,</span><br><span class="line">        .end = S3C24XX_PA_LCD + S3C24XX_SZ_LCD - <span class="number">1</span>,</span><br><span class="line">        .flag = IORESOURCE_MEM,</span><br><span class="line">    &#125;,</span><br><span class="line">    [<span class="number">1</span>] = &#123;</span><br><span class="line">        .start = IRQ_LCD,</span><br><span class="line">        .end = IRQ_LCD,</span><br><span class="line">        .flag = IORESOURCE_IRQ,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> u64 s3c_device_lcd_dmamask = <span class="number">0xffffffff</span>UL;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">platform_device</span> <span class="title">s3c_device_lcd</span> =</span> &#123;</span><br><span class="line">    .name = <span class="string">&quot;s3c2410-lcd&quot;</span>,</span><br><span class="line">    .id = <span class="number">-1</span>,</span><br><span class="line">    .num_resources = ARRAY_SIZE(s3c_lcd_resource),</span><br><span class="line">    .resource = s3c_lcd_resource,</span><br><span class="line">    .dev = &#123;</span><br><span class="line">        .dma_mask = &amp;s3c_device_lcd_dmamask,</span><br><span class="line">        .coherent_dma_mask = <span class="number">0xffffffff</span>UL,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p><code>s3c_device_lcd</code>结构，已经加入了S3C2410、S3C2440开发板的设备列表中了。</p>
+<ol>
+<li><code>arch/arm/mach-s3c2410/mach-smdk2410.c</code><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">platform_device</span> *<span class="title">smdk2410_devices</span>[] __<span class="title">initdata</span> =</span> &#123;</span><br><span class="line">     ...</span><br><span class="line">     &amp;s3c_device_lcd,</span><br><span class="line">     ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></li>
+<li><code>arch/arm/mach-s3c2440/mach-smdk2440.c</code><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">platform_device</span> *<span class="title">smdk2440_devices</span>[] __<span class="title">initdata</span> =</span> &#123;</span><br><span class="line">     ...</span><br><span class="line">     &amp;s3c_device_lcd,</span><br><span class="line">     ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+而LCD控制器驱动程序<code>drivers/video/s3c2410fb.c</code>的入口函数为：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">platform_driver</span> <span class="title">s3c2410fb_driver</span> =</span> &#123;</span><br><span class="line">	.probe		= s3c2410fb_probe,</span><br><span class="line">	.remove		= s3c2410fb_remove,</span><br><span class="line">	.suspend	= s3c2410fb_suspend,</span><br><span class="line">	.resume		= s3c2410fb_resume,</span><br><span class="line">	.driver		= &#123;</span><br><span class="line">		.name	= <span class="string">&quot;s3c2410-lcd&quot;</span>,</span><br><span class="line">		.owner	= THIS_MODULE,</span><br><span class="line">	&#125;,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> __devinit <span class="title function_">s3c2410fb_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">return</span> platform_driver_register(&amp;s3c2410fb_driver);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+平台设备s3c_device_lcd和平台驱动s3c2410fb_driver的名字都是“s3c2410-lcd”，所以注册了s3c2410fb_driver之后，它的s3c2410fb_probe函数将被调用来设置LCD控制器。</li>
+</ol>
+<h3 id="底层驱动代码分析及修改"><a href="#底层驱动代码分析及修改" class="headerlink" title="底层驱动代码分析及修改"></a>底层驱动代码分析及修改</h3><p>s3c2410fb_probe函数完成初始化LCD控制器、注册中断处理函数、注册frame buffer设备等工作，它的流程图如下图所示：<br><img src="/2022/10/19/LCD%E5%92%8CUSB%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E7%A7%BB%E6%A4%8D/3.jpeg" alt="img not found"><br>这个函数中，与单板相关的就是其中的mach-info结构。它是平台设备s3c_device_lcd结构中的dev.platform_data成员，读者可以查看s3c2410fb_init_registers函数来了解它的功能。但是在前面看到的s3c_device_lcd结构中，并没有指定这个成员。它在其他函数中设置；对于S3C2440，单板初始化函数smdk2440_machine_init调用s3c24xx_fb_set_platdata函数来设置；对于S3C2410，没有设置。<br>smdk2440_machine_init函数在<code>arch/arm/mach-s3c2440/mach-smdk2440.c</code>中，如下所示：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> __init <span class="title function_">smdk2440_machine_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    s3c24xx_fb_set_platdata(&amp;smdk2440_lcd_cfg);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>smdk2440_lcd_cfg结构表示LCD控制器的一些配置，比如分辨率、时间特性等。<br>s3c24xx_fb_set_platdata函数在<code>arch/arm/plat-s3c24xx/devs.c</code>中，它直接将参数smdk2440_lcd_cfg赋给设置平台设备s3c_device_lcd结构中的dev.platform_data成员。代码如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> __init <span class="title function_">s3c24xx_fb_set_platdata</span><span class="params">(<span class="keyword">struct</span> s3c2410fb_mach_info *pd)</span></span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="built_in">memcpy</span>(npd,pd,<span class="keyword">sizeof</span>(*npd));</span><br><span class="line">    s3c_device_lcd.dev.platform_data = npd;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>所以，对于S3C2440，需要修改smdk2440_lcd_cfg结构；对于S3C2410，仿照S3C2410增加一个smdk2410_lcd_cfg结构，并调用s3c24xx_fb_set_platdata函数来设置它。<br>smdk2440_lcd_cfg是s3c2410fb_mach_info结构类型，这个类型在<code>include/asm-arm/arch-s3c2410/fb.h</code>文件中定义，下面分析它的各个成员的意义。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">s3c2410fb_mach_info</span> &#123;</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">char</span>	fixed_syncs;	<span class="comment">/* do not update sync/border */</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/* LCD types */</span></span><br><span class="line">	<span class="type">int</span>		type;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Screen size */</span></span><br><span class="line">	<span class="type">int</span>		width;</span><br><span class="line">	<span class="type">int</span>		height;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Screen info */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">s3c2410fb_val</span> <span class="title">xres</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">s3c2410fb_val</span> <span class="title">yres</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">s3c2410fb_val</span> <span class="title">bpp</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/* lcd configuration registers */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">s3c2410fb_hw</span>  <span class="title">regs</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/* GPIOs */</span></span><br><span class="line"></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>	gpcup;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>	gpcup_mask;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>	gpccon;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>	gpccon_mask;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>	gpdup;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>	gpdup_mask;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>	gpdcon;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>	gpdcon_mask;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* lpc3600 control register */</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>	lpcsel;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p><code>fixed_syncs</code>被设为1时表示“固定的”时间参数和边框大小，这意味着用户程序无法调整分辨率等参数，因为底层驱动不修改时间参数和边框大小。从s3c2410fb.c中的相关代码来看，它就是不在重新设置LCDCON2&#x2F;3&#x2F;4寄存器中的相关位。<br><code>type</code>表示LCD的类型，从LCDCON1寄存器位[6:5]可以知道它有4种取值，如下所示：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">00 = 4-bit dual scan display mode (STN)</span><br><span class="line">01 = 4-bit single scan display mode (STN)</span><br><span class="line">10 = 8-bit single scan display mode (STN)</span><br><span class="line">11 = TFT LCD panel</span><br></pre></td></tr></table></figure>
+<p><code>width</code>、<code>height</code>用来设置图像的宽度和高度，它们取xres、yres的默认值。<br><code>s3c2410fb_val</code>结构的定义如下，xres、yres和bpp分别表示图像宽度、高度和像素位宽的最小、最大、默认值。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">s3c2410fb_val</span> &#123;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span> defval;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span> min;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span> max;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p><code>struct s3c2410fb_hw regs</code>表示LCDCON1-LCDCON5共5个LCD控制器的控制寄存器。它们用来设置LCD类型、像素数据的格式。<br><code>gpcup</code>、<code>gpcup_mask</code>、<code>gpccon</code>、<code>gpccon_mask</code>、<code>gpdup</code>、<code>gpdup_mask</code>、<code>gpdcon</code>、<code>gpdcon_mask</code>用来设置GPC、GPD两组GPIO引脚，<code>gpcup</code>和<code>gpccon_mask</code>两个成员被用来设置GPCUP寄存器：<code>gpcup</code>表示新值，<code>gpccon_mask</code>表示要设置的位。<br><code>lpcsel</code>表示LPCSEL寄存器，它用来支持SEC公司生产的TFT LCD，对于一般的LCD，不用设置这个寄存器。<br>本开发板使用240x320，16bpp的TFT LCD，内核自带的smdk2440_lcd_cfg结构并不适用于这个开发板，并且它的设置有一些错误：没有指定GPIO寄存器的值，“type”设置错了。原来的值如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">s3c2410fb_mach_info</span> <span class="title">smdk2440_lcd_cfg</span> __<span class="title">initdata</span> =</span> &#123;</span><br><span class="line">...</span><br><span class="line"><span class="meta">#<span class="keyword">if</span> 0</span></span><br><span class="line">	<span class="comment">/* currently setup by downloader */</span></span><br><span class="line">	.gpccon		= <span class="number">0xaa940659</span>,</span><br><span class="line">	.gpccon_mask	= <span class="number">0xffffffff</span>,</span><br><span class="line">	.gpcup		= <span class="number">0x0000ffff</span>,</span><br><span class="line">	.gpcup_mask	= <span class="number">0xffffffff</span>,</span><br><span class="line">	.gpdcon		= <span class="number">0xaa84aaa0</span>,</span><br><span class="line">	.gpdcon_mask	= <span class="number">0xffffffff</span>,</span><br><span class="line">	.gpdup		= <span class="number">0x0000faff</span>,</span><br><span class="line">	.gpdup_mask	= <span class="number">0xffffffff</span>,</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">...</span><br><span class="line">	.type		= S3C2410_LCDCON1_TFT16BPP,</span><br><span class="line">...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>它把GPIO的值屏蔽掉了，原因是“currently setup by downloader”，这也许是这个驱动的开发者在调试时，另外使用某种下载器来设置GPIO。<br>上面的<code>type</code>被设置为<code>S3C2410_LCDCON1_TFT16BPP</code>，这是错误的，“type”表示“类型”，而“S3C2410_LCDCON1_TFT16BPP”表示“TFT”类型下数据的格式。应该设为以下4个值之一：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> S3C2410_LCDCON1_DSCAN4	   (0&lt;&lt;5)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> S3C2410_LCDCON1_STN4	   (1&lt;&lt;5)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> S3C2410_LCDCON1_STN8	   (2&lt;&lt;5)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> S3C2410_LCDCON1_TFT	       (3&lt;&lt;5)</span></span><br></pre></td></tr></table></figure>
+<p>下面修改代码</p>
+<ol>
+<li>对于S3C2440单板<br>修改smdk2440_lcd_cfg结构，它在<code>arch/arm/mach-s3c2440/mach-smdk2440.c</code>文件中，修改后的代码如下：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* LCD driver info */</span></span><br><span class="line"> <span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">s3c2410fb_mach_info</span> <span class="title">smdk2440_lcd_cfg</span> __<span class="title">initdata</span> =</span> &#123;</span><br><span class="line">     .regs	= &#123;</span><br><span class="line"></span><br><span class="line">         .lcdcon1	= S3C2410_LCDCON1_TFT16BPP |</span><br><span class="line">                 S3C2410_LCDCON1_TFT |</span><br><span class="line">                 S3C2410_LCDCON1_CLKVAL(<span class="number">0x04</span>),</span><br><span class="line"></span><br><span class="line">         .lcdcon2	= S3C2410_LCDCON2_VBPD(<span class="number">1</span>) |</span><br><span class="line">                 S3C2410_LCDCON2_LINEVAL(<span class="number">319</span>) |</span><br><span class="line">                 S3C2410_LCDCON2_VFPD(<span class="number">5</span>) |</span><br><span class="line">                 S3C2410_LCDCON2_VSPW(<span class="number">1</span>),</span><br><span class="line"></span><br><span class="line">         .lcdcon3	= S3C2410_LCDCON3_HBPD(<span class="number">36</span>) |</span><br><span class="line">                 S3C2410_LCDCON3_HOZVAL(<span class="number">239</span>) |</span><br><span class="line">                 S3C2410_LCDCON3_HFPD(<span class="number">19</span>),</span><br><span class="line"></span><br><span class="line">         .lcdcon4	= S3C2410_LCDCON4_MVAL(<span class="number">13</span>) |</span><br><span class="line">                 S3C2410_LCDCON4_HSPW(<span class="number">5</span>),</span><br><span class="line"></span><br><span class="line">         .lcdcon5	= S3C2410_LCDCON5_FRM565 |</span><br><span class="line">                 S3C2410_LCDCON5_INVVLINE |</span><br><span class="line">                 S3C2410_LCDCON5_INVVFRAME |</span><br><span class="line">                 S3C2410_LCDCON5_PWREN |</span><br><span class="line">                 S3C2410_LCDCON5_HWSWP,</span><br><span class="line">     &#125;,</span><br><span class="line"></span><br><span class="line">     <span class="comment">/* currently setup by downloader */</span></span><br><span class="line">     .gpccon		= <span class="number">0xaaaaaaaa</span>,</span><br><span class="line">     .gpccon_mask	= <span class="number">0xffffffff</span>,</span><br><span class="line">     .gpcup		= <span class="number">0xffffffff</span>,</span><br><span class="line">     .gpcup_mask	= <span class="number">0xffffffff</span>,</span><br><span class="line">     .gpdcon		= <span class="number">0xaaaaaaaa</span>,</span><br><span class="line">     .gpdcon_mask	= <span class="number">0xffffffff</span>,</span><br><span class="line">     .gpdup		= <span class="number">0xffffffff</span>,</span><br><span class="line">     .gpdup_mask	= <span class="number">0xffffffff</span>,</span><br><span class="line"></span><br><span class="line">     .fixed_syncs = <span class="number">1</span>,</span><br><span class="line">     .type		= S3C2410_LCDCON1_TFT,</span><br><span class="line"></span><br><span class="line">     .width		= <span class="number">240</span>,</span><br><span class="line">     .height		= <span class="number">320</span>,</span><br><span class="line"></span><br><span class="line">     .xres		= &#123;</span><br><span class="line">         .min	= <span class="number">240</span>,</span><br><span class="line">         .max	= <span class="number">240</span>,</span><br><span class="line">         .defval	= <span class="number">240</span>,</span><br><span class="line">     &#125;,</span><br><span class="line"></span><br><span class="line">     .yres		= &#123;</span><br><span class="line">         .min	= <span class="number">320</span>,</span><br><span class="line">         .max	= <span class="number">320</span>,</span><br><span class="line">         .defval = <span class="number">320</span>,</span><br><span class="line">     &#125;,</span><br><span class="line"></span><br><span class="line">     .bpp		= &#123;</span><br><span class="line">         .min	= <span class="number">16</span>,</span><br><span class="line">         .max	= <span class="number">16</span>,</span><br><span class="line">         .defval = <span class="number">16</span>,</span><br><span class="line">     &#125;,</span><br><span class="line"> &#125;;</span><br></pre></td></tr></table></figure></li>
+<li>对于S3C2410单板<br>仿照<code>arch/arm/mach-s3c2440/mach-smdk2440.c</code>来修改<code>arch/arm/mach-s3c2410/mach-smdk2410.c</code><br>①增加smdk2410_lcd_cfg结构<br>直接把smdk2440_lcd_cfg的内容搬到mach-smdk2410.c中，改名为smdk2410_lcd_cfg即可。<br>②使用smdk2410_lcd_cfg结构<br>在S3C2410单板初始化函数smdk2410_init中，调用s3c24xx_fb_set_platdata函数。除增加的smdk2410_lcd_cfg结构外，还要增加如下所示的代码：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;asm/arch/fb.h&gt;</span></span></span><br><span class="line">...</span><br><span class="line"><span class="comment">/* LCD driver info */</span></span><br><span class="line"> <span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">s3c2410fb_mach_info</span> <span class="title">smdk2440_lcd_cfg</span> __<span class="title">initdata</span> =</span> &#123;</span><br><span class="line">     ...</span><br><span class="line"> &#125;;</span><br><span class="line"> ...</span><br><span class="line"> <span class="type">static</span> <span class="type">void</span> __init <span class="title function_">smdk2410_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line"> &#123;</span><br><span class="line">     s3c24xx_fb_set_platdata(&amp;smdk2410_lcd_cfg);</span><br><span class="line">     ...</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h3 id="配置内核以使用LCD"><a href="#配置内核以使用LCD" class="headerlink" title="配置内核以使用LCD"></a>配置内核以使用LCD</h3><p>对LCD的配置有两方面，一是frame buffer方面的配置，二是控制台方面的配置。<br>配置内容如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Device Drivers ---&gt;</span><br><span class="line">    Graphics support ---&gt;</span><br><span class="line">        &lt;*&gt; Support for frame buffer devices    //支持frame buffer</span><br><span class="line">        &lt;*&gt; S3c2410 LCD frame buffer support    //支持S3C24xx</span><br><span class="line">            Console display driver support ---&gt;</span><br><span class="line">            &lt;*&gt; Frame buffer Console support    //支持frame buffer控制它</span><br><span class="line">            [ ] Select Compile-in fonts         //选择字库，默认为VGA 8x8、VGA 8x16字库</span><br><span class="line">        [*] Bootup logo ---&gt;                    //启动时显示LOGO</span><br><span class="line">            [*] Standard 224-color Linux logo   //选择LOGO图像，有单色、16色、244色</span><br></pre></td></tr></table></figure>
+<ol>
+<li>通过LCD显示内核信息<br>以前使用串口作为控制台（打印内核信息）时，命令行参数为“console&#x3D;ttySAC0”，现在可以多加一项，比如“console&#x3D;ttySAC0 console&#x3D;tty1”。tty1表示第一个虚拟终端，tty2表示第二个虚拟终端，而tty0表示当前的虚拟终端。</li>
+<li>操作&#x2F;dev&#x2F;tty1输出字符：如果使用mdev机制，这个步骤可以省略。<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">mknod /dev/tty0 c <span class="number">4</span> <span class="number">0</span></span><br><span class="line">mknod /dev/tty1 c <span class="number">4</span> <span class="number">1</span></span><br><span class="line">mknod /dev/tty2 c <span class="number">4</span> <span class="number">2</span></span><br><span class="line">mknod /dev/tty3 c <span class="number">4</span> <span class="number">3</span></span><br><span class="line">mknod /dev/tty4 c <span class="number">4</span> <span class="number">4</span></span><br><span class="line">mknod /dev/tty5 c <span class="number">4</span> <span class="number">5</span></span><br><span class="line">mknod /dev/tty6 c <span class="number">4</span> <span class="number">6</span></span><br></pre></td></tr></table></figure>
+在串口控制台，使用“echo hello &gt; &#x2F;dev&#x2F;tty0”命令可以在LCD上显示“hello”字符串。</li>
+<li>操作&#x2F;dev&#x2F;fb0绘制图像<br>首先如下创建设备文件，如果使用mdev机制，这个步骤可以省略：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">mknod /dev/fb0 c <span class="number">29</span> <span class="number">0</span></span><br></pre></td></tr></table></figure>
+然后使用frame buffer测试程序执行“fb_test &#x2F;dev&#x2F;fb0”即可在LCD上看到很多同心圆，并且在控制台打印出frame buffer的属性。</li>
+</ol>
+<h1 id="USB驱动程序移植"><a href="#USB驱动程序移植" class="headerlink" title="USB驱动程序移植"></a>USB驱动程序移植</h1><h2 id="USB驱动程序概述"><a href="#USB驱动程序概述" class="headerlink" title="USB驱动程序概述"></a>USB驱动程序概述</h2><p>USB（Universal Serial Bus）即“通用串行外部总线”，在各种场所已经大量使用。它接口简单（只有5V和GND、两根数据线D+和D-），可以外接硬盘、键盘、鼠标、打印机等多种设备。要使用尽可能少的接口支持尽可能多的外设，USB是一个好的选择，在嵌入式设备中尤其如此。<br>USB总线规范有1.1版和2.0版。USB1.1支持两种传输速率：低速（Low Speed）1.5Mbit&#x2F;s、全速12Mbit&#x2F;s，对于鼠标、键盘、CD-ROM等设备，这样的速率足够。但是在访问硬盘、摄像机时，就显得很慢。为此，USB2.0提供了一种更高的传输速率：高速，它可以达到480Mbit&#x2F;s。USB2.0向下兼容USB1.1，可以遵循USB1.1规范的设备连接到USB2.0控制器上，也可以把USB2.0的设备USB1.1控制器上。<br>USB总线的硬件拓扑结构如下图所示。<br>USB主机控制器（USB Host Controller）通过根集线器（Root Hub）与其他设备相连接。集线器也属于USB设备，通过它可以在一个USB接口上扩展出多个接口。除根集线器外，最多可以层叠5个集线器，每条USB电缆的最大长度是5m，所以USB总线的最大距离为30m。一条USB总线上可以外接127个设备，包括根集线器和其他集线器。整个结构图就是一个星状结构，一条USB总线上所有设备共享一条通往主机的数据通道，同一时刻只能有一个设备与主机通信。<br><img src="/2022/10/19/LCD%E5%92%8CUSB%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E7%A7%BB%E6%A4%8D/4.jpeg" alt="img not found"><br>通过USB主机控制器来管理外接的USB设备，USB主机控制器共分3种，UHCI、OHCI和EHCI，其中的“HCI”表示“Host Controller Interface”。UHCI、OHCI属于USB1.1的主机控制器规范，而EHCI是USB2.0的主机控制规范。UHCI（Universal HCI），它是由Intel公司制定得标准，它的硬件做的事情少，这使得软件比较复杂。与之相对的是OHC（Open HCI）,它由Compaq、Microsoft和National Semiconductor联合制定，在硬件方面它具备更多的智能，使得软件相对简单。<br><em><strong>这些差别只存在于底层的USB主机控制器的驱动程序，对它之上的软件没有影响。USB2.0的主机控制程序只有EHCI（Enhanced HCI）一种</strong></em><br>在配置内核的时候，经常可以看到“HCD”字样，它表示“Host Controller Drivers”，即主机控制器驱动程序。比如有uhci-hcd、ohci-hcd、ehci-hcd等驱动模块。<br>USB驱动程序分两类：USB主机控制器驱动程序（Host Controller Drivers）、USB设备驱动程序（USB device drivers）。它们在内核中的层次如图所示。<br><img src="/2022/10/19/LCD%E5%92%8CUSB%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E7%A7%BB%E6%A4%8D/5.jpeg" alt="img not found"><br>USB主机控制器驱动程序提供访问USB设备的接口，它只是一个“数据通道”，至于这些数据有什么用，这要靠上层的USB设备驱动程序来解释。USB设备驱动程序使用下层驱动提供的接口来访问USB设备，不需要关心传输的具体细节。</p>
+<h2 id="配置内核支持USB键盘、USB鼠标和USB硬盘"><a href="#配置内核支持USB键盘、USB鼠标和USB硬盘" class="headerlink" title="配置内核支持USB键盘、USB鼠标和USB硬盘"></a>配置内核支持USB键盘、USB鼠标和USB硬盘</h2><p>S3C2410&#x2F;S3C2440的USB控制器有如下特性<br><strong>符合OHCI1.0规范</strong><br><strong>支持USB1.1版本</strong><br><strong>有两个插口</strong><br><strong>支持低速设备和全速设备</strong></p>
+<p>Linux内核中对OHCI主机控制器支持完善，并有多种USB设备驱动程序。Linux2.6.22.6也已经支持S3C2410&#x2F;S3C2440的USB控制器，只不过第二个插口上电后默认为USB Device插口，如果要将它改为USB Host插口（比如没有USB集线器，却需要同时接入USB键盘、USB鼠标时），只要设置MISCCR寄存器的位3即可，所有的修改都在文件<code>drivers/usb/host/ohci-s3c2410.c</code>中完成，代码如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;asm/arch/regs-gpio.h&gt;</span></span></span><br><span class="line">...</span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">usb_hcd_s3c2410_probe</span><span class="params">(<span class="type">const</span> <span class="keyword">struct</span> hc_driver *driver,</span></span><br><span class="line"><span class="params">                <span class="keyword">struct</span> platform_device *dev)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">usb_hcd</span> *<span class="title">hcd</span> =</span> <span class="literal">NULL</span>;</span><br><span class="line">    <span class="type">int</span> retval;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 2 host port */</span>    </span><br><span class="line">    writel(readl(S3C2410_MISCCR) | S3C2410_MISCCR_USBHOST, S3C2410_MISCCR);</span><br><span class="line"></span><br><span class="line">    s3c2410_usb_set_power(dev-&gt;dev.platfrom_data,<span class="number">1</span>,<span class="number">1</span>);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>现在只需要配置内核启用它们：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Device Drivers ---&gt;</span><br><span class="line">    SCSI device support ---&gt;</span><br><span class="line">        &lt;*&gt; SCSI device support         //要支持USB磁盘，这项要选上</span><br><span class="line">        [*] legacy /proc/scsi/ support  //在/proc/scsi 目录下提供以下信息</span><br><span class="line">        &lt;*&gt; SCSI disk support           //SCSI硬盘，要支持U盘等，这项要选上</span><br><span class="line">    </span><br><span class="line">    USB support ---&gt;</span><br><span class="line">        &lt;*&gt; Support for Host-side USB   //USB主机控制器</span><br><span class="line">        [*] USB device filesystem       //在/proc文件系统中提供一些信息，调试用</span><br><span class="line">        &lt;*&gt; OHCI HCD support            //OHCI主机控制器驱动程序</span><br><span class="line">        &lt;*&gt; USB mass Storage support    //USB存储设备</span><br><span class="line"></span><br><span class="line">    HID Devices ---&gt;</span><br><span class="line">        &lt;*&gt; USB Human Interface Device (full HID) support   //USB键盘、USB鼠标等HID设备</span><br><span class="line">        [*] /dev/hiddev raw HID device support              //以原始（raw）的方式访问HID设备</span><br></pre></td></tr></table></figure>
+<p>USB控制器的时钟是在U-Boot中设置的，UCLK必须设为48MHZ。</p>
+<h2 id="USB设备的使用"><a href="#USB设备的使用" class="headerlink" title="USB设备的使用"></a>USB设备的使用</h2><p>连接USB设备时需要注意：S3C2410&#x2F;S3C2440既可以作为USB主机，也可以作为USB设备。作为USB主机时对外提供两个接口，对应板上叠起来的两个USB接口，下面的称为HOST1，上面的称为HOST2；作为USB设备时，对外也提供一个接口，对应板上的USB_DEVICE接口。<br>HOST2和USB_DEVICE在S3C2410&#x2F;S3C2440上的引脚是复用的。要在开发板上使用两个USB设备时，除HOST1外，可以设置跳线使用HOST2；要使用更多的USB设备，必须通过USB集线器来连接。</p>
+<h3 id="使用LCD和USB键盘作为终端"><a href="#使用LCD和USB键盘作为终端" class="headerlink" title="使用LCD和USB键盘作为终端"></a>使用LCD和USB键盘作为终端</h3><p>现有的内核已经支持LCD和USB键盘，可以使用它们来作为控制台、终端了。前面说过，在命令行参数中增加“console&#x3D;tty1”就可以在LCD上显示内核信息，不过要想使用它们来登录系统，需要修改&#x2F;etc&#x2F;inittab文件，增加以下6行：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">tty1::askfirst:-/bin/sh</span><br><span class="line">tty2::askfirst:-/bin/sh</span><br><span class="line">tty3::askfirst:-/bin/sh</span><br><span class="line">tty4::askfirst:-/bin/sh</span><br><span class="line">tty5::askfirst:-/bin/sh</span><br><span class="line">tty6::askfirst:-/bin/sh</span><br></pre></td></tr></table></figure>
+<p>它们在6个虚拟终端上启动shell程序，接上USB键盘和LCD后，可以看到如下字样的提示信息：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Please press Enter to activate this consorl</span><br></pre></td></tr></table></figure>
+<p>在键盘上按回车键，就可以像在串口终端上一样使用USB键盘、LCD来控制系统了。</p>
+<h3 id="使用U盘"><a href="#使用U盘" class="headerlink" title="使用U盘"></a>使用U盘</h3><p>首先在开发板上创建如下设备文件</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mknod /dev/sda b 8 0</span><br><span class="line">mknod /dev/sda1 b 8 1</span><br><span class="line">mknod /dev/sda2 b 8 2</span><br><span class="line">mknod /dev/sda3 b 8 3</span><br><span class="line">mknod /dev/sda4 b 8 4</span><br></pre></td></tr></table></figure>
+<p>接U盘后，即可像前面使用硬盘、SD卡一样来使用U盘了。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">fdsik /dev/sda              //进入菜单，对U盘进行分区，修改分了一个主分区/dev/sda1</span><br><span class="line">mkdosfs -F 32 /dev/sda1     //格式化为FAT32文件系统</span><br><span class="line">mount /dev/sda1 /mnt        //挂接</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>嵌入式Linux应用完全开发手册</category>
+        <category>第4篇第24章 LCD和USB驱动程序移植</category>
+      </categories>
+      <tags>
+        <tag>嵌入式Linux</tag>
+        <tag>Linux Driver</tag>
       </tags>
   </entry>
   <entry>
@@ -6577,346 +6577,6 @@ s3cmci.c中的函数会将GPG8引脚设置为外部中断EINT16，设置双边�
       </tags>
   </entry>
   <entry>
-    <title>内存管理</title>
-    <url>/2022/11/26/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/</url>
-    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>在内核里分配内存可不像在其他地方分配内存那么容易。造成这种局面的因素很多。从根本上讲，是因为内核本身不能像用户空间那样奢侈地使用内存。内核与用户空间不同，它不具备这种能力，它不支持简单便捷的内存分配方式。比如，内核一般不能睡眠。此外，处理内存分配错误对内核来说也绝非易事。正是由于这种限制，再加上内存分配机制不能太复杂，所以在内核中获取内存要比在用户空间复杂得多。不过，从程序开发者角度来看，也不是说内核的内存分配就困难得不得了，只是在用户空间中的内存分配不太一样而已。<br>本章讨论的是在内核之中获取内存的方法。在深入探究实际的分配接口之前，我们需要理解内核是如何管理内存的。</p>
-<span id="more"></span>
-
-<h1 id="页"><a href="#页" class="headerlink" title="页"></a>页</h1><p>内核把物理页作为内存管理的基本单位。尽管处理器的最小可寻址单位通常为字（甚至是字节），但是，内存管理单元（MMU，管理内存并把物理内存转换为虚拟内存的硬件）通常以页为单位进行处理。正因为如此，MMU以页（page）大小为单位来管理系统中的页表（这也是页表名的来由）。从虚拟内存的角度来看，页就是最小单位。<br>在第19章我们将会看到，体系结构不同，支持的页的大小也不尽相同，还有些体系结构甚至支持几种不同的页大小。大多数32位体系结构支持4KB的页，而64位体系结构一般会支持8KB的页。这就意味着，在支持4KB页大小并有1GB物理内存的机器上，物理内存会被划分为262144个页。<br>内核用<code>struct page</code>结构表示系统中的每个物理页，该结构位于&lt;linux&#x2F;mm_types.h&gt;中—-我简化了定义，去除了两个容易混淆我们讨论主题的联合结构体：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">page</span> &#123;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>           flags;</span><br><span class="line">    <span class="type">atomic_t</span>                _count;</span><br><span class="line">    <span class="type">atomic_t</span>                _mapcount;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>           private;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">address_space</span>    *<span class="title">mapping</span>;</span></span><br><span class="line">    <span class="type">pgoff_t</span>                 index;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>        <span class="title">lru</span>;</span></span><br><span class="line">    <span class="type">void</span>                    *virtual;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<p>让我们看一下其中比较重要的域。flag域用来存放页的状态。这些状态包括页是不是脏的，是不是被锁定在内存中等。flag的每一位单独表示一种状态，所以它至少可以同时表示出32种不同的状态。这些标志定义在&lt;linux&#x2F;page-flags&gt;中。<br>_count域存放页的引用计数—-也就是这一页被引用了多少次。当计数值变为-1时，就说明当前内核并没有引用这一页，于是，在新的分配中就可以使用它。内核代码不应当直接检查该域，而是调用page_count()函数检查，该函数唯一的参数就是page结构。当页空闲时，尽管该结构内部的_count值是负的，但是对page_count()函数而言，返回0表示页空闲，返回一个正整数表示页在使用。一个页可以由页缓存使用（这时，mapping域指向和这个页关联的address_space对象），或者作为私有数据（由private指向），或者作为进程页表中的映射。<br>virtual域是页的虚拟地址。通常情况下，它就是页在虚拟内存中的地址。有些内存（即所谓的高端内存）并不永久地映射到内核地址空间上。在这种情况下，这个域的值为NULL，需要的时候，必须动态地映射这些页。稍后我们将谈论高端内存。<br>必须要理解的一点是page结构与物理页有关，而并非与虚拟页相关。因此，该结构对页的描述只是短暂的。即使页中所包含的数据继续存在，由于交换等原因，它们也可能并不再和同一个page结构相关联。内核仅仅用这个数据结构来描述当前时刻在相关物理页中存放的东西。这个数据结构的目的在于描述物理内存本身，而不是描述包含在其中的数据。<br>内核用这一结构来管理系统中所有的页，因为内核需要直到一个页是否空闲（也就是页有没有被分配）。如果页已经被分配，内核还需要直到谁拥有这个页。<code>拥有者可能是用户空间进程、动态分配的内核数据、静态内核代码或页高速缓存等</code>。<br>系统中的每个物理页都要分配一个这样的结构体，开发者常常对此感到惊讶。他们会想“这得浪费多少内存呀”！让我们来算算对所有这些页都这么做，到底要消耗多少内存。就算<code>struct page</code>占40字节的内存吧，假定系统的物理页为8KB大小，系统有4GB物理内存。那么，系统中共有页面524288个，而描述这么多页面的page结构体消耗的内存只不过是20MB：也许绝对值不小，而相对系统4GB内存而言，仅是很小的一部分罢了。因此，要管理系统中这么多物理页面，这个代价并不算太高。</p>
-<h1 id="区"><a href="#区" class="headerlink" title="区"></a>区</h1><p>由于硬件的限制，内核并不能对所有的页一视同仁。有些页位于内存中特定的物理地址上，所以不能将其用于一些特定的任务。由于存在这种限制，所以内核把页划分为不同的区（zone）。内核使用区对具有相似特性的页进行分组。Linux必须处理如下两种由于硬件存在缺陷而引起的内存寻址问题：</p>
-<ol>
-<li>一些硬件只能用某些特定的内存地址来执行DMA（直接内存访问）。</li>
-<li>一些体系结构的内存的物理寻址范围比虚拟寻址范围大得多。这样，就有一些内存不能永久地映射到内核空间上。</li>
-</ol>
-<p>因为存在这些制约条件，Linux主要使用了四种区：</p>
-<ol>
-<li>ZONE_DMA—-这个区包含的页能用来执行DMA操作。</li>
-<li>ZONE_DMA32—-和ZONE_DMA类似，该区包含的页面可用来执行DMA操作；而和ZONE_DMA不同之处在于，这些页面只能被32位设备访问。在某些体系结构中，该区将比ZONE_DMA更大。</li>
-<li>ZONE_NORMAL—-这个区包含的都是能正常映射的页。</li>
-<li>ZONE_HIGHMEM—-这个区包含“高端内存”，其中的页并不能永久地映射到内核地址空间。</li>
-</ol>
-<p>这些区（还有两种不大重要的）在&lt;linux&#x2F;mmzone.h&gt;中定义。<br>区的实际使用和分布是与体系结构相关的。例如，某些体系结构在内存的任何地址上执行DMA都没有问题。在这些体系结构中，ZONE_DMA为空，ZONE_NORMAL就可以直接用于分配。与此相反，在x86体系结构上，ISA设备就不能在整个32位的地址空间中执行DMA，因为ISA设备只能访问物理内存的前16MB。因此，ZONE_DMA在x86上包含的页都在0-16MB的内存范围里。<br>ZONE_HIGHMEM的工作方式也差不多。能否直接映射取决于体系结构。在32位x86系统上，ZONE_HIGHMEM为高于896MB的所有物理内存。在其他体系结构上，由于所有内存都被直接映射，所以ZONE_HIGHMEM为空。ZONE_HIGHMEM所在的内存就是所谓的高端内存（high memory）。系统的其余内存就是所谓的低端内存（low memory）。<br>前两个区各取所需后，剩余的就由ZONE_NORMAL区独享了。在x86上，ZONE_NORMAL是从16MB到896MB的所有物理内存。在其他的体系结构上，ZONE_NORMAL是所有的可用物理地址。下表是每个区及其在x86-32上所占的页的列表。</p>
-<table>
-<thead>
-<tr>
-<th>区</th>
-<th>描述</th>
-<th>物理内存</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>ZONE_DMA</td>
-<td>DMA使用的页</td>
-<td>&lt;16MB</td>
-</tr>
-<tr>
-<td>ZONE_NORMAL</td>
-<td>正常可寻址的页</td>
-<td>16-896MB</td>
-</tr>
-<tr>
-<td>ZONE_HIGHMEM</td>
-<td>动态映射的页</td>
-<td>&gt;896MB</td>
-</tr>
-</tbody></table>
-<p>Linux把系统的页划分为区，形成不同的内存池，这样就可以根据用途进行分配了。例如，ZONE_DMA内存池让内核有能力为DMA分配所需的内存。如果需要这样的内存，那么，内核就可以从ZONE_DMA中按照请求的数目取出页。注意，区的划分没有任何物理意义，这只不过是内核为了管理而采取的一种逻辑上的分组。<br>某些分配可能需要从特定的区中获取页，而另外一些分配则可以从多个区中获取页。比如，尽管用于DMA的内存必须从ZONE_DMA中进行分配，但是一般用途的内存却既能从ZONE_DMA分配，也能从ZONE_NORMAL分配，不过不可能同时从两个区分配，因为分配是不能跨区界限的。当然，内核更希望一般用途的内存从常规区分配，这样能节省ZONE_DMA中的页，保证满足DMA的使用需求。但是，如果可供分配的资源不够用了（如果内存已经变得很少了），那么，内核就会占用其他可用区的内存。<br>不是所有的体系结构都定义了全部区，有些64位的体系结构，如Intel的x86-64体系结构可以映射和处理64位的内存空间，所以x86-64没有ZONE_HIGHMEM区，所有的物理内存都处于ZONE_DMA和ZONE_NORMAL区。<br>每个区都用<code>struct zone</code>表示，在&lt;linux&#x2F;mmzone.h&gt;中定义：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">zone</span> &#123;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               watermark[NR_WMARK];</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               lowmem_reserve[MAX_NR_ZONES];</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">per_cpu_pageset</span>      <span class="title">pageset</span>[<span class="title">NR_CPUS</span>];</span></span><br><span class="line">    <span class="type">spinlock_t</span>                  lock;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">free_area</span>            <span class="title">free_area</span>[<span class="title">MAX_ORDER</span>];</span></span><br><span class="line">    <span class="type">spinlock_t</span>                  lru_lock;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zone_lru</span> &#123;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>        <span class="title">list</span>;</span></span><br><span class="line">        <span class="type">unsigned</span> <span class="type">long</span>           nr_saved_scan;</span><br><span class="line">    &#125;lru[NR_LRU_LISTS];         </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zone_reclaim_stat</span>    <span class="title">reclaim_stat</span>;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               pages_scanned;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               flags;</span><br><span class="line">    <span class="type">atomic_long_t</span>               vm_stat[NR_VM_ZONE_STAT_ITEMS];</span><br><span class="line">    <span class="type">int</span>                         prev_priority;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span>                inactive_ratio;</span><br><span class="line">    <span class="type">wait_queue_head_t</span>           *wait_table;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               wait_table_hash_nr_entries;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               wait_table_bits;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">pglist_data</span>          *<span class="title">zone_pgdat</span>;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               zone_start_pfn;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               spanned_pages;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               present_pages;</span><br><span class="line">    <span class="type">const</span> <span class="type">char</span>                  *name;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<p>这个结构体很大，但是，系统中只有三个区，因此，也只有三个这样的结构。让我们看一下其中一些重要的域。<br>lock域是一个自旋锁，它防止该结构被并发访问。注意，这个域只保护结构，而不保护驻留在这个区中的所有页。没有特定的锁来保护单个页，但是，部分内核可以锁住在页中驻留的数据。<br>watermark数值持有该区的最小值、最低和最高水位值。内核使用水位为每个内存区设置合适的内存消耗基准。该水位随空闲内存的多少而变化。<br>name域是一个以NULL结束的字符串表示这个区的名字。内核启动期间初始化这个值，其代码位于<code>mm/page_alloc.c</code>中。三个区的名字分别为“DMA”、“Normal”和“HighMem”。</p>
-<h1 id="获得页"><a href="#获得页" class="headerlink" title="获得页"></a>获得页</h1><p>我们已经对内核如果管理内存（页、区等）有所了解了，现在让我们看一下内核实现的接口，我们正是通过这些接口在内核内分配和释放内存的。<br>内核提供了一种请求内存地底层机制，并提供了对它进行访问的几个接口。所有这些接口都以页为单位分配内存，定义于&lt;linux&#x2F;gfp.h&gt;中。最核心的函数是：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">struct</span> page *<span class="title function_">alloc_pages</span><span class="params">(<span class="type">gfp_t</span> gfp_mask,<span class="type">unsigned</span> <span class="type">int</span> order)</span>;</span><br></pre></td></tr></table></figure>
-<p>该函数分配2的order（1 &lt;&lt; order）次方个连续的物理页，并返回一个指针，该指针指向第一个页page结构体；如果出错，就返回NULL。在12.4节中我们再研究gft_t类型和gft_mask参数，你可以用下面这个函数把给定的页转换为它的逻辑地址：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> *<span class="title function_">page_address</span><span class="params">(<span class="keyword">struct</span> page *page)</span>;</span><br></pre></td></tr></table></figure>
-<p>该函数返回一个指针，指向给定物理页当前所在的逻辑地址。如果你无须用到<code>struct page</code>，你可以调用：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> __get_free_pages(<span class="type">gfp_t</span> gfp_mask,<span class="type">unsigned</span> <span class="type">int</span> order);</span><br></pre></td></tr></table></figure>
-<p>这个函数与alloc_pages()作用相同，不过它直接返回所请求的第一个页的逻辑地址。因为页是连续的，所以其他页也会紧随其后。<br>如果你只需要一页，就可以用下面两个封装好的函数，它能让你少敲几下键盘：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">struct</span> page *<span class="title function_">alloc_page</span><span class="params">(<span class="type">gfp_t</span> gfp_mask)</span>;</span><br><span class="line"><span class="type">unsigned</span> <span class="type">long</span> __get_free_page(<span class="type">gfp_t</span> gfp_mask);</span><br></pre></td></tr></table></figure>
-<p>这两个函数与其兄弟函数工作方式相同，只不过传递给order的值为0。</p>
-<h2 id="获得填充为0的页"><a href="#获得填充为0的页" class="headerlink" title="获得填充为0的页"></a>获得填充为0的页</h2><p>如果你需要让返回的页的内容全为0，请用下面的这个函数：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> <span class="title function_">get_zeroed_page</span><span class="params">(<span class="type">unsigned</span> <span class="type">int</span> gfp_mask)</span>;</span><br></pre></td></tr></table></figure>
-<p>这个函数与__get_free_page()工作方式相同，只不过把分配好的页都填充成了0—-字节中的每一位都要取消设置。如果分配的页是给用户空间的，这个函数就非常有用了。虽说分配好的页应该包含的都是随机产生的垃圾信息，但其实这些信息可能并不是完全随机的—-它很可能“随机地”包含某些敏感数据。用户空间的页在返回之前，所有数据必须填充为0，或做其他清理工作，在保障系统安全这一点上，我们绝不妥协。下表是所有底层的页分配方法的列表。</p>
-<p><strong>低级页分配方法</strong></p>
-<table>
-<thead>
-<tr>
-<th>标志</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>alloc_page(gfp_mask)</td>
-<td>只分配一页，返回指向页结构的指针</td>
-</tr>
-<tr>
-<td>alloc_pages(gfp_mask,order)</td>
-<td>分配2的order次方个页，返回指向第一页页机构的指针</td>
-</tr>
-<tr>
-<td>__get_free_page(gfp_mask)</td>
-<td>只分配一页，返回指向其逻辑地址的指针</td>
-</tr>
-<tr>
-<td>__get_free_pages(gfp_mask,order)</td>
-<td>分配2的order次方个页，返回指向第一页逻辑地址的指针</td>
-</tr>
-<tr>
-<td>get_zeroed_page(gfp_mask)</td>
-<td>只分配一页，让其内容填充0，返回指向其逻辑地址的指针</td>
-</tr>
-</tbody></table>
-<h2 id="释放页"><a href="#释放页" class="headerlink" title="释放页"></a>释放页</h2><p>当你不再需要页时可以用下面的函数释放它们：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> __free_pages(<span class="keyword">struct</span> page *page,<span class="type">unsigned</span> <span class="type">int</span> order);</span><br><span class="line"><span class="type">void</span> <span class="title function_">free_pages</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> addr,<span class="type">unsigned</span> <span class="type">int</span> order)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">free_page</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> addr)</span>;</span><br></pre></td></tr></table></figure>
-<p>释放页时要谨慎，只能释放属于你的页。传递了错误的<code>struct page</code>或地址，用了错误的order值，这些都可能导致系统崩溃。请记住，内核是完全信赖自己的。这点与用户空间不同，如果你有非法操作，内核会开开心心地把自己挂起来，停止运行。<br>让我们看一个例子。其中，我们想得到8个页：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> page;</span><br><span class="line"></span><br><span class="line">page = __get_free_pages(GFP_KERNEL,<span class="number">3</span>);</span><br><span class="line"><span class="keyword">if</span>(!page) &#123;</span><br><span class="line">    <span class="comment">//没有足够的内存，你必须处理这种错误</span></span><br><span class="line">    <span class="keyword">return</span> -ENOMEM;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//page 现在指向8个连续页的第1个页的地址</span></span><br></pre></td></tr></table></figure>
-<p>在此，我们使用完这8个页之后释放它们：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">free_page(page,<span class="number">3</span>);</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">    页已经被释放了，我们不应该再访问存放在“page”中的地址了</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
-<p>GFP_KERNEL参数是gfp_mask标志中的一个例子。前面我们已经简要讨论过了。<br>调用__get_free_pages()之后要注意进行错误检查。内核分配可能失败，因此你的代码必须进行检查并做相应的处理。这意味在此之前，你所做的所有工作可能前功尽弃，甚至还需要回归到原来的状态。正因为如此，在程序开始时就先进行内存分配是很有意义的，这能让错误处理得容易一点。如果你不这么做，那么在你想要分配内存的时候如果失败了，局面可能就难以控制了。<br>在你需要以页为单位的一族连续物理页时，尤其是在你只需要一两页时，这些低级页函数就很有用。对于常用的以字节为单位的分配来说，内核提供的函数是kmalloc()。</p>
-<h1 id="kmalloc"><a href="#kmalloc" class="headerlink" title="kmalloc()"></a>kmalloc()</h1><p>kmalloc()函数与用户空间的malloc()一族函数非常类似，只不过它多了一个flags参数。kmalloc()函数是一个简单的接口，用它可以获得以字节为单位的一块内核内存。如果你需要整个页，那么，前面讨论的页分配接口可能是更好的选择。但是，对于大多数内存来说，kmalloc()接口用的更多。<br>kmalloc()在&lt;linux&#x2F;slab.h&gt;中声明：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> *<span class="title function_">kmalloc</span><span class="params">(<span class="type">size_t</span> size,<span class="type">gfp_t</span> flags)</span>;</span><br></pre></td></tr></table></figure>
-<p>这个函数返回的一个指向内存块的指针，其内存块至少要有size大小。所分配的内存区在物理上是连续的。在出错时，它返回NULL。除非没有足够的内存可用，否则内核总能分配成功。在对kmalloc()调用之后，你必须检查返回的是不是NULL，如果是，要适当地处理错误。<br>让我们看一个例子。我们随便假定存在一个dog结构体，现在需要为它动态地分配足够的空间：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">dog</span> *<span class="title">p</span>;</span></span><br><span class="line">p = kmalloc(<span class="keyword">sizeof</span>(<span class="keyword">struct</span> dog),GFP_KERNEL);</span><br><span class="line"><span class="keyword">if</span>(!p)</span><br><span class="line">    <span class="comment">//处理错误</span></span><br></pre></td></tr></table></figure>
-<p>如果kmalloc()调用成功，那么，ptr现在指向一个内存块，内存块的大小至少为所请求的大小。GFP_KERNEL标志表示在试图获取内存并返回给kmalloc()的调用者的过程中，内存分配器将要采取的行为。</p>
-<h2 id="gfp-mask标志"><a href="#gfp-mask标志" class="headerlink" title="gfp_mask标志"></a>gfp_mask标志</h2><p>我们已经看过几个例子，发现不管是在低级页分配函数中，还是在kmalloc()函数中，都用到了分配器的标志。现在我们就深入讨论一下这些标志。<br>这些标志可分为三类：行为修饰符、区修饰符及类型。行为修饰符表示内核应当如何分配所需的内存。在某种特定情况下，只能使用某些特定的方法分配内存。例如，中断处理程序就要求内存在分配内存的过程中不能睡眠（因为中断处理程序不能被重新调度）。区修饰符表示从哪儿分配内存。前面我们已经看到，内核把物理内存分为多个区，每个区用于不同的目的。区修饰符表示从哪儿分配内存。前面我们已经看到，内核把物理内存分为多个区，每个区用于不同的目的。区修饰符指明到底从这些区中的哪一区进行分配。类型标志组合了行为修饰符和区修饰符，将各种可能用到的组合归纳为不同类型，简化了修饰符的使用；这样，你只需指定一个类型标志就可以了。GFP_KERNEL就是一种类型标志，内核中进程上下文相关的代码可以使用它。我们来看一下这些标志。</p>
-<h3 id="行为修饰符"><a href="#行为修饰符" class="headerlink" title="行为修饰符"></a>行为修饰符</h3><p>所有这些标志，包括行为描述符都是在&lt;linux&#x2F;gfp.h&gt;中声明的。不过，在&lt;linux&#x2F;slab.h&gt;中包含有这个头文件，因此，你一般不必直接包含引用它。实际上，一般只使用类型修饰符就够了，我们随后会看到这点。因此，最好对每个标志都有所了解。下表是行为修饰符的列表。<br><strong>行为修饰符</strong></p>
-<table>
-<thead>
-<tr>
-<th>标志</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>_GFP_WAIT</td>
-<td>分配器可以睡眠</td>
-</tr>
-<tr>
-<td>_GFP_HIGH</td>
-<td>分配器可以访问紧急事件缓冲池</td>
-</tr>
-<tr>
-<td>_GFP_IO</td>
-<td>分配器可以启动磁盘I&#x2F;O</td>
-</tr>
-<tr>
-<td>_GFP_FS</td>
-<td>分配器可以启动文件系统I&#x2F;O</td>
-</tr>
-<tr>
-<td>_GFP_COLD</td>
-<td>分配器应该使用高速缓存中快要淘汰出去的页</td>
-</tr>
-<tr>
-<td>_GFP_NOWARN</td>
-<td>分配器将不打印失败警告</td>
-</tr>
-<tr>
-<td>_GFP_REPEAT</td>
-<td>分配器在分配失败时重复进行分配，但是这次分配还存在失败的可能</td>
-</tr>
-<tr>
-<td>_GFP_NOFALL</td>
-<td>分配器将无限地重复进行分配。分配不能失败</td>
-</tr>
-<tr>
-<td>_GFP_NORETRY</td>
-<td>分配器在分配失败时绝不会重新分配</td>
-</tr>
-<tr>
-<td>_GFP_NO_GROW</td>
-<td>在slab层内部使用</td>
-</tr>
-<tr>
-<td>_GFP_COMP</td>
-<td>添加混合页元数据，在hugetlb的代码内部使用</td>
-</tr>
-</tbody></table>
-<p>可以同时指定这些分配标志。例如：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">ptr = kmalloc(size,_GFP_WAIT | _GFP_IO | _GFP_FS);</span><br></pre></td></tr></table></figure>
-<p>说明页分配器（最终调用alloc_pages()）在分配时可以阻塞、执行I&#x2F;O。在必要时还可以执行文件系统操作。这就让内核有很大的自由度，以便它尽可能找到空闲的内存来满足分配请求。<br>大部分分配都会指定这些修饰符，但一般不是这样指定的，而是采用我们随后讨论的类型标志。别担心，你不会在分配内存时为怎样使用这些标志而犯愁的。</p>
-<h3 id="区修饰符"><a href="#区修饰符" class="headerlink" title="区修饰符"></a>区修饰符</h3><p>区修饰符表示内存区应当从何处分配。通常，分配可以从任何区开始。不过，内核优先从ZONE_NORMAL开始，这样可以确保其他区在需要时有足够的空闲页可供使用。<br>实际上只有两个区修饰符，因为除了ZONE_NORMAL之外只有两个区（默认都是从ZONE_NORMAL区进行分配）。下表是区修饰符的列表。<br><strong>区修饰符</strong></p>
-<table>
-<thead>
-<tr>
-<th>标志</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>_GFP_DMA</td>
-<td>从ZONE_DMA分配</td>
-</tr>
-<tr>
-<td>_GFP_DMA32</td>
-<td>只在ZONE_DMA32分配</td>
-</tr>
-<tr>
-<td>_GFP_HIGHMEM</td>
-<td>从ZONE_HIGHMEM或ZONE_NORMAL分配</td>
-</tr>
-</tbody></table>
-<p>指定以上标志中的一个就可以改变内核试图进行分配的区。_GFP_DMA标志强制内核从ZONE_DMA分配。这个标志在说，有了这种奇怪的标识，我们绝对可以拥有进行DMA的内存。相反，如果指定_GFP_HIGHMEN标志，则从ZONE_HIGHMEM（优先）或ZONE_NORMAL分配。这个标志在说，我可以使用高端内存，因此，我可以是一个玩偶，给你退还一些内存，但是，常规内存还照常工作。如果没有指定任何标志，则内核从ZONE_DMA或ZONE_NORMAL进行分配，当然优先从ZONE_NORMAL进行分配。不管区标志说什么了，只要它行为正常，我就不关心了。<br>不能给_get_free_pages()或kmalloc()指定ZONE_HIGHMEM，因为这两个函数返回的都是逻辑地址，而不是page结构，这两个函数分配的内存当前有可能还没有映射到内核的虚拟地址空间，因此，也可能根本没有逻辑地址。只有alloc_pages()才能分配高端内存。实际上，你的分配在大多数情况下都不必指定修饰符，ZONE_NORMAL就足矣。</p>
-<h3 id="类型标志"><a href="#类型标志" class="headerlink" title="类型标志"></a>类型标志</h3><p>类型标志指定所需的行为和区描述符以完成特殊类型的处理。正因为这一点，内核代码趋向于使用正确的类型标志，而不是一味地指定它可能需要用到的多个描述符。这么做既简单又不容易出错误。下表是类型标志的列表，下下表显示了每个类型标志与哪些修饰符相关联。<br><strong>类型标志</strong></p>
-<table>
-<thead>
-<tr>
-<th>标志</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>GFP_ATOMIC</td>
-<td>这个标志用在中断处理程序、下半部、持有自旋锁以及其他不能睡眠的地方。</td>
-</tr>
-<tr>
-<td>GFP_NOWAIT</td>
-<td>与GFP_ATOMIC类似，不同之处在于。调用不会退给紧急内存池。这就增加了内存分配失败的可能性。</td>
-</tr>
-<tr>
-<td>GFP_NOIO</td>
-<td>这种分配可以阻塞，但不会启动磁盘I&#x2F;O。这个标志在不能引发更多磁盘I&#x2F;O时能阻塞I&#x2F;O代码，这可能导致令人不愉快的递归。</td>
-</tr>
-<tr>
-<td>GFP_NOFS</td>
-<td>这种分配在必要时可能阻塞，也可能启动磁盘I&#x2F;O，但是不会启动文件系统操作。这个标志在你不能再启动另一个文件系统的操作时，用在文件系统部分的代码中。</td>
-</tr>
-<tr>
-<td>GFP_KERNEL</td>
-<td>这是一种常规分配方式，可能会阻塞。这个标志在睡眠安全时用在进程上下文代码中。为了获得调用者所需的内存，内核会尽力而为。这个标志应当是首选标志。</td>
-</tr>
-<tr>
-<td>GFP_USER</td>
-<td>这是一种常规分配方式，可能会阻塞。这个标志用于为用户空间进程分配内存。</td>
-</tr>
-<tr>
-<td>GFP_HIGHUSER</td>
-<td>这是从ZONE_HIGHMEM进行分配，可能会阻塞。这个标志用于为用户空间进程分配内存。</td>
-</tr>
-<tr>
-<td>GFP_DMA</td>
-<td>这是从ZONE_DMA进行分配。需要获取能供DMA使用的内存的设备驱动程序使用这个标志，通常与以上的某个标志组合在一起使用。</td>
-</tr>
-</tbody></table>
-<p><strong>在每种类型标志后隐含的修饰符列表</strong></p>
-<table>
-<thead>
-<tr>
-<th>标志</th>
-<th>修饰符标志</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>GFP_ATOMIC</td>
-<td>_GFP_HIGH</td>
-</tr>
-<tr>
-<td>GFP_NOWAIT</td>
-<td>0</td>
-</tr>
-<tr>
-<td>GFP_NOIO</td>
-<td>_GFP_WAIT</td>
-</tr>
-<tr>
-<td>GFP_NOFS</td>
-<td>(_GFP_WAIT</td>
-</tr>
-<tr>
-<td>GFP_KERNEL</td>
-<td>(_GFP_WAIT</td>
-</tr>
-<tr>
-<td>GFP_USER</td>
-<td>(_GFP_WAIT</td>
-</tr>
-<tr>
-<td>GFP_HIGHUSER</td>
-<td>(_GFP_WAIT</td>
-</tr>
-<tr>
-<td>GFP_DMA</td>
-<td>_GFP_DMA</td>
-</tr>
-</tbody></table>
-<p>让我们看一下做常用的标志以及你什么时候、为什么需要使用它们。内核中最常用的标志是GFP_KERNEL。这种分配可能会引起睡眠，它使用的是普通优先级。因为调用可能阻塞，因此这个标志只用在可以重新安全调度的进程上下文中（也就是没有锁被持有的等情况）。因为这个标志对内核如何获取请求的内存没有任何约束，所以内存分配成功的可能性很高。<br>另一个截然相反的标志是GFP_ATOMIC。因为这个标志表示不能睡眠的内存分配，因此想要满足调用者获取内存的请求将会受到很严格的限制，即使没有足够的连续内存块可供使用，内核也很可能释放出可用内存来，因为内核不能让调用者睡眠。相反，GFP_KERNEL分配可以让调用者睡眠、交换、刷新一些页到硬盘等。因为GFP_ATOMIC不能执行以上任何操作，因此与GFP_KERNEL相比较，它分配成功的机会比较小（尤其在内存短缺时）。即便如此，在当前代码（例如中断处理程序、软中断和tasklet）不能睡眠时，也只能选择GFP_ATOMIC。<br>在以上两种标志中间的是GFP_NOIO和GFP_NOFS。以这两个标志进行的分配可能会引起阻塞，但它们会避免执行某些其他操作。GFP_NOIO分配绝不启动任何磁盘I&#x2F;O来帮助满足请求。而GFP_NOFS可能会启动磁盘I&#x2F;O，但是它不会启动文件系统I&#x2F;O。你为什么需要这些标志？它们分别用在某些低级块I&#x2F;O或文件系统的代码中。设想，如果文件系统代码中需要分配内存，但没有使用GFP_NOFS。这种分配可能会引起更多的文件系统操作，而这些操作又会导致另外的分配，从而再引起更多的文件系统操作！这会一直持续下去。这样的代码在调用分配器的时候。必须确保分配器不会再执行到代码本身，否则，分配就可能产生死锁。也别紧张，内核使用这两个标志的地方是极少的。<br>GFP_DMA标志表示分配器必须满足从ZONE_DMA进行分配的请求。这个标志用在需要DMA的内存的设备驱动程序中。一般你会把这个标志与GFP_ATOMIC和GFP_KERNEL结合起来使用。<br>在你编写的绝大多数代码中，用到的要么是GFP_KERNEL，要么是GFP_ATOMIC。下表是通常情形和所用标志的列表。不管使用哪种分配类型，你都必须进行检查，并对错误进行处理。<br><strong>什么时候用哪种标志</strong></p>
-<table>
-<thead>
-<tr>
-<th>情形</th>
-<th>相应标志</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>进程上下文，可以睡眠</td>
-<td>使用GFP_KERNEL</td>
-</tr>
-<tr>
-<td>进程上下文，不可以睡眠</td>
-<td>使用GFP_ATOMIC，在你睡眠之前或之后以GFP_KERNEL执行内存分配</td>
-</tr>
-<tr>
-<td>中断处理程序</td>
-<td>使用GFP_ATOMIC</td>
-</tr>
-<tr>
-<td>软中断</td>
-<td>使用GFP_ATOMIC</td>
-</tr>
-<tr>
-<td>tasklet</td>
-<td>使用GFP_ATOMIC</td>
-</tr>
-<tr>
-<td>需要用于DMA的内存，可以睡眠</td>
-<td>使用（GFP_DMA</td>
-</tr>
-<tr>
-<td>需要用于DMA的内存，不可以睡眠</td>
-<td>使用（GFP_DMA</td>
-</tr>
-</tbody></table>
-<h2 id="kfree"><a href="#kfree" class="headerlink" title="kfree()"></a>kfree()</h2><p>kmalloc()的另一端就是kfree()，kfree()声明于&lt;linux&#x2F;slab.h&gt;中：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">kfree</span><span class="params">(<span class="type">const</span> <span class="type">void</span> *ptr)</span>;</span><br></pre></td></tr></table></figure>
-<p>kfree()函数释放由kmalloc()分配出来的内存块。如果想要释放的内存不是由kmalloc()分配的，或者想要释放的内存早就被释放了，比如说释放属于内核其他部分的内存，调用这个函数就会导致严重的后果。与用户空间类似，分配和回收要注意配对使用，以避免内存泄漏和其他bug。注意，<code>调用kfree(NULL)是安全的</code>。<br>让我们看一个在中断处理程序中分配内存的例子。在这个例子中，中断处理程序想分配一个缓冲区来保存输入数据。BUF_SIZE预定义为以字节为单位的缓冲区长度，它应该是大于两个字节的。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">char</span> *buf;</span><br><span class="line"></span><br><span class="line">buf = kmalloc(BUF_SIZE,GFP_ATOMIC);</span><br><span class="line"><span class="keyword">if</span>(!buf)</span><br><span class="line">    <span class="comment">//内存分配出错</span></span><br></pre></td></tr></table></figure>
-<p>之后，当我们不再需要这个内存时，别忘了释放它：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">kfree(buf);</span><br></pre></td></tr></table></figure>
-
-<h1 id="vmalloc"><a href="#vmalloc" class="headerlink" title="vmalloc()"></a>vmalloc()</h1><p><code>vmalloc()函数的工作方式类似于kmalloc()，只不过前者分配的内存虚拟地址是连续的，而物理地址则无须连续。这也是用户空间分配函数的工作方式：由malloc()返回的页在进程的虚拟地址空间内是连续的，但是，这并不保证它们在物理RAM中也是连续的。kmalloc()函数确保页在物理地址上是连续的（虚拟地址自然也是连续的）。</code>vmalloc()函数只确保页在虚拟地址空间内是连续的。它通过分配非连续的物理内存块，再修正页表，把内存映射到逻辑地址空间的连续区域中，就能做到这点。<br>大多数情况下，只有硬件设备需要得到物理地址连续的内存。在很多体系结构中，硬件设备存在于内存管理单元之外，它们根本不理解什么是虚拟地址。<code>因此，硬件设备用到的任何内存区都必须是物理上连续的块，而不仅仅是虚拟地址上连续的内存块</code>。而仅供软件使用的内存块（例如与进程相关的缓冲区）就可以使用只有虚拟地址连续的内存块。但在你的编程中，根本察觉不到这种差异。<code>对内核而言，所有内存看起来都是逻辑上连续的</code>。<br>尽管在某些情况下才需要物理上连续的内存块，但是，很多内核代码都用kmalloc()来获得内存，而不是vmalloc()。这主要是处于性能的考虑。vmalloc()函数为了把物理上不连续的页转化为虚拟地址空间上连续的页，必须专门建立页表项。糟糕的是，通过vmalloc()获得的页必须一个一个地进行映射（因为它们物理上是不连续的），这就会导致比直接内存映射大得多的TLB抖动。因为这些原因，<code>vmalloc()仅在不得已时才会使用----典型的就是为了获得大块内存时</code>，例如，当模块被动态插入到内核中时，就把模块装载到由vmalloc()分配的内存上。<br>vmalloc()函数声明在&lt;linux&#x2F;vmalloc.h&gt;中，定义在&lt;mm&#x2F;vmalloc.c&gt;中。用法与用户空间的malloc()相同：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> *<span class="title function_">vmalloc</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> size)</span>;</span><br></pre></td></tr></table></figure>
-<p>该函数返回一个指针，指向逻辑上连续的一块内存区，其大小至少为size。在发生错误时，函数返回NULL。<code>函数可能睡眠，因此，不能从中断上下文中进行调用，也不能从其他不允许阻塞的情况下进行调用</code>。<br>要释放通过vmalloc()所获得的内存，使用下面的函数：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vfree</span><span class="params">(<span class="type">const</span> <span class="type">void</span> *addr)</span>;</span><br></pre></td></tr></table></figure>
-<p>这个函数会释放从addr开始的内存块，其中addr是以前由vmalloc()分配的内存块的地址。这个函数也可以睡眠，因此，不能从中断上下文中调用。它没有返回值。<br>这个函数用起来比较简单：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">char</span> *buf;</span><br><span class="line"></span><br><span class="line">buf = vmalloc(<span class="number">16</span>*PAGE_SIZE);    <span class="comment">//get 16 pages</span></span><br><span class="line"><span class="keyword">if</span>(!buf)</span><br><span class="line">    <span class="comment">//错误，不能分配内存</span></span><br><span class="line"><span class="comment">//buf现在指向虚拟地址连续的一块内存区，其大小至少为16*PAGE_SIZE</span></span><br></pre></td></tr></table></figure>
-<p>在分配内存之后，一定要释放它：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">vfree(buf);</span><br></pre></td></tr></table></figure>
-
-<h1 id="slab层"><a href="#slab层" class="headerlink" title="slab层"></a>slab层</h1><p>分配和释放数据结构是所有内核中最普遍的操作之一。为了便于数据的频繁分配和回收，编程人员常常会用到空闲链表。空闲链表包含可供使用的、已经分配好的数据结构块。当代码需要一个新的数据结构实例时，就可以从空闲链表抓取一个，而不需要分配内存，再把数据放进去。以后，当不再需要这个数据结构的实例时，就把它放回空闲链表而不是释放它。从这个意义上说，空闲链表相当于对象高速缓存—-快速存储频繁使用的对象类型。<br>在内核中，空闲链表面临的主要问题之一是不能全局控制。当可用内存变得紧缺时，内核无法通知每个空闲链表，让其收缩缓存的大小以便释放出一些内存来。实际上，内核根本就不知道存在任何空闲链表。为了弥补这一缺陷，也为了使代码更加稳固，Linux内核提供了slab层（也就是所谓的slab分配器）。slab分配器扮演了通用数据结构缓存层的角色。<br>slab分配器的概念首先在Sun公司的SunOS 5.4操作系统中得以实现。Linux数据结构缓存层具有同样的名字和基本设计思想。<br>slab分配器试图在几个基本原则之间寻求一种平衡：</p>
-<ol>
-<li>频繁使用的数据结构也会频繁分配和释放，因此应当缓存它们。</li>
-<li>频繁分配和回收必然导致内存碎片（难以找到大块连续的可用内存）。为了避免这种现象，空闲链表的缓存会连续地存放。因为已释放的数据结构又会放回空闲链表，因此不会导致碎片。</li>
-<li>回收的对象可以立即投入下一次分配，因此，对于频繁的分配和释放，空闲链表能够提高其性能。</li>
-<li>如果分配器知道对象大小、页大小和总的高速缓存的大小这样的概念，它会做出更明智的决策。</li>
-<li>如果让部分缓存专属于单个处理器（对系统上的每个处理器独立而唯一），那么，分配和释放就可以不加SMP锁的情况下进行。</li>
-<li>如果分配器是与NUMA相关的，它就可以从相同的内存节点为请求者进行分配。 </li>
-<li>对存放的对象进行着色，以防止多个对象映射到相同的高速缓存行。</li>
-</ol>
-<p>Linux的slab层在设计和实现时充分考虑了上述原则。</p>
-<h2 id="slab层的设计"><a href="#slab层的设计" class="headerlink" title="slab层的设计"></a>slab层的设计</h2><p>slab层把不同的对象划分为所谓高速缓存组，其中每个高速缓存组都存放不同类型的对象。每种对象类型对应一个高速缓存。例如，一个高速缓存用于存放进程描述符（task_struct结构的一个空闲链表），而另一个高速缓存存放索引节点对象（struct inode）。有趣的是，kmalloc()接口建立在slab层上，使用了一组通用高速缓存。<br>然后，这些高速缓存又被划分为slab。slab由一个或多个物理上连续的页组成。一般情况下，slab也就仅仅由一页组成。每个高速缓存可以由多个slab组成。<br>每个slab都包含一些对象成员，这里的对象指的是被缓存的数据结构。每个slab处于三种状态之一：满、部分满或空。一个满的slab没有空闲的对象（slab中所有对象都已经被分配）。一个空的slab没有分配出任何对象（slab中的所有对象都是空闲的）。一个部分满的slab有一些对象已分配出去，有些对象还空闲着。当内核的某一部分需要一个新的对象时，先从部分满的slab中进行分配。如果没有部分满的slab，就从空的slab中进行分配。如果没有空的slab，就要创建一个slab了。显然，满的slab无法满足请求，因为它根本就没有空闲的对象。这种策略能减少碎片。</p>
-]]></content>
-      <categories>
-        <category>学习</category>
-        <category>书籍</category>
-        <category>Linux内核设计与实现</category>
-        <category>第12章 内存管理</category>
-      </categories>
-      <tags>
-        <tag>Linux Kernel</tag>
-        <tag>操作系统</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>进程调度</title>
     <url>/2022/10/28/%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>第3章讨论了进程，它在操作系统看来是程序的运行态表现形式。本章将讨论进程调度程序，它是确保进程能有效工作的一个内核子系统。<br>调度程序负责决定将哪个进程投入运行，何时运行以及运行多长时间。进程调度程序（常常简称调度程序）可看作在可运行态程序之间分配有限的处理器时间资源的内核子系统。调度程序是像Linux这样的多任务操作系统的基础。只有通过调度程序的合理调度，系统资源才能最大限度的发挥作用，多进程才会并发执行的效果。<br>调度程序没有太复杂的原理。最大限度地利用处理器时间的原则是，只要有可以执行的进程，那么总会有进程正在执行。但是只要系统中可运行的进程的数目比处理器的个数多，就注定某一给定时刻会有一些进程不能执行。这些进程在等待运行。这一组处于可运行状态的进程中选择一个来执行，是调度程序所需完成的基本工作。</p>
@@ -7775,6 +7435,412 @@ s3cmci.c中的函数会将GPG8引脚设置为外部中断EINT16，设置双边�
         <category>书籍</category>
         <category>Linux内核设计与实现</category>
         <category>第10章 内核同步方法</category>
+      </categories>
+      <tags>
+        <tag>Linux Kernel</tag>
+        <tag>操作系统</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>内存管理</title>
+    <url>/2022/11/26/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>在内核里分配内存可不像在其他地方分配内存那么容易。造成这种局面的因素很多。从根本上讲，是因为内核本身不能像用户空间那样奢侈地使用内存。内核与用户空间不同，它不具备这种能力，它不支持简单便捷的内存分配方式。比如，内核一般不能睡眠。此外，处理内存分配错误对内核来说也绝非易事。正是由于这种限制，再加上内存分配机制不能太复杂，所以在内核中获取内存要比在用户空间复杂得多。不过，从程序开发者角度来看，也不是说内核的内存分配就困难得不得了，只是在用户空间中的内存分配不太一样而已。<br>本章讨论的是在内核之中获取内存的方法。在深入探究实际的分配接口之前，我们需要理解内核是如何管理内存的。</p>
+<span id="more"></span>
+
+<h1 id="页"><a href="#页" class="headerlink" title="页"></a>页</h1><p>内核把物理页作为内存管理的基本单位。尽管处理器的最小可寻址单位通常为字（甚至是字节），但是，内存管理单元（MMU，管理内存并把物理内存转换为虚拟内存的硬件）通常以页为单位进行处理。正因为如此，MMU以页（page）大小为单位来管理系统中的页表（这也是页表名的来由）。从虚拟内存的角度来看，页就是最小单位。<br>在第19章我们将会看到，体系结构不同，支持的页的大小也不尽相同，还有些体系结构甚至支持几种不同的页大小。大多数32位体系结构支持4KB的页，而64位体系结构一般会支持8KB的页。这就意味着，在支持4KB页大小并有1GB物理内存的机器上，物理内存会被划分为262144个页。<br>内核用<code>struct page</code>结构表示系统中的每个物理页，该结构位于&lt;linux&#x2F;mm_types.h&gt;中—-我简化了定义，去除了两个容易混淆我们讨论主题的联合结构体：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">page</span> &#123;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>           flags;</span><br><span class="line">    <span class="type">atomic_t</span>                _count;</span><br><span class="line">    <span class="type">atomic_t</span>                _mapcount;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>           private;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">address_space</span>    *<span class="title">mapping</span>;</span></span><br><span class="line">    <span class="type">pgoff_t</span>                 index;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>        <span class="title">lru</span>;</span></span><br><span class="line">    <span class="type">void</span>                    *virtual;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>让我们看一下其中比较重要的域。flag域用来存放页的状态。这些状态包括页是不是脏的，是不是被锁定在内存中等。flag的每一位单独表示一种状态，所以它至少可以同时表示出32种不同的状态。这些标志定义在&lt;linux&#x2F;page-flags&gt;中。<br>_count域存放页的引用计数—-也就是这一页被引用了多少次。当计数值变为-1时，就说明当前内核并没有引用这一页，于是，在新的分配中就可以使用它。内核代码不应当直接检查该域，而是调用page_count()函数检查，该函数唯一的参数就是page结构。当页空闲时，尽管该结构内部的_count值是负的，但是对page_count()函数而言，返回0表示页空闲，返回一个正整数表示页在使用。一个页可以由页缓存使用（这时，mapping域指向和这个页关联的address_space对象），或者作为私有数据（由private指向），或者作为进程页表中的映射。<br>virtual域是页的虚拟地址。通常情况下，它就是页在虚拟内存中的地址。有些内存（即所谓的高端内存）并不永久地映射到内核地址空间上。在这种情况下，这个域的值为NULL，需要的时候，必须动态地映射这些页。稍后我们将谈论高端内存。<br>必须要理解的一点是page结构与物理页有关，而并非与虚拟页相关。因此，该结构对页的描述只是短暂的。即使页中所包含的数据继续存在，由于交换等原因，它们也可能并不再和同一个page结构相关联。内核仅仅用这个数据结构来描述当前时刻在相关物理页中存放的东西。这个数据结构的目的在于描述物理内存本身，而不是描述包含在其中的数据。<br>内核用这一结构来管理系统中所有的页，因为内核需要直到一个页是否空闲（也就是页有没有被分配）。如果页已经被分配，内核还需要直到谁拥有这个页。<code>拥有者可能是用户空间进程、动态分配的内核数据、静态内核代码或页高速缓存等</code>。<br>系统中的每个物理页都要分配一个这样的结构体，开发者常常对此感到惊讶。他们会想“这得浪费多少内存呀”！让我们来算算对所有这些页都这么做，到底要消耗多少内存。就算<code>struct page</code>占40字节的内存吧，假定系统的物理页为8KB大小，系统有4GB物理内存。那么，系统中共有页面524288个，而描述这么多页面的page结构体消耗的内存只不过是20MB：也许绝对值不小，而相对系统4GB内存而言，仅是很小的一部分罢了。因此，要管理系统中这么多物理页面，这个代价并不算太高。</p>
+<h1 id="区"><a href="#区" class="headerlink" title="区"></a>区</h1><p>由于硬件的限制，内核并不能对所有的页一视同仁。有些页位于内存中特定的物理地址上，所以不能将其用于一些特定的任务。由于存在这种限制，所以内核把页划分为不同的区（zone）。内核使用区对具有相似特性的页进行分组。Linux必须处理如下两种由于硬件存在缺陷而引起的内存寻址问题：</p>
+<ol>
+<li>一些硬件只能用某些特定的内存地址来执行DMA（直接内存访问）。</li>
+<li>一些体系结构的内存的物理寻址范围比虚拟寻址范围大得多。这样，就有一些内存不能永久地映射到内核空间上。</li>
+</ol>
+<p>因为存在这些制约条件，Linux主要使用了四种区：</p>
+<ol>
+<li>ZONE_DMA—-这个区包含的页能用来执行DMA操作。</li>
+<li>ZONE_DMA32—-和ZONE_DMA类似，该区包含的页面可用来执行DMA操作；而和ZONE_DMA不同之处在于，这些页面只能被32位设备访问。在某些体系结构中，该区将比ZONE_DMA更大。</li>
+<li>ZONE_NORMAL—-这个区包含的都是能正常映射的页。</li>
+<li>ZONE_HIGHMEM—-这个区包含“高端内存”，其中的页并不能永久地映射到内核地址空间。</li>
+</ol>
+<p>这些区（还有两种不大重要的）在&lt;linux&#x2F;mmzone.h&gt;中定义。<br>区的实际使用和分布是与体系结构相关的。例如，某些体系结构在内存的任何地址上执行DMA都没有问题。在这些体系结构中，ZONE_DMA为空，ZONE_NORMAL就可以直接用于分配。与此相反，在x86体系结构上，ISA设备就不能在整个32位的地址空间中执行DMA，因为ISA设备只能访问物理内存的前16MB。因此，ZONE_DMA在x86上包含的页都在0-16MB的内存范围里。<br>ZONE_HIGHMEM的工作方式也差不多。能否直接映射取决于体系结构。在32位x86系统上，ZONE_HIGHMEM为高于896MB的所有物理内存。在其他体系结构上，由于所有内存都被直接映射，所以ZONE_HIGHMEM为空。ZONE_HIGHMEM所在的内存就是所谓的高端内存（high memory）。系统的其余内存就是所谓的低端内存（low memory）。<br>前两个区各取所需后，剩余的就由ZONE_NORMAL区独享了。在x86上，ZONE_NORMAL是从16MB到896MB的所有物理内存。在其他的体系结构上，ZONE_NORMAL是所有的可用物理地址。下表是每个区及其在x86-32上所占的页的列表。</p>
+<table>
+<thead>
+<tr>
+<th>区</th>
+<th>描述</th>
+<th>物理内存</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ZONE_DMA</td>
+<td>DMA使用的页</td>
+<td>&lt;16MB</td>
+</tr>
+<tr>
+<td>ZONE_NORMAL</td>
+<td>正常可寻址的页</td>
+<td>16-896MB</td>
+</tr>
+<tr>
+<td>ZONE_HIGHMEM</td>
+<td>动态映射的页</td>
+<td>&gt;896MB</td>
+</tr>
+</tbody></table>
+<p>Linux把系统的页划分为区，形成不同的内存池，这样就可以根据用途进行分配了。例如，ZONE_DMA内存池让内核有能力为DMA分配所需的内存。如果需要这样的内存，那么，内核就可以从ZONE_DMA中按照请求的数目取出页。注意，区的划分没有任何物理意义，这只不过是内核为了管理而采取的一种逻辑上的分组。<br>某些分配可能需要从特定的区中获取页，而另外一些分配则可以从多个区中获取页。比如，尽管用于DMA的内存必须从ZONE_DMA中进行分配，但是一般用途的内存却既能从ZONE_DMA分配，也能从ZONE_NORMAL分配，不过不可能同时从两个区分配，因为分配是不能跨区界限的。当然，内核更希望一般用途的内存从常规区分配，这样能节省ZONE_DMA中的页，保证满足DMA的使用需求。但是，如果可供分配的资源不够用了（如果内存已经变得很少了），那么，内核就会占用其他可用区的内存。<br>不是所有的体系结构都定义了全部区，有些64位的体系结构，如Intel的x86-64体系结构可以映射和处理64位的内存空间，所以x86-64没有ZONE_HIGHMEM区，所有的物理内存都处于ZONE_DMA和ZONE_NORMAL区。<br>每个区都用<code>struct zone</code>表示，在&lt;linux&#x2F;mmzone.h&gt;中定义：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">zone</span> &#123;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               watermark[NR_WMARK];</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               lowmem_reserve[MAX_NR_ZONES];</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">per_cpu_pageset</span>      <span class="title">pageset</span>[<span class="title">NR_CPUS</span>];</span></span><br><span class="line">    <span class="type">spinlock_t</span>                  lock;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">free_area</span>            <span class="title">free_area</span>[<span class="title">MAX_ORDER</span>];</span></span><br><span class="line">    <span class="type">spinlock_t</span>                  lru_lock;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zone_lru</span> &#123;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>        <span class="title">list</span>;</span></span><br><span class="line">        <span class="type">unsigned</span> <span class="type">long</span>           nr_saved_scan;</span><br><span class="line">    &#125;lru[NR_LRU_LISTS];         </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zone_reclaim_stat</span>    <span class="title">reclaim_stat</span>;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               pages_scanned;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               flags;</span><br><span class="line">    <span class="type">atomic_long_t</span>               vm_stat[NR_VM_ZONE_STAT_ITEMS];</span><br><span class="line">    <span class="type">int</span>                         prev_priority;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span>                inactive_ratio;</span><br><span class="line">    <span class="type">wait_queue_head_t</span>           *wait_table;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               wait_table_hash_nr_entries;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               wait_table_bits;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">pglist_data</span>          *<span class="title">zone_pgdat</span>;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               zone_start_pfn;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               spanned_pages;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>               present_pages;</span><br><span class="line">    <span class="type">const</span> <span class="type">char</span>                  *name;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>这个结构体很大，但是，系统中只有三个区，因此，也只有三个这样的结构。让我们看一下其中一些重要的域。<br>lock域是一个自旋锁，它防止该结构被并发访问。注意，这个域只保护结构，而不保护驻留在这个区中的所有页。没有特定的锁来保护单个页，但是，部分内核可以锁住在页中驻留的数据。<br>watermark数值持有该区的最小值、最低和最高水位值。内核使用水位为每个内存区设置合适的内存消耗基准。该水位随空闲内存的多少而变化。<br>name域是一个以NULL结束的字符串表示这个区的名字。内核启动期间初始化这个值，其代码位于<code>mm/page_alloc.c</code>中。三个区的名字分别为“DMA”、“Normal”和“HighMem”。</p>
+<h1 id="获得页"><a href="#获得页" class="headerlink" title="获得页"></a>获得页</h1><p>我们已经对内核如果管理内存（页、区等）有所了解了，现在让我们看一下内核实现的接口，我们正是通过这些接口在内核内分配和释放内存的。<br>内核提供了一种请求内存地底层机制，并提供了对它进行访问的几个接口。所有这些接口都以页为单位分配内存，定义于&lt;linux&#x2F;gfp.h&gt;中。最核心的函数是：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">struct</span> page *<span class="title function_">alloc_pages</span><span class="params">(<span class="type">gfp_t</span> gfp_mask,<span class="type">unsigned</span> <span class="type">int</span> order)</span>;</span><br></pre></td></tr></table></figure>
+<p>该函数分配2的order（1 &lt;&lt; order）次方个连续的物理页，并返回一个指针，该指针指向第一个页page结构体；如果出错，就返回NULL。在12.4节中我们再研究gft_t类型和gft_mask参数，你可以用下面这个函数把给定的页转换为它的逻辑地址：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> *<span class="title function_">page_address</span><span class="params">(<span class="keyword">struct</span> page *page)</span>;</span><br></pre></td></tr></table></figure>
+<p>该函数返回一个指针，指向给定物理页当前所在的逻辑地址。如果你无须用到<code>struct page</code>，你可以调用：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> __get_free_pages(<span class="type">gfp_t</span> gfp_mask,<span class="type">unsigned</span> <span class="type">int</span> order);</span><br></pre></td></tr></table></figure>
+<p>这个函数与alloc_pages()作用相同，不过它直接返回所请求的第一个页的逻辑地址。因为页是连续的，所以其他页也会紧随其后。<br>如果你只需要一页，就可以用下面两个封装好的函数，它能让你少敲几下键盘：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">struct</span> page *<span class="title function_">alloc_page</span><span class="params">(<span class="type">gfp_t</span> gfp_mask)</span>;</span><br><span class="line"><span class="type">unsigned</span> <span class="type">long</span> __get_free_page(<span class="type">gfp_t</span> gfp_mask);</span><br></pre></td></tr></table></figure>
+<p>这两个函数与其兄弟函数工作方式相同，只不过传递给order的值为0。</p>
+<h2 id="获得填充为0的页"><a href="#获得填充为0的页" class="headerlink" title="获得填充为0的页"></a>获得填充为0的页</h2><p>如果你需要让返回的页的内容全为0，请用下面的这个函数：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> <span class="title function_">get_zeroed_page</span><span class="params">(<span class="type">unsigned</span> <span class="type">int</span> gfp_mask)</span>;</span><br></pre></td></tr></table></figure>
+<p>这个函数与__get_free_page()工作方式相同，只不过把分配好的页都填充成了0—-字节中的每一位都要取消设置。如果分配的页是给用户空间的，这个函数就非常有用了。虽说分配好的页应该包含的都是随机产生的垃圾信息，但其实这些信息可能并不是完全随机的—-它很可能“随机地”包含某些敏感数据。用户空间的页在返回之前，所有数据必须填充为0，或做其他清理工作，在保障系统安全这一点上，我们绝不妥协。下表是所有底层的页分配方法的列表。</p>
+<p><strong>低级页分配方法</strong></p>
+<table>
+<thead>
+<tr>
+<th>标志</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>alloc_page(gfp_mask)</td>
+<td>只分配一页，返回指向页结构的指针</td>
+</tr>
+<tr>
+<td>alloc_pages(gfp_mask,order)</td>
+<td>分配2的order次方个页，返回指向第一页页机构的指针</td>
+</tr>
+<tr>
+<td>__get_free_page(gfp_mask)</td>
+<td>只分配一页，返回指向其逻辑地址的指针</td>
+</tr>
+<tr>
+<td>__get_free_pages(gfp_mask,order)</td>
+<td>分配2的order次方个页，返回指向第一页逻辑地址的指针</td>
+</tr>
+<tr>
+<td>get_zeroed_page(gfp_mask)</td>
+<td>只分配一页，让其内容填充0，返回指向其逻辑地址的指针</td>
+</tr>
+</tbody></table>
+<h2 id="释放页"><a href="#释放页" class="headerlink" title="释放页"></a>释放页</h2><p>当你不再需要页时可以用下面的函数释放它们：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> __free_pages(<span class="keyword">struct</span> page *page,<span class="type">unsigned</span> <span class="type">int</span> order);</span><br><span class="line"><span class="type">void</span> <span class="title function_">free_pages</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> addr,<span class="type">unsigned</span> <span class="type">int</span> order)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">free_page</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> addr)</span>;</span><br></pre></td></tr></table></figure>
+<p>释放页时要谨慎，只能释放属于你的页。传递了错误的<code>struct page</code>或地址，用了错误的order值，这些都可能导致系统崩溃。请记住，内核是完全信赖自己的。这点与用户空间不同，如果你有非法操作，内核会开开心心地把自己挂起来，停止运行。<br>让我们看一个例子。其中，我们想得到8个页：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> page;</span><br><span class="line"></span><br><span class="line">page = __get_free_pages(GFP_KERNEL,<span class="number">3</span>);</span><br><span class="line"><span class="keyword">if</span>(!page) &#123;</span><br><span class="line">    <span class="comment">//没有足够的内存，你必须处理这种错误</span></span><br><span class="line">    <span class="keyword">return</span> -ENOMEM;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//page 现在指向8个连续页的第1个页的地址</span></span><br></pre></td></tr></table></figure>
+<p>在此，我们使用完这8个页之后释放它们：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">free_page(page,<span class="number">3</span>);</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">    页已经被释放了，我们不应该再访问存放在“page”中的地址了</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+<p>GFP_KERNEL参数是gfp_mask标志中的一个例子。前面我们已经简要讨论过了。<br>调用__get_free_pages()之后要注意进行错误检查。内核分配可能失败，因此你的代码必须进行检查并做相应的处理。这意味在此之前，你所做的所有工作可能前功尽弃，甚至还需要回归到原来的状态。正因为如此，在程序开始时就先进行内存分配是很有意义的，这能让错误处理得容易一点。如果你不这么做，那么在你想要分配内存的时候如果失败了，局面可能就难以控制了。<br>在你需要以页为单位的一族连续物理页时，尤其是在你只需要一两页时，这些低级页函数就很有用。对于常用的以字节为单位的分配来说，内核提供的函数是kmalloc()。</p>
+<h1 id="kmalloc"><a href="#kmalloc" class="headerlink" title="kmalloc()"></a>kmalloc()</h1><p>kmalloc()函数与用户空间的malloc()一族函数非常类似，只不过它多了一个flags参数。kmalloc()函数是一个简单的接口，用它可以获得以字节为单位的一块内核内存。如果你需要整个页，那么，前面讨论的页分配接口可能是更好的选择。但是，对于大多数内存来说，kmalloc()接口用的更多。<br>kmalloc()在&lt;linux&#x2F;slab.h&gt;中声明：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> *<span class="title function_">kmalloc</span><span class="params">(<span class="type">size_t</span> size,<span class="type">gfp_t</span> flags)</span>;</span><br></pre></td></tr></table></figure>
+<p>这个函数返回的一个指向内存块的指针，其内存块至少要有size大小。所分配的内存区在物理上是连续的。在出错时，它返回NULL。除非没有足够的内存可用，否则内核总能分配成功。在对kmalloc()调用之后，你必须检查返回的是不是NULL，如果是，要适当地处理错误。<br>让我们看一个例子。我们随便假定存在一个dog结构体，现在需要为它动态地分配足够的空间：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">dog</span> *<span class="title">p</span>;</span></span><br><span class="line">p = kmalloc(<span class="keyword">sizeof</span>(<span class="keyword">struct</span> dog),GFP_KERNEL);</span><br><span class="line"><span class="keyword">if</span>(!p)</span><br><span class="line">    <span class="comment">//处理错误</span></span><br></pre></td></tr></table></figure>
+<p>如果kmalloc()调用成功，那么，ptr现在指向一个内存块，内存块的大小至少为所请求的大小。GFP_KERNEL标志表示在试图获取内存并返回给kmalloc()的调用者的过程中，内存分配器将要采取的行为。</p>
+<h2 id="gfp-mask标志"><a href="#gfp-mask标志" class="headerlink" title="gfp_mask标志"></a>gfp_mask标志</h2><p>我们已经看过几个例子，发现不管是在低级页分配函数中，还是在kmalloc()函数中，都用到了分配器的标志。现在我们就深入讨论一下这些标志。<br>这些标志可分为三类：行为修饰符、区修饰符及类型。行为修饰符表示内核应当如何分配所需的内存。在某种特定情况下，只能使用某些特定的方法分配内存。例如，中断处理程序就要求内存在分配内存的过程中不能睡眠（因为中断处理程序不能被重新调度）。区修饰符表示从哪儿分配内存。前面我们已经看到，内核把物理内存分为多个区，每个区用于不同的目的。区修饰符表示从哪儿分配内存。前面我们已经看到，内核把物理内存分为多个区，每个区用于不同的目的。区修饰符指明到底从这些区中的哪一区进行分配。类型标志组合了行为修饰符和区修饰符，将各种可能用到的组合归纳为不同类型，简化了修饰符的使用；这样，你只需指定一个类型标志就可以了。GFP_KERNEL就是一种类型标志，内核中进程上下文相关的代码可以使用它。我们来看一下这些标志。</p>
+<h3 id="行为修饰符"><a href="#行为修饰符" class="headerlink" title="行为修饰符"></a>行为修饰符</h3><p>所有这些标志，包括行为描述符都是在&lt;linux&#x2F;gfp.h&gt;中声明的。不过，在&lt;linux&#x2F;slab.h&gt;中包含有这个头文件，因此，你一般不必直接包含引用它。实际上，一般只使用类型修饰符就够了，我们随后会看到这点。因此，最好对每个标志都有所了解。下表是行为修饰符的列表。<br><strong>行为修饰符</strong></p>
+<table>
+<thead>
+<tr>
+<th>标志</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>_GFP_WAIT</td>
+<td>分配器可以睡眠</td>
+</tr>
+<tr>
+<td>_GFP_HIGH</td>
+<td>分配器可以访问紧急事件缓冲池</td>
+</tr>
+<tr>
+<td>_GFP_IO</td>
+<td>分配器可以启动磁盘I&#x2F;O</td>
+</tr>
+<tr>
+<td>_GFP_FS</td>
+<td>分配器可以启动文件系统I&#x2F;O</td>
+</tr>
+<tr>
+<td>_GFP_COLD</td>
+<td>分配器应该使用高速缓存中快要淘汰出去的页</td>
+</tr>
+<tr>
+<td>_GFP_NOWARN</td>
+<td>分配器将不打印失败警告</td>
+</tr>
+<tr>
+<td>_GFP_REPEAT</td>
+<td>分配器在分配失败时重复进行分配，但是这次分配还存在失败的可能</td>
+</tr>
+<tr>
+<td>_GFP_NOFALL</td>
+<td>分配器将无限地重复进行分配。分配不能失败</td>
+</tr>
+<tr>
+<td>_GFP_NORETRY</td>
+<td>分配器在分配失败时绝不会重新分配</td>
+</tr>
+<tr>
+<td>_GFP_NO_GROW</td>
+<td>在slab层内部使用</td>
+</tr>
+<tr>
+<td>_GFP_COMP</td>
+<td>添加混合页元数据，在hugetlb的代码内部使用</td>
+</tr>
+</tbody></table>
+<p>可以同时指定这些分配标志。例如：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">ptr = kmalloc(size,_GFP_WAIT | _GFP_IO | _GFP_FS);</span><br></pre></td></tr></table></figure>
+<p>说明页分配器（最终调用alloc_pages()）在分配时可以阻塞、执行I&#x2F;O。在必要时还可以执行文件系统操作。这就让内核有很大的自由度，以便它尽可能找到空闲的内存来满足分配请求。<br>大部分分配都会指定这些修饰符，但一般不是这样指定的，而是采用我们随后讨论的类型标志。别担心，你不会在分配内存时为怎样使用这些标志而犯愁的。</p>
+<h3 id="区修饰符"><a href="#区修饰符" class="headerlink" title="区修饰符"></a>区修饰符</h3><p>区修饰符表示内存区应当从何处分配。通常，分配可以从任何区开始。不过，内核优先从ZONE_NORMAL开始，这样可以确保其他区在需要时有足够的空闲页可供使用。<br>实际上只有两个区修饰符，因为除了ZONE_NORMAL之外只有两个区（默认都是从ZONE_NORMAL区进行分配）。下表是区修饰符的列表。<br><strong>区修饰符</strong></p>
+<table>
+<thead>
+<tr>
+<th>标志</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>_GFP_DMA</td>
+<td>从ZONE_DMA分配</td>
+</tr>
+<tr>
+<td>_GFP_DMA32</td>
+<td>只在ZONE_DMA32分配</td>
+</tr>
+<tr>
+<td>_GFP_HIGHMEM</td>
+<td>从ZONE_HIGHMEM或ZONE_NORMAL分配</td>
+</tr>
+</tbody></table>
+<p>指定以上标志中的一个就可以改变内核试图进行分配的区。_GFP_DMA标志强制内核从ZONE_DMA分配。这个标志在说，有了这种奇怪的标识，我们绝对可以拥有进行DMA的内存。相反，如果指定_GFP_HIGHMEN标志，则从ZONE_HIGHMEM（优先）或ZONE_NORMAL分配。这个标志在说，我可以使用高端内存，因此，我可以是一个玩偶，给你退还一些内存，但是，常规内存还照常工作。如果没有指定任何标志，则内核从ZONE_DMA或ZONE_NORMAL进行分配，当然优先从ZONE_NORMAL进行分配。不管区标志说什么了，只要它行为正常，我就不关心了。<br>不能给_get_free_pages()或kmalloc()指定ZONE_HIGHMEM，因为这两个函数返回的都是逻辑地址，而不是page结构，这两个函数分配的内存当前有可能还没有映射到内核的虚拟地址空间，因此，也可能根本没有逻辑地址。只有alloc_pages()才能分配高端内存。实际上，你的分配在大多数情况下都不必指定修饰符，ZONE_NORMAL就足矣。</p>
+<h3 id="类型标志"><a href="#类型标志" class="headerlink" title="类型标志"></a>类型标志</h3><p>类型标志指定所需的行为和区描述符以完成特殊类型的处理。正因为这一点，内核代码趋向于使用正确的类型标志，而不是一味地指定它可能需要用到的多个描述符。这么做既简单又不容易出错误。下表是类型标志的列表，下下表显示了每个类型标志与哪些修饰符相关联。<br><strong>类型标志</strong></p>
+<table>
+<thead>
+<tr>
+<th>标志</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GFP_ATOMIC</td>
+<td>这个标志用在中断处理程序、下半部、持有自旋锁以及其他不能睡眠的地方。</td>
+</tr>
+<tr>
+<td>GFP_NOWAIT</td>
+<td>与GFP_ATOMIC类似，不同之处在于。调用不会退给紧急内存池。这就增加了内存分配失败的可能性。</td>
+</tr>
+<tr>
+<td>GFP_NOIO</td>
+<td>这种分配可以阻塞，但不会启动磁盘I&#x2F;O。这个标志在不能引发更多磁盘I&#x2F;O时能阻塞I&#x2F;O代码，这可能导致令人不愉快的递归。</td>
+</tr>
+<tr>
+<td>GFP_NOFS</td>
+<td>这种分配在必要时可能阻塞，也可能启动磁盘I&#x2F;O，但是不会启动文件系统操作。这个标志在你不能再启动另一个文件系统的操作时，用在文件系统部分的代码中。</td>
+</tr>
+<tr>
+<td>GFP_KERNEL</td>
+<td>这是一种常规分配方式，可能会阻塞。这个标志在睡眠安全时用在进程上下文代码中。为了获得调用者所需的内存，内核会尽力而为。这个标志应当是首选标志。</td>
+</tr>
+<tr>
+<td>GFP_USER</td>
+<td>这是一种常规分配方式，可能会阻塞。这个标志用于为用户空间进程分配内存。</td>
+</tr>
+<tr>
+<td>GFP_HIGHUSER</td>
+<td>这是从ZONE_HIGHMEM进行分配，可能会阻塞。这个标志用于为用户空间进程分配内存。</td>
+</tr>
+<tr>
+<td>GFP_DMA</td>
+<td>这是从ZONE_DMA进行分配。需要获取能供DMA使用的内存的设备驱动程序使用这个标志，通常与以上的某个标志组合在一起使用。</td>
+</tr>
+</tbody></table>
+<p><strong>在每种类型标志后隐含的修饰符列表</strong></p>
+<table>
+<thead>
+<tr>
+<th>标志</th>
+<th>修饰符标志</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GFP_ATOMIC</td>
+<td>_GFP_HIGH</td>
+</tr>
+<tr>
+<td>GFP_NOWAIT</td>
+<td>0</td>
+</tr>
+<tr>
+<td>GFP_NOIO</td>
+<td>_GFP_WAIT</td>
+</tr>
+<tr>
+<td>GFP_NOFS</td>
+<td>(_GFP_WAIT</td>
+</tr>
+<tr>
+<td>GFP_KERNEL</td>
+<td>(_GFP_WAIT</td>
+</tr>
+<tr>
+<td>GFP_USER</td>
+<td>(_GFP_WAIT</td>
+</tr>
+<tr>
+<td>GFP_HIGHUSER</td>
+<td>(_GFP_WAIT</td>
+</tr>
+<tr>
+<td>GFP_DMA</td>
+<td>_GFP_DMA</td>
+</tr>
+</tbody></table>
+<p>让我们看一下做常用的标志以及你什么时候、为什么需要使用它们。内核中最常用的标志是GFP_KERNEL。这种分配可能会引起睡眠，它使用的是普通优先级。因为调用可能阻塞，因此这个标志只用在可以重新安全调度的进程上下文中（也就是没有锁被持有的等情况）。因为这个标志对内核如何获取请求的内存没有任何约束，所以内存分配成功的可能性很高。<br>另一个截然相反的标志是GFP_ATOMIC。因为这个标志表示不能睡眠的内存分配，因此想要满足调用者获取内存的请求将会受到很严格的限制，即使没有足够的连续内存块可供使用，内核也很可能释放出可用内存来，因为内核不能让调用者睡眠。相反，GFP_KERNEL分配可以让调用者睡眠、交换、刷新一些页到硬盘等。因为GFP_ATOMIC不能执行以上任何操作，因此与GFP_KERNEL相比较，它分配成功的机会比较小（尤其在内存短缺时）。即便如此，在当前代码（例如中断处理程序、软中断和tasklet）不能睡眠时，也只能选择GFP_ATOMIC。<br>在以上两种标志中间的是GFP_NOIO和GFP_NOFS。以这两个标志进行的分配可能会引起阻塞，但它们会避免执行某些其他操作。GFP_NOIO分配绝不启动任何磁盘I&#x2F;O来帮助满足请求。而GFP_NOFS可能会启动磁盘I&#x2F;O，但是它不会启动文件系统I&#x2F;O。你为什么需要这些标志？它们分别用在某些低级块I&#x2F;O或文件系统的代码中。设想，如果文件系统代码中需要分配内存，但没有使用GFP_NOFS。这种分配可能会引起更多的文件系统操作，而这些操作又会导致另外的分配，从而再引起更多的文件系统操作！这会一直持续下去。这样的代码在调用分配器的时候。必须确保分配器不会再执行到代码本身，否则，分配就可能产生死锁。也别紧张，内核使用这两个标志的地方是极少的。<br>GFP_DMA标志表示分配器必须满足从ZONE_DMA进行分配的请求。这个标志用在需要DMA的内存的设备驱动程序中。一般你会把这个标志与GFP_ATOMIC和GFP_KERNEL结合起来使用。<br>在你编写的绝大多数代码中，用到的要么是GFP_KERNEL，要么是GFP_ATOMIC。下表是通常情形和所用标志的列表。不管使用哪种分配类型，你都必须进行检查，并对错误进行处理。<br><strong>什么时候用哪种标志</strong></p>
+<table>
+<thead>
+<tr>
+<th>情形</th>
+<th>相应标志</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>进程上下文，可以睡眠</td>
+<td>使用GFP_KERNEL</td>
+</tr>
+<tr>
+<td>进程上下文，不可以睡眠</td>
+<td>使用GFP_ATOMIC，在你睡眠之前或之后以GFP_KERNEL执行内存分配</td>
+</tr>
+<tr>
+<td>中断处理程序</td>
+<td>使用GFP_ATOMIC</td>
+</tr>
+<tr>
+<td>软中断</td>
+<td>使用GFP_ATOMIC</td>
+</tr>
+<tr>
+<td>tasklet</td>
+<td>使用GFP_ATOMIC</td>
+</tr>
+<tr>
+<td>需要用于DMA的内存，可以睡眠</td>
+<td>使用（GFP_DMA</td>
+</tr>
+<tr>
+<td>需要用于DMA的内存，不可以睡眠</td>
+<td>使用（GFP_DMA</td>
+</tr>
+</tbody></table>
+<h2 id="kfree"><a href="#kfree" class="headerlink" title="kfree()"></a>kfree()</h2><p>kmalloc()的另一端就是kfree()，kfree()声明于&lt;linux&#x2F;slab.h&gt;中：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">kfree</span><span class="params">(<span class="type">const</span> <span class="type">void</span> *ptr)</span>;</span><br></pre></td></tr></table></figure>
+<p>kfree()函数释放由kmalloc()分配出来的内存块。如果想要释放的内存不是由kmalloc()分配的，或者想要释放的内存早就被释放了，比如说释放属于内核其他部分的内存，调用这个函数就会导致严重的后果。与用户空间类似，分配和回收要注意配对使用，以避免内存泄漏和其他bug。注意，<code>调用kfree(NULL)是安全的</code>。<br>让我们看一个在中断处理程序中分配内存的例子。在这个例子中，中断处理程序想分配一个缓冲区来保存输入数据。BUF_SIZE预定义为以字节为单位的缓冲区长度，它应该是大于两个字节的。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">char</span> *buf;</span><br><span class="line"></span><br><span class="line">buf = kmalloc(BUF_SIZE,GFP_ATOMIC);</span><br><span class="line"><span class="keyword">if</span>(!buf)</span><br><span class="line">    <span class="comment">//内存分配出错</span></span><br></pre></td></tr></table></figure>
+<p>之后，当我们不再需要这个内存时，别忘了释放它：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">kfree(buf);</span><br></pre></td></tr></table></figure>
+
+<h1 id="vmalloc"><a href="#vmalloc" class="headerlink" title="vmalloc()"></a>vmalloc()</h1><p><code>vmalloc()函数的工作方式类似于kmalloc()，只不过前者分配的内存虚拟地址是连续的，而物理地址则无须连续。这也是用户空间分配函数的工作方式：由malloc()返回的页在进程的虚拟地址空间内是连续的，但是，这并不保证它们在物理RAM中也是连续的。kmalloc()函数确保页在物理地址上是连续的（虚拟地址自然也是连续的）。</code>vmalloc()函数只确保页在虚拟地址空间内是连续的。它通过分配非连续的物理内存块，再修正页表，把内存映射到逻辑地址空间的连续区域中，就能做到这点。<br>大多数情况下，只有硬件设备需要得到物理地址连续的内存。在很多体系结构中，硬件设备存在于内存管理单元之外，它们根本不理解什么是虚拟地址。<code>因此，硬件设备用到的任何内存区都必须是物理上连续的块，而不仅仅是虚拟地址上连续的内存块</code>。而仅供软件使用的内存块（例如与进程相关的缓冲区）就可以使用只有虚拟地址连续的内存块。但在你的编程中，根本察觉不到这种差异。<code>对内核而言，所有内存看起来都是逻辑上连续的</code>。<br>尽管在某些情况下才需要物理上连续的内存块，但是，很多内核代码都用kmalloc()来获得内存，而不是vmalloc()。这主要是处于性能的考虑。vmalloc()函数为了把物理上不连续的页转化为虚拟地址空间上连续的页，必须专门建立页表项。糟糕的是，通过vmalloc()获得的页必须一个一个地进行映射（因为它们物理上是不连续的），这就会导致比直接内存映射大得多的TLB抖动。因为这些原因，<code>vmalloc()仅在不得已时才会使用----典型的就是为了获得大块内存时</code>，例如，当模块被动态插入到内核中时，就把模块装载到由vmalloc()分配的内存上。<br>vmalloc()函数声明在&lt;linux&#x2F;vmalloc.h&gt;中，定义在&lt;mm&#x2F;vmalloc.c&gt;中。用法与用户空间的malloc()相同：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> *<span class="title function_">vmalloc</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> size)</span>;</span><br></pre></td></tr></table></figure>
+<p>该函数返回一个指针，指向逻辑上连续的一块内存区，其大小至少为size。在发生错误时，函数返回NULL。<code>函数可能睡眠，因此，不能从中断上下文中进行调用，也不能从其他不允许阻塞的情况下进行调用</code>。<br>要释放通过vmalloc()所获得的内存，使用下面的函数：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vfree</span><span class="params">(<span class="type">const</span> <span class="type">void</span> *addr)</span>;</span><br></pre></td></tr></table></figure>
+<p>这个函数会释放从addr开始的内存块，其中addr是以前由vmalloc()分配的内存块的地址。这个函数也可以睡眠，因此，不能从中断上下文中调用。它没有返回值。<br>这个函数用起来比较简单：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">char</span> *buf;</span><br><span class="line"></span><br><span class="line">buf = vmalloc(<span class="number">16</span>*PAGE_SIZE);    <span class="comment">//get 16 pages</span></span><br><span class="line"><span class="keyword">if</span>(!buf)</span><br><span class="line">    <span class="comment">//错误，不能分配内存</span></span><br><span class="line"><span class="comment">//buf现在指向虚拟地址连续的一块内存区，其大小至少为16*PAGE_SIZE</span></span><br></pre></td></tr></table></figure>
+<p>在分配内存之后，一定要释放它：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">vfree(buf);</span><br></pre></td></tr></table></figure>
+
+<h1 id="slab层"><a href="#slab层" class="headerlink" title="slab层"></a>slab层</h1><p>分配和释放数据结构是所有内核中最普遍的操作之一。为了便于数据的频繁分配和回收，编程人员常常会用到空闲链表。空闲链表包含可供使用的、已经分配好的数据结构块。当代码需要一个新的数据结构实例时，就可以从空闲链表抓取一个，而不需要分配内存，再把数据放进去。以后，当不再需要这个数据结构的实例时，就把它放回空闲链表而不是释放它。从这个意义上说，空闲链表相当于对象高速缓存—-快速存储频繁使用的对象类型。<br>在内核中，空闲链表面临的主要问题之一是不能全局控制。当可用内存变得紧缺时，内核无法通知每个空闲链表，让其收缩缓存的大小以便释放出一些内存来。实际上，内核根本就不知道存在任何空闲链表。为了弥补这一缺陷，也为了使代码更加稳固，Linux内核提供了slab层（也就是所谓的slab分配器）。slab分配器扮演了通用数据结构缓存层的角色。<br>slab分配器的概念首先在Sun公司的SunOS 5.4操作系统中得以实现。Linux数据结构缓存层具有同样的名字和基本设计思想。<br>slab分配器试图在几个基本原则之间寻求一种平衡：</p>
+<ol>
+<li>频繁使用的数据结构也会频繁分配和释放，因此应当缓存它们。</li>
+<li>频繁分配和回收必然导致内存碎片（难以找到大块连续的可用内存）。为了避免这种现象，空闲链表的缓存会连续地存放。因为已释放的数据结构又会放回空闲链表，因此不会导致碎片。</li>
+<li>回收的对象可以立即投入下一次分配，因此，对于频繁的分配和释放，空闲链表能够提高其性能。</li>
+<li>如果分配器知道对象大小、页大小和总的高速缓存的大小这样的概念，它会做出更明智的决策。</li>
+<li>如果让部分缓存专属于单个处理器（对系统上的每个处理器独立而唯一），那么，分配和释放就可以不加SMP锁的情况下进行。</li>
+<li>如果分配器是与NUMA相关的，它就可以从相同的内存节点为请求者进行分配。 </li>
+<li>对存放的对象进行着色，以防止多个对象映射到相同的高速缓存行。</li>
+</ol>
+<p>Linux的slab层在设计和实现时充分考虑了上述原则。</p>
+<h2 id="slab层的设计"><a href="#slab层的设计" class="headerlink" title="slab层的设计"></a>slab层的设计</h2><p>slab层把不同的对象划分为所谓高速缓存组，其中每个高速缓存组都存放不同类型的对象。每种对象类型对应一个高速缓存。例如，一个高速缓存用于存放进程描述符（task_struct结构的一个空闲链表），而另一个高速缓存存放索引节点对象（struct inode）。有趣的是，kmalloc()接口建立在slab层上，使用了一组通用高速缓存。<br>然后，这些高速缓存又被划分为slab。slab由一个或多个物理上连续的页组成。一般情况下，slab也就仅仅由一页组成。每个高速缓存可以由多个slab组成。<br>每个slab都包含一些对象成员，这里的对象指的是被缓存的数据结构。每个slab处于三种状态之一：满、部分满或空。一个满的slab没有空闲的对象（slab中所有对象都已经被分配）。一个空的slab没有分配出任何对象（slab中的所有对象都是空闲的）。一个部分满的slab有一些对象已分配出去，有些对象还空闲着。当内核的某一部分需要一个新的对象时，先从部分满的slab中进行分配。如果没有部分满的slab，就从空的slab中进行分配。如果没有空的slab，就要创建一个slab了。显然，满的slab无法满足请求，因为它根本就没有空闲的对象。这种策略能减少碎片。<br>作为一个例子，让我们考察一下inode结构，该结构是磁盘索引节点在内存中的体现。这些数据结构会频繁地创建和释放，因此，用slab分配器来管理它们就很必要。因而<code>struct inode</code>就由<code>inode_cachep</code>高速缓存进行分配。这种高速缓存由一个或多个slab组成—-由多个slab组成的可能性大一些，因为这样的对象数量很大。每个slab包含尽可能多的<code>struct inode</code>对象。当内核请求分配一个新的inode结构时，内核就从部分满的slab或空的slab返回一个指向已分配但未使用的结构的指针。当内核用完inode对象后，slab分配器就把该对象标记为空闲。下图显示了高速缓存、slab及对象之间的关系。<br><img src="/2022/11/26/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/1.jpeg" alt="img not found"><br>每个高速缓存都使用<code>kmem_cache</code>结构来表示。这个结构包含三个链表：slab_full、slabs_partial和slabs_empty，均存放在kmem_list3结构内，该结构在<code>mm/slab.c</code>中定义。这些链表包含高速缓存中的所有slab。slab描述符<code>struct slab</code>用来描述每个slab：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">slab</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">list</span>;</span>           <span class="comment">//满、部分满或空链表</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>       colouroff;      <span class="comment">//slab着色的偏移量</span></span><br><span class="line">    <span class="type">void</span>                *s_mem;         <span class="comment">//在slab中的第一个对象</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span>        inuse;          <span class="comment">//slab中已分配的对象数</span></span><br><span class="line">    <span class="type">kmem_bufctl_t</span>       <span class="built_in">free</span>;           <span class="comment">//第一个空闲对象</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>slab描述符要么在slab之外另行分配，要么就放在slab自身开始的地方。如果slab很小，或者slab内部有足够的空间容纳slab描述符，那么描述符就存放在slab里面。<br>slab分配器可以创建新的slab，这是通过__get_free_pages()低级内核页分配器进行的：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> *<span class="title function_">kmem_getpages</span><span class="params">(<span class="keyword">struct</span> kmem_cache *cachep,<span class="type">gfp_t</span> flags,<span class="type">int</span> nodeid)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">page</span> *<span class="title">page</span>;</span></span><br><span class="line">    <span class="type">void</span> *addr;</span><br><span class="line">    <span class="type">int</span> i;</span><br><span class="line"></span><br><span class="line">    flags |= cachep-&gt;gfpflags;</span><br><span class="line">    <span class="keyword">if</span>(likely(nodeid == <span class="number">-1</span>)) &#123;</span><br><span class="line">        addr = (<span class="type">void</span> *)__get_free_pages(flags,cachep-&gt;gfporder);</span><br><span class="line">        <span class="keyword">if</span>(!addr)</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">        page = virt_to_page(addr);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        page = alloc_pages_node(nodeid,flags,cachep-&gt;gfporder);</span><br><span class="line">        <span class="keyword">if</span>(!page)</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">        addr = page_address(page);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    i = (<span class="number">1</span> &lt;&lt; cachep-&gt;gfporder);</span><br><span class="line">    <span class="keyword">if</span>(cachep-&gt;flags &amp; SLAB_RECLAIM_ACCOUNT)</span><br><span class="line">        <span class="type">atomic_add</span>(i,&amp;slab_reclaim_pages);</span><br><span class="line">    add_page_state(nr_slab,i);</span><br><span class="line">    <span class="keyword">while</span>(i--) &#123;</span><br><span class="line">        SetPageSlab(page);</span><br><span class="line">        page++;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> addr;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>该函数使用__get_free_pages()来为高速缓存分配足够多的内存。该函数的第一个参数就指向需要很多页的特定高速缓存。第二个参数是要传给__get_free_pages()的标志，注意这个标志是如何与另一个值进行二进制“或”运算的，这相当于把高速缓存需要的缺省标志加到flags参数上。分配的页大小为2的幂次方，存放在cachep-&gt;gfporder中。由于与分配器NUMA相关的代码的关系前面的这个函数比想象的要复杂一些。当nodeid是一个非负数时，分配器就试图对从相同的内存节点给发出的请求进行分配。这在NUMA系统上提供了较好的性能，但是访问节点之外的内存会导致性能的损失。<br>为了便于理解，我们可以忽略与NUMA相关的代码，写一个简单的kmem_getpages()函数：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">void</span> *<span class="title function_">kmem_getpages</span><span class="params">(<span class="keyword">struct</span> kmem_cache *cachep,<span class="type">gfp_t</span> flags)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">void</span> *addr;</span><br><span class="line"></span><br><span class="line">    flags |= cachep-&gt;gfpflags;</span><br><span class="line">    addr = (<span class="type">void</span> *)__get_free_pages(flags,cachep-&gt;gfporder);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> addr;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>接着，调用kmem_freepages()释放内存，而对给定的高速缓存页，kmem_freepages()最终调用的是free_pages()。当然，slab层的关键就是避免频繁分配和释放页。由此可知，slab层只有当给定的高速缓存部分中既没有满也没有空的slab时才会调用页分配函数。而只有在下列情况下才会调用释放函数：当可用内存变得紧缺时，系统企图释放出更多内存以供使用；或者当高速缓存显式地被撤销时。<br>slab层的管理是在每个高速缓存的基础上，通过提供给整个内核一个简答接口来完成的。通过接口就可以创建和撤销新的高速缓存，并在高速缓存内分配和释放对象。高速缓存及其内部slab的复杂管理完全通过slab层的内部机制来处理。当你创建了一个高速缓存后，slab层所起的作用就像是一个专用的分配器，可以为具体的对象类型进行分配。</p>
+<h2 id="slab分配器的接口"><a href="#slab分配器的接口" class="headerlink" title="slab分配器的接口"></a>slab分配器的接口</h2><p>一个新的高速缓存通过以下函数创建：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">struct</span> kmem_cache *<span class="title function_">kmem_cache_create</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *name,</span></span><br><span class="line"><span class="params">                                     <span class="type">size_t</span> size,</span></span><br><span class="line"><span class="params">                                     <span class="type">size_t</span> align,</span></span><br><span class="line"><span class="params">                                     <span class="type">unsigned</span> <span class="type">long</span> flags,</span></span><br><span class="line"><span class="params">                                     <span class="type">void</span> (*ctor)(<span class="type">void</span> *))</span>;</span><br></pre></td></tr></table></figure>
+<p>第一个参数是一个字符串，存放着高速缓存的名字；第二个参数是高速缓存中每个元素的大小；第三个参数是slab内第一个对象的偏移，它用来确保在页内进行特定的对齐。通常情况下，0就可以满足要求，也就是标准对齐。flags参数是可选的设置项，用来控制高速缓存的行为。它可以为0，表示没有特殊的行为，或者与以下标志中的一个或多个进行“或”运算：</p>
+<ol>
+<li>SLAB_HWCACHE_ALIGN 这个标志命令slab层把一个slab内的所有对象按高速缓存行对齐。这就防止了“错误的共享”（两个或多个对象尽管位于不同的内存地址，但映射到相同的高速缓存行）。这可以提高性能，但以增加内存开销为代价，因为对齐越严格，浪费的内存就越多。到底会浪费多少内存，取决于对象的大小以及对象相对于系统高速缓存行对齐的方式。对于会频繁使用高速缓存，而且代码本身对性能要求又很严格的情况，设置该选项是理想的选择；否则，请三思而后行。</li>
+<li>SLAB_POISON 这个标志使slab层用已知的值（a5a5a5a5）填充slab。这就是所谓的“中毒”，有利于对未初始化内存的访问。</li>
+<li>SLAB_RED_ZONE 这个标志导致slab层在已分配的内存周围插入“红色警戒区”以探测缓冲越界。</li>
+<li>SLAB_PANIC 这个标志当分配失败时提醒slab层。这在要求分配只能成功的时候非常有用。比如，在系统初启动时分配一个VMA结构的高速缓存。</li>
+<li>SLAB_CACHE_DMA 这个标志命令slab层使用可以执行DMA的内存给每个slab分配空间。只有在分配的对象用于DMA，而且必须驻留在ZONE_DMA区时才需要这个标志。否则，你既不需要也不应该设置这个标志。</li>
+</ol>
+<p>最后一个参数ctor是高速缓存的构造函数，只有在新的页追加到高速缓存时，构造函数才被调用。实际上，Linux内核的高速缓存不使用构造函数。事实上这里曾经还有过一个析构函数参数，但是由于内核代码并不需要它，因此已经抛弃掉了。你可以将ctor参数赋值为NULL。<br><code>kmem_cache_create()</code>在成功时会返回一个指向所创建高速缓存的指针；否则，返回NULL。这个函数不能在中断上下文中调用，因为它可能会睡眠。<br>要撤销一个高速缓存，则调用：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">kmem_cache_destroy</span><span class="params">(<span class="keyword">struct</span> kmem_cache *cachep)</span>;</span><br></pre></td></tr></table></figure>
+<p>顾名思义，这样就可以撤销给定的高速缓存。这个函数通常在模块的注销代码中被调用，当然，这里指创建了自己的高速缓存的模块。同样，也不能从中断上下文中调用这个函数，因为它也可能睡眠。调用该函数之前必须确保存在以下两个条件：</p>
+<ol>
+<li>高速缓存中的所有slab都必须为空。其实，不管哪个slab中，只要还有一个对象被分配出去并正在使用的话，那怎么可能撤销这个高速缓存呢？</li>
+<li>在调用<code>kmem_cache_destroy()</code>过程中（更不用说在调用之后了）不再访问这个高速缓存。调用者必须确保这种同步。</li>
+</ol>
+<p>该函数在成功时返回0，否则返回非0值。</p>
+<h3 id="从缓存中分配"><a href="#从缓存中分配" class="headerlink" title="从缓存中分配"></a>从缓存中分配</h3><p>创建高速缓存之后，就可以通过下列函数获取对象：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> *<span class="title function_">kmem_cache_alloc</span><span class="params">(<span class="keyword">struct</span> kemem_cache *cachep,<span class="type">gfp_t</span> flags)</span></span><br></pre></td></tr></table></figure>
+<p>该函数从给定的高速缓存cachep中返回一个指向对象的指针。如果高速缓存的所有slab中都没有空闲的对象，那么slab层必须通过kmem_geipages()获取新的页，flags的值传递给_get_free_pages()。这与我们前面看到的标志相同，你用到的应该是GFP_KERNEL或GFP_ATOMIC。<br>最后一个释放对象，并把它返回给原先的slab，可以使用下面这个函数：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">kmem_cache_free</span><span class="params">(<span class="keyword">struct</span> kmem_cache *cachep,<span class="type">void</span> *objp)</span>;</span><br></pre></td></tr></table></figure>
+<p>这样就能把cachep中的对象objp标记为空闲。</p>
+<h3 id="slab分配器的使用实例"><a href="#slab分配器的使用实例" class="headerlink" title="slab分配器的使用实例"></a>slab分配器的使用实例</h3><p>让我们考察一个鲜活的实例，这个例子用的是task_struct结构（进程描述符）。代码稍微有些复杂，取自<code>kernel/fork.c</code>。<br>首先，内核用一个全局变量存放指向task_struct高速缓存的指针：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">kmem_cache</span> *<span class="title">task_struct_cachep</span>;</span></span><br></pre></td></tr></table></figure>
+<p>在内核初始化期间，在定义于<code>kernel/fork.c</code>的fork_init()中创建高速缓存：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">task_struct_cachep = kmem_cache_create(<span class="string">&quot;task_struct&quot;</span>,</span><br><span class="line">                                        <span class="keyword">sizeof</span>(<span class="keyword">struct</span> task_struct),</span><br><span class="line">                                        ARCH_MIN_TASKALIGN,</span><br><span class="line">                                        SLAB_PANIC | SLAB_NOTRACK,</span><br><span class="line">                                        <span class="literal">NULL</span>);</span><br></pre></td></tr></table></figure>
+<p>这样就创建了一个名为task_struct的高速缓存，其中存放的就是类型为struct task_struct的对象。该对象被创建后存放在slab中偏移量为ARCH_MIN_TASKALIGN个字节的地方，ARCH_MIN_TASKALIGN预定义值于体系结构相关。通常将它定义为L1_CACHE_BYTES—-L1高速缓存的字节大小。没有构造函数或析构函数。注意不用检查返回值是否为失败标记NULL，因为SLAB_PANIC标志已经被设置了。如果分配失败，slab分配器就调用panic()函数。如果没有提供SLAB_PANIC标志，就必须自己检查返回值。SLAB_PANIC标志用在这儿是因为这是系统操作必不可少的高速缓存。<br>每当进程调用fork()时，一定会创建一个新的进程描述符。这是在dup_task_struct()中完成的，而该函数会被do_fork()调用：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">tsk</span>;</span></span><br><span class="line"></span><br><span class="line">tsk = kmem_cache_alloc(task_struct_cachep,GFP_KERNEL);</span><br><span class="line"><span class="keyword">if</span>(!tsk)</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br></pre></td></tr></table></figure>
+<p>进程执行完后，如果没有子进程在等待的话，它的进程描述符就会被释放，并返回给task_struct_cachep slab高速缓存。这是在free_task_struct()中执行的（这里，tsk是现有的进程）：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">kmem_cache_free(task_struct_cachep,tsk);</span><br></pre></td></tr></table></figure>
+<p>由于进程描述符是内核的核心组成部分，时刻要用到，因此task_struct_cachep高速缓存绝不会被撤销掉。即使真能撤销，我们也要通过下列函数阻止其被撤销：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> err;</span><br><span class="line"></span><br><span class="line">err = kmem_cache_destroy(task_struct_cachep);</span><br><span class="line"><span class="keyword">if</span>(err)</span><br><span class="line">    <span class="comment">//出错，撤销高速缓存</span></span><br></pre></td></tr></table></figure>
+<p>很容易吧？slab层负责内存紧缺情况下所有底层的对齐、着色、分配、释放和回收等。如果你要频繁创建很多相同类型的对象，那么，就应该考虑使用slab高速缓存。也就是说，不要自己去实现空闲链表。</p>
+<h1 id="在栈上的静态分配"><a href="#在栈上的静态分配" class="headerlink" title="在栈上的静态分配"></a>在栈上的静态分配</h1><p>在用户空间，我们以前所讨论到的那些分配的例子，有不少都可以在栈上发生。因为我们毕竟可以实现知道所分配空间的大小。用户空间能够奢侈地负担起非常大的栈，而且栈空间还可以动态增长，相反，内核却不能这么奢侈—-内核栈小而且固定。当给每个进程分配一个固定大小的小栈后，不但可以减少内存的消耗，而且内核也无须负担太重的栈管理任务。<br>每个进程的内核栈大小既依赖体系结构，也与编译时的选项有关。历史上，每个进程都有两页的内核栈。因为32位和64位体系结构的页面大小分别是4KB和8KB，所以通常它们的内核栈的大小分别是8KB和16KB。</p>
+<h2 id="单页内核栈"><a href="#单页内核栈" class="headerlink" title="单页内核栈"></a>单页内核栈</h2><p>但是，在2.6系列内核的早期，引入了一个选项设置单页内核栈。当激活这个选项时，每个进程的内核栈只有一页那么大，根据体系结构的不同，或为4KB，或为8KB。这么做出于两个原因：首先，可以让每个进程减少内存消耗。其次，也是最重要的，随着机器运行时间的增加，寻找两个未分配的、连续的页变得越来约困难。物理内存渐渐变为碎片，因此，给一个新进程分配虚拟内存（VM）的压力也在增大。<br>还有一个更复杂的原因。继续跟随我：我们几乎掌握了关于内核栈的全部知识。现在，每个进程的整个调用链必须放在自己的内核栈中。不过，中断处理程序也曾经使用它们所中断的进程的内核栈，这样，中断处理程序也要放在内核栈中。这当然有效而简单，但是，这同时会把更严格的约束条件加在这可怜的内核栈上。当我们转而使用只有一个页面的内核栈时，中断处理程序就不放在栈中了。<br>为了矫正这个问题，内核开发者们实现了一个新功能：中断栈。中断栈为每个进程通过一个用于中断处理程序的栈。有了这个选项，中断处理程序不用再和被中断进程共享一个内核栈，它们可以使用自己的栈了。对每个进程来说仅仅耗费了一页而已。<br>总的来说，内核栈可以是1页，也可以是2页，这取决于编译时配置选项。栈大小因此在4-16KB的范围内。历史上，中断处理程序和被中断进程共享一个栈。当1页栈的选项激活时，中断处理程序获得了自己的栈。在任何情况下，无限制的递归和alloca()显然是不被允许的。</p>
+<h2 id="在栈上光明正大的工作"><a href="#在栈上光明正大的工作" class="headerlink" title="在栈上光明正大的工作"></a>在栈上光明正大的工作</h2><p>在任意一个函数中，你都必须节省栈资源。这并不难，<code>也没有什么窍门，只需要在具体的函数中让所有局部变量所占空间之和不要超过几百字节</code>。在栈上进行大量的静态分配是很危险的。要不然，在内核中和在用户空间中进行栈分配就没什么差别了。栈溢出时悄无声息，但势必会引起严重的问题。因为内核没有在管理内核栈上做足工作，因此，当栈溢出时，多出的数据就会直接溢出来，覆盖掉紧邻堆栈末端的东西。首先面临考验的就是thread_info结构。在堆栈之外，任何内核数据都可能存在潜在的风险。当栈溢出时，最好情况是机器宕机，最坏的情况是悄无声息地破坏数据。<br><code>因此，进行动态分配是一种明智的选择，本章前面有关大块内存的分配就是采用这种方式。</code></p>
+<h1 id="高端内存的映射"><a href="#高端内存的映射" class="headerlink" title="高端内存的映射"></a>高端内存的映射</h1><p>根据定义，在高端内存中的页不能永久地映射到内核地址空间上。因此，通过alloc_pages()函数以__GFP_HIGHMEM标志获得的页贝不可能有逻辑地址。<br>在x86体系结构上，高于896MB的所有物理内存的范围大都是高端内存，它并不会永久地或自动地映射到内核地址空间，尽管x86处理器能够寻址物理RAM的范围达到4GB。一旦这些页被分配，就必须映射到内核的逻辑地址空间上。在x86上，高端内存中的页被映射到3GB-4GB。</p>
+<h2 id="永久映射"><a href="#永久映射" class="headerlink" title="永久映射"></a>永久映射</h2><p>要映射一个给定的page结构到内核地址空间，可以使用定义在文件&lt;linux&#x2F;highmem.h&gt;中的这个函数：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> *<span class="title function_">kmap</span><span class="params">(<span class="keyword">struct</span> page *page)</span></span><br></pre></td></tr></table></figure>
+<p>这个函数在高端内存和低端内存上都能用。如果page结构对应的是低端内存中的一页，函数只会单纯地返回该页的虚拟地址。如果页位于高端内存，则会建立一个永久映射，再返回地址。这个函数可以睡眠，因此kmap()只能用在进程上下文中。<br>因为允许永久映射的数量是有限的，当不再需要高端内存时，应该解除映射，这可以通过下列函数完成：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">kunmap</span><span class="params">(<span class="keyword">struct</span> page *page)</span>;</span><br></pre></td></tr></table></figure>
+
+<h2 id="临时映射"><a href="#临时映射" class="headerlink" title="临时映射"></a>临时映射</h2><p>当必须创建一个映射而当前的上下文又不能睡眠时，内核提供了临时映射（也就是所谓的原子映射）。有一组保留的映射，它们可以存放新创建的临时映射。内核可以原子地把高端内存中的一个页映射到某个保留的映射中。因此，临时映射可以用再不能睡眠的地方，比如中断处理程序中，因为获取映射时绝不会阻塞。<br>通过下列函数建立一个临时映射：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> *<span class="title function_">kmap_atomic</span><span class="params">(<span class="keyword">struct</span> page *page,<span class="keyword">enum</span> km_type type)</span>;</span><br></pre></td></tr></table></figure>
+<p>参数type是下列枚举类型之一，这些枚举类型描述了临时映射的目的。它们定义于&lt;asm&#x2F;kmap_types.h&gt;中：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">km_type</span> &#123;</span></span><br><span class="line">    KM_BOUNCE_READ,</span><br><span class="line">    KM_SKB_SUNRPC_DATA,</span><br><span class="line">    KM_SKB_DATA_SOFTIRQ,</span><br><span class="line">    KM_USER0,</span><br><span class="line">    KM_USER1,</span><br><span class="line">    KM_BIO_SRC_IRQ,</span><br><span class="line">    KM_BIO_DST_IRQ,</span><br><span class="line">    KM_PTE0,</span><br><span class="line">    KM_PTE1,</span><br><span class="line">    KM_PTE2,</span><br><span class="line">    KM_IRQ0,</span><br><span class="line">    KM_IRQ1,</span><br><span class="line">    KM_SOFTIRQ0,</span><br><span class="line">    KM_SOFTIRQ1,</span><br><span class="line">    KM_SYNC_ICACHE,</span><br><span class="line">    KM_SYNC_DCAHCE,</span><br><span class="line">    KM_UML_USERCOPY,</span><br><span class="line">    KM_IRQ_PTE,</span><br><span class="line">    KM_NMI,</span><br><span class="line">    KM_NMI_PTE,</span><br><span class="line">    KM_TYPE_NR</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>这个函数不会阻塞，因此可以用在中断上下文和其他不能重新调度的地方。它也禁止内核抢占，这是有必要的，因为映射对每个处理器都是唯一的。通过下列函数取消映射：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">kunmap_atomic</span><span class="params">(<span class="type">void</span> *kvaddr,<span class="keyword">enum</span> km_type type)</span>;</span><br></pre></td></tr></table></figure>
+<p>这个函数也不会阻塞。在很多体系结构中，除非激活了内核抢占，否则kmap_atomic()根本就无事可做，因为只有在下一个临时映射到来前上一个临时映射才有效。因此，内核完全可以“忘掉”kmap_atomic()映射，kunmap_atomic()也无须做什么实际的事情。下一个原子映射将自动覆盖前一个映射。</p>
+<h1 id="每个CPU的分配"><a href="#每个CPU的分配" class="headerlink" title="每个CPU的分配"></a>每个CPU的分配</h1><p>支持SMP的现代操作系统使用每个CPU上的数据，对于给定的处理器其数据是唯一的。一般来说，每个CPU的数据存放在一个数组中。数组的每一项对应着系统上一个存在的处理器。按当前处理器号确定这个数组的当前元素这就是2.4内核处理每个CPU数据的方式。这种方式还不错，因此，2.6内核的很多代码依然用它。可以声明数据如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> my_percpu[NR_CPUS];</span><br></pre></td></tr></table></figure>
+<p>然后，按如下方式访问它：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> cpu;</span><br><span class="line"></span><br><span class="line">cpu = get_cpu();        <span class="comment">//获得当前处理器，并禁止内核抢占</span></span><br><span class="line">my_percpu[cpu] ++;      <span class="comment">//或者无论什么</span></span><br><span class="line">printk(<span class="string">&quot;my_percpu on cpu = %d is %lu\n&quot;</span>,cpu,my_percpu[cpu]);</span><br><span class="line">put_cpu();              <span class="comment">//激活内核抢占</span></span><br></pre></td></tr></table></figure>
+<p>注意，上面的代码中并没有出现锁，这是因为所操作的数据对当前处理器来说是唯一的。除了当前处理器之外，没有其他处理器可接触到这个数据，不存在并发访问问题，所以当前处理器可以在不用锁的情况下安全访问它。<br>现在，内核抢占成为了唯一需要关注的问题了，内核抢占会引起下面提到的两个问题：</p>
+<ol>
+<li>如果你的代码被其他处理器抢占并重新调度，那么这时CPU变量就会无效，因为它指向的是错误的处理器（通常，代码获得当前处理器之后是不可以睡眠的）。</li>
+<li>如果另一个任务抢占了你的代码，那么就有可能在同一个处理器上发生并发访问my_percpu的情况，显然这属于一个竞争条件。</li>
+</ol>
+<p>虽然如此，但是你大可不必惊慌，因为在获取当前处理器号，即调用get_cpu()时，就已经禁止了内核抢占。相应的在调用put_cpu()时又会重新激活当前处理器号。注意，只要你总使用上述方法来保护数据安全，那么，内核抢占就不需要你自己去禁止。</p>
+<h1 id="新的每个CPU接口"><a href="#新的每个CPU接口" class="headerlink" title="新的每个CPU接口"></a>新的每个CPU接口</h1>]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>Linux内核设计与实现</category>
+        <category>第12章 内存管理</category>
       </categories>
       <tags>
         <tag>Linux Kernel</tag>
