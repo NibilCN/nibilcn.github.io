@@ -94,61 +94,6 @@
       </tags>
   </entry>
   <entry>
-    <title>GPIO接口</title>
-    <url>/2022/08/10/GPIO%E6%8E%A5%E5%8F%A3/</url>
-    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《嵌入式Linux应用完全开发手册》第2篇第5章总结归纳</p>
-<span id="more"></span>
-<h1 id="本章目标"><a href="#本章目标" class="headerlink" title="本章目标"></a>本章目标</h1><ol>
-<li>掌握嵌入式开发的步骤：编程、编译、烧写程序、运行</li>
-<li>通过GPIO口的操作了解软件如何控制硬件</li>
-</ol>
-<h1 id="GPIO硬件介绍"><a href="#GPIO硬件介绍" class="headerlink" title="GPIO硬件介绍"></a>GPIO硬件介绍</h1><p>GPIO（Genaral Purpose I&#x2F;O Ports）意思是通过通用输入&#x2F;输出端口，通俗的说，就是一些引脚，可以通过它们输出高低电平或者通过它们读入引脚的状态—是高电平还是低电平。<br>S3C2410有117个I&#x2F;O端口，共分为A-H 8组，GPA、GPB、……、GPH。S3C2440有130个I&#x2F;O端口，共分为A-H 9组，GPA、GPB、……、GPJ。可以通过设置寄存器来确定某个引脚用于输入、输出还是其他特殊功能。比如可以设置GPH6作为一般的输入、输出引脚，或者用于串口。<br>GPIO的操作是所有硬件操作的基础，由此扩展开来可以了解所有硬件的操作，这是底层开发人员必须掌握的。</p>
-<h2 id="通过寄存器来操作GPIO引脚"><a href="#通过寄存器来操作GPIO引脚" class="headerlink" title="通过寄存器来操作GPIO引脚"></a>通过寄存器来操作GPIO引脚</h2><p>既然一个引脚可以用于输入、输出或其他功能，那么一定有寄存器用来选择这些功能；对于输入，一定可以通过读取某个寄存器来确定引脚的电平是高还是低；对于输出，一定可以通过写入某个寄存器来让这个引脚输出高电平还是低电平；对于其他特殊功能，则有另外的寄存器来控制它。<br>对于这几组GPIO引脚，它们的寄存器是相似的；GPxCON用于选择引脚功能。GPxDAT用于读写引脚数据。GPxUP用于确定是否使用内部上拉电阻。</p>
-<h3 id="GPxCON寄存器"><a href="#GPxCON寄存器" class="headerlink" title="GPxCON寄存器"></a>GPxCON寄存器</h3><p>从寄存器的名字可以看出，它用于配置（Configure）—选择引脚的功能。<br>PORT A与PORT B-PORT H&#x2F;J在功能选择方面有所不同，GPACON中每一位对应一根引脚（共23根引脚）。当某位被设置为0时，相应引脚为输出引脚，此时我们可以在GPADAT中的相应位写入0或1让此引脚输出高电平或者低电平。当某位被设置为1时，相应的引脚为地址线，或用于地址控制。此时的GPADAT无用。通常而言GPACON全被设置为1，以便访问外部存储器件。<br>PORT B-PORT H&#x2F;J 在寄存器操作方面完全相同。GPxCON中每两位控制一根引脚，00表示输入、01表示输出、10表示特殊功能、11保留。</p>
-<h3 id="GPxDAT寄存器"><a href="#GPxDAT寄存器" class="headerlink" title="GPxDAT寄存器"></a>GPxDAT寄存器</h3><p>GPxDAT用于读&#x2F;写引脚；当引脚被设置为输入时，读此寄存器可知相应引脚的电平状态是高还是低；当引脚被设置为输出时，写此寄存器相应位可令此引脚输出高电平或者低电平。</p>
-<h3 id="GPxUP"><a href="#GPxUP" class="headerlink" title="GPxUP"></a>GPxUP</h3><p>某位为1时，相应引脚无内部上拉电阻；为0时，相应引脚使用内部上拉电阻。<br><img src="/2022/08/10/GPIO%E6%8E%A5%E5%8F%A3/1.jpeg" alt="img not found"><br>上拉、下拉电阻的作用在于，当GPIO引脚处于第三态（既不是输出高电平，也不是输出低电平，而是呈高阻态）时，它的电平状态由上拉、下拉电阻决定。</p>
-<h2 id="怎样使用软件来访问硬件"><a href="#怎样使用软件来访问硬件" class="headerlink" title="怎样使用软件来访问硬件"></a>怎样使用软件来访问硬件</h2><h3 id="访问单个引脚"><a href="#访问单个引脚" class="headerlink" title="访问单个引脚"></a>访问单个引脚</h3><p>单个引脚的操作无外乎3种：输出高低电平、检测引脚状态、中断。对某个引脚的操作一般通过读写寄存器来完成。<br>比如对于图5.2所示的电路，可以设置GPBCON寄存器将GPB5、GPB6、GPB7和GPB8设为输出功能，然会写GPBDAT的寄存器使得这四个引脚输出高电平或低电平。输出高电平时，相应的LED灯熄灭，输出低电平时，相应的LED灯点亮。<br>还可以设置GPFCON寄存器将GPF0、GPF2、GPF3和GPF11设为输入功能，然后通过读出GPFDAT&#x2F;GPGDAT寄存器并判断相应位是0还是1来确定各个按键是否被按下。某个按键按下时，相应引脚电平为低，GPFDAT&#x2F;GPGDAT寄存器相应位为0，否则为1。<br>那么怎么访问这些寄存器呢，通过软件，读写它们的地址。比如，GPBCON和GPBDAT寄存器的地址都是0x56000010、0x56000014，可以通过如下的指令让GPB5输出低电平，点亮LED1。<br><img src="/2022/08/10/GPIO%E6%8E%A5%E5%8F%A3/2.jpeg" alt="img not found"></p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> GPBCON (*(volatile unsigned long *)0x56000010)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPBDAT (*(volatile unsigned long *)0x56000014)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPB5_out (1&lt;&lt;(5*2))</span></span><br><span class="line">GPBCON = GPB5_out;<span class="comment">//GPB5引脚设置为输出</span></span><br><span class="line">GPBDAT &amp;= ~(<span class="number">1</span>&lt;&lt;<span class="number">5</span>);<span class="comment">//GPB5输出低电平</span></span><br></pre></td></tr></table></figure>
-<h3 id="以总线方式访问硬件"><a href="#以总线方式访问硬件" class="headerlink" title="以总线方式访问硬件"></a>以总线方式访问硬件</h3><p>并非只能通过寄存器才能发出硬件信号，实际上，通过访问总线的方式控制硬件更常见。以NOR Flash的访问为例：<br><img src="/2022/08/10/GPIO%E6%8E%A5%E5%8F%A3/3.jpeg" alt="img not found"><br>图中，缓冲器的作用是为了提高驱动力、隔离前后级信号。NOR Flash AM29LV800BB的片选信号使用S3C2410&#x2F;S3C2440的nGCS0信号，当CPU发出的地址信号处于0x00000000-0x07FFFFFF之间时，nGCS0信号有效，于是NOR Flash被选中。这时，CPU发出的地址信号传到NOR Flash；进行写操作时，nWE信号为低，数据信号从CPU发出给NOR Flash；进行读操作时，nWE信号为高，数据信号从NOR Flash发给CPU。上图所示的硬件连线决定了读写操作都是以16位为单位的。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*地址对齐的16位读操作*/</span></span><br><span class="line"><span class="type">unsigned</span> <span class="type">short</span> *pwAddr = (<span class="type">unsigned</span> <span class="type">short</span> *)<span class="number">0x2</span>;</span><br><span class="line"><span class="type">unsigned</span> <span class="type">short</span> wVal;</span><br><span class="line">wVal = *pwAddr;</span><br></pre></td></tr></table></figure>
-<p>上述代码就会向NOR Flash发起读操作：CPU发出的读地址为0x2，则地址总线ADDR1-ADDR20、A0-A19的信号都是1、0、…、0（CPU的ADDR0为0，不过ADDR0没有接到NOR Flash上）。NOR Flash接收到的地址就是0x1，NOR Flash在稍后的时间里将此址上的16位数据取出，并通过数据总线D0-D15发给CPU。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*地址不对齐的16位读操作*/</span></span><br><span class="line"><span class="type">unsigned</span> <span class="type">short</span> *pwAddr = (<span class="type">unsigned</span> <span class="type">short</span> *)<span class="number">0x1</span>;</span><br><span class="line"><span class="type">unsigned</span> <span class="type">short</span> wVal;</span><br><span class="line">wVal = *pwAddr;</span><br></pre></td></tr></table></figure>
-<p>由于地址位0x1；不是2对齐的，但是BANK0的位宽被设为16，这将导致异常。我们可以设置异常处理函数来处理这种情况。在异常处理函数中，使用0x0、0x2发起两次读操作，然后将两个结果组合起来。使用地址0x0读到两字节数据D0、D1，再使用地址0x2读到D2、D3。最后D1、D2组合成一个16位的数返回给wVal。如果没有设置地址不对齐异常处理函数，那么上述代码将出错。如果某个BANK位宽被设置为n，访问此BANK时，在总线上永远只会看到地址对齐的n位操作。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*8位读操作*/</span></span><br><span class="line"><span class="type">unsigned</span> <span class="type">char</span> *pucAddr = (<span class="type">unsigned</span> <span class="type">char</span> *)<span class="number">0x6</span>;</span><br><span class="line"><span class="type">unsigned</span> <span class="type">char</span> ucVal;</span><br><span class="line">ucVal = *pucAddr;</span><br></pre></td></tr></table></figure>
-<p>CPU首先使用地址0x6对NOR Flash发起16位的读操作，得到两字节的数据，假设位D1、D0，然后将D0取出赋值给uvVal。在读操作期间，地址总线ADDR1-ADDR20、A0-A19的信号都是1、1、1、…、0。CPU会自动丢弃D1。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*32位读操作*/</span></span><br><span class="line"><span class="type">unsigned</span> <span class="type">int</span> *pdwAddr = (<span class="type">unsigned</span> <span class="type">int</span> *)<span class="number">0x6</span>;</span><br><span class="line"><span class="type">unsigned</span> <span class="type">int</span> dwVal;</span><br><span class="line">dwVal = *pdwAddr;</span><br></pre></td></tr></table></figure>
-<p>CPU首先使用地址0x6对NOR Flash发起16位的读操作，得到两字节的数据，假设为D0，D1；再使用地址0x8发起读操作，得到两字节的数据D2，D3，最后将这4个字节的数据组合后再赋值给变量dwVal。<br>由于NOR Flash的特性，使得对NOR Flash的写操作比较复杂—比如要先发出特定的地址信号通知NOR Flash准备接受数据，然后才发出数据。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*16位写操作*/</span></span><br><span class="line"><span class="type">unsigned</span> <span class="type">short</span> *pwAddr = (<span class="type">unsigned</span> <span class="type">short</span> *)<span class="number">0x6</span>;</span><br><span class="line">*pwAddr = <span class="number">0x1234</span>;</span><br></pre></td></tr></table></figure>
-<p>CPU发起一次对NOR Flash的写操作，地址总线ADDR1-ADDR20、A0-A19的信号都时1、1、…、0；数据线DATA0-DATA15、D0-D15的信号为0、0、1、0、1、1、0、0、0、1、0、0、1、0、0、0。<br>由此可见，CPU使用某个地址进行访问时，这个32位的地址值和ADDR0-ADDR31一一对应，外接的设备可以以8位、16位、32位进行操作—取决于硬件设计。如果以8位进行操作，那么数据出现在数据信号DATA0-DATA7上，如果以16位进行操作，则数值出现在数据线DATA0-DATA15上；如果以32位进行操作，则数值出现在DATA0-DATA31上。</p>
-<h1 id="GPIO操作实例"><a href="#GPIO操作实例" class="headerlink" title="GPIO操作实例"></a>GPIO操作实例</h1><p>LED和按键与处理器的电路连接基于图5.2。程序基于裸机开发，不带操作系统。</p>
-<h2 id="纯汇编实现点亮一个LED"><a href="#纯汇编实现点亮一个LED" class="headerlink" title="纯汇编实现点亮一个LED"></a>纯汇编实现点亮一个LED</h2><p>汇编程序实现。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">.text</span><br><span class="line">.global _start</span><br><span class="line">_start:</span><br><span class="line">    ldr r0,=0x56000010      @r0设置为GPBCON寄存器，用于配置GPIOB系列引脚。</span><br><span class="line">    mov r1,#0x00000400      @r1赋值立即数0x00000400</span><br><span class="line">    str r1,[r0]             @GPBCON写入0x00000400，设置GPB5为输出口，位[10:9]=0b01</span><br><span class="line">    ldr r0,=0x56000014      @r0设置为GPBDAT寄存器，用于读写GPIOB系列引脚的数据。</span><br><span class="line">    mov r1,#0x00000020      @r1赋值立即数0x00000020</span><br><span class="line">    str r1,[r0]             @点亮LED1</span><br><span class="line">main_loop:</span><br><span class="line">    b main_lopp             @死循环</span><br></pre></td></tr></table></figure>
-<p>编译如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">arm-linux-gcc -g -c -o led_on.o led_on.S                        @编译</span><br><span class="line">arm-linux-ld -Ttext 0x00000000 -g led_on.o -o led_on_elf        @链接</span><br><span class="line">arm-linux-objcopy -O binary -S led_on_elf led_on.bin            @将elf格式的可执行文件转换位二进制格式</span><br></pre></td></tr></table></figure>
-
-<h2 id="C代码实现点亮一个LED"><a href="#C代码实现点亮一个LED" class="headerlink" title="C代码实现点亮一个LED"></a>C代码实现点亮一个LED</h2><p>C语言执行的第一条指令并不在main函数中。生成一个C程序的可执行文件时，编译器通常会在我们的代码中加上几个被称为启动文件的代码—crtl.o、crti.o、crtend.o、crtn.o等，它们是标准库文件。这些代码设置C程序的堆栈等，然后调用main函数。它们依赖于操作系统，在裸板上这些代码无法执行，所以需要自己写一个。<br>这段代码很简单，只有6条指令，自己编写的crt0.S文件内容如下：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">File:crt0.S</span></span><br><span class="line"><span class="comment">通过它转入C程序</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">.text</span><br><span class="line">.global _start</span><br><span class="line">_start:</span><br><span class="line">    ldr r0,=<span class="number">0x56000010</span>      @watchdog地址寄存器</span><br><span class="line">    mov r1,#<span class="number">0x0</span>             @</span><br><span class="line">    str r1,[r0]             @写入<span class="number">0</span>，禁止watchdog，否则CPU会不断重启</span><br><span class="line">    ldr sp,=<span class="number">1024</span>*<span class="number">4</span>          @设置堆栈，注意不能大于<span class="number">4</span>KB，因为当前可以内存只有<span class="number">4</span>KB</span><br><span class="line">                            @NAND Flash中的代码会在复位后移到内部RAM（只有<span class="number">4</span>KB）</span><br><span class="line">    bl main                 @调用C程序中的main函数</span><br><span class="line"></span><br><span class="line">halt_loop:</span><br><span class="line">    b halt_loop</span><br></pre></td></tr></table></figure>
-<p>设置好堆栈指针后，就可以调用C函数main了。C函数执行前，必须设置栈。<br>所以现在可以写出控制LED的C程序了。main函数在led_on_c.c中，代码如下：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> GPBCON (*(volatile unsigned long *)0x56000010)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPBDAT (*(volatile unsigned long *)0x56000014)</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    GPBCON = <span class="number">0x00000040</span>;    <span class="comment">//设置GPB5为输出端口，位[10:9]=0b01</span></span><br><span class="line">    GPBDAT = <span class="number">0x00000000</span>;    <span class="comment">//GPB5输出0，LED1点亮</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>编译如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">arm-linux-gcc -g -c -o crt0.o crt0.S</span><br><span class="line">arm-linux-gcc -g -c -o led_on_c.0 led_on_c.c</span><br><span class="line">arm-linux-ld -Ttext 0x00000000 -g crt0.o led_on_c.o -o led_on_c_elf</span><br><span class="line">arm-linux-objcopy -O binary -S led_on_c_elf led_on_c.bin</span><br><span class="line">arm-linux-objdump -D -m arm led_on_c_elf &gt; led_on_c.dis</span><br></pre></td></tr></table></figure>
-<p>先分别编译crt0.S和led_on_c.c(不连接)。然后将编译的结果连接起来。然后把得到的ELF格式的文件led_on_c_elf转换成二进制的bin文件。最后将结果转换为汇编代码以供查看。</p>
-<h2 id="按键来控制LED"><a href="#按键来控制LED" class="headerlink" title="按键来控制LED"></a>按键来控制LED</h2><p>当K1-K4某个按键按下时，点亮LED1-LED4中相应的代码。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">File:key_led.c</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPBCON (* (unsigned long *) 0x56000010)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPBDAT (* (unsigned long *) 0x56000014)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPFCON (* (unsigned long *) 0x56000050)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPFDAT (* (unsigned long *) 0x56000054)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPGCON (* (unsigned long *) 0x56000060)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPGDAT (* (unsigned long *) 0x56000064)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">LED1-LED4对应GPB5、GPB6、GPB7、GPB8</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPB5_out (1&lt;&lt;(5*2))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPB6_out (1&lt;&lt;(6*2))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPB7_out (1&lt;&lt;(7*2))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPB8_out (1&lt;&lt;(8*2))</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">K1-K4对应GPG11、GPG3、GPF2、GPF0</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPG11_in ~(3&lt;&lt;(11*2))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPG3_in ~(3&lt;&lt;(3*2))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPF2_in ~(3&lt;&lt;(2*2))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPF0_in ~(3&lt;&lt;(0*2))</span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> dwDat;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//LED1-LED4对应的4根引脚设置为输出</span></span><br><span class="line">    GPBCON = GPB5_out | GPB6_out | GPB7_out | GPB8_out ;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//K1-K2对应的两根引脚设为输入</span></span><br><span class="line">    GPGCON = GPG11_in &amp; GPG3_in;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        dwDat = GPGDAT;             <span class="comment">//读取GPG管脚电平状态</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span>(dwDat &amp; (<span class="number">1</span> &lt;&lt; <span class="number">11</span>))       <span class="comment">//K1没有按下</span></span><br><span class="line">            GPBDAT  |= (<span class="number">1</span> &lt;&lt; <span class="number">5</span>);    <span class="comment">//LED1熄灭</span></span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            GPBDAT  &amp;= ~(<span class="number">1</span> &lt;&lt; <span class="number">5</span>);   <span class="comment">//LED1点亮</span></span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span>(dwDat &amp; (<span class="number">1</span> &lt;&lt; <span class="number">3</span>))        <span class="comment">//K2没有按下</span></span><br><span class="line">            GPBDAT  |= (<span class="number">1</span> &lt;&lt; <span class="number">6</span>);    <span class="comment">//LED2熄灭</span></span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            GPBDAT  &amp;= ~(<span class="number">1</span> &lt;&lt; <span class="number">6</span>);   <span class="comment">//LED2点亮</span></span><br><span class="line"></span><br><span class="line">        dwDat = GPFDAT;             <span class="comment">//读取GPF管脚电平状态</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span>(dwDat &amp; (<span class="number">1</span> &lt;&lt; <span class="number">2</span>))        <span class="comment">//K3没有按下</span></span><br><span class="line">            GPBDAT  |= (<span class="number">1</span> &lt;&lt; <span class="number">7</span>);    <span class="comment">//LED3熄灭</span></span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            GPBDAT  &amp;= ~(<span class="number">1</span> &lt;&lt; <span class="number">7</span>);   <span class="comment">//LED3点亮</span></span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span>(dwDat &amp; (<span class="number">1</span> &lt;&lt; <span class="number">0</span>))        <span class="comment">//K4没有按下</span></span><br><span class="line">            GPBDAT  |= (<span class="number">1</span> &lt;&lt; <span class="number">8</span>);    <span class="comment">//LED4熄灭</span></span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            GPBDAT  &amp;= ~(<span class="number">1</span> &lt;&lt; <span class="number">8</span>);   <span class="comment">//LED4点亮</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>代码先将LED1-LED4对应的引脚GPB5-GPB8设为输出引脚。<br>然后将K1、K2对应的引脚GPG11、GPG3设为输入引脚，K3、K4对应的引脚GPF2、GPF0设为输入引脚。<br>然后就是一个无穷循环，读取GPGDAT、GPFDAT寄存器，从中判断K1、K2、K3、K4是否按下。若按下则点亮相应的LED，否则熄灭相应的LED。</p>
-]]></content>
-      <categories>
-        <category>学习</category>
-        <category>书籍</category>
-        <category>嵌入式Linux应用完全开发手册</category>
-        <category>第2篇第5章 GPIO接口</category>
-      </categories>
-      <tags>
-        <tag>嵌入式Linux</tag>
-        <tag>裸机</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Cpp设计模式之工厂模式</title>
     <url>/2022/08/16/Cpp%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>C++常用设计模式之工厂模式</p>
@@ -238,6 +183,61 @@
         <tag>面向对象编程</tag>
         <tag>设计模式</tag>
         <tag>应用开发</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>GPIO接口</title>
+    <url>/2022/08/10/GPIO%E6%8E%A5%E5%8F%A3/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《嵌入式Linux应用完全开发手册》第2篇第5章总结归纳</p>
+<span id="more"></span>
+<h1 id="本章目标"><a href="#本章目标" class="headerlink" title="本章目标"></a>本章目标</h1><ol>
+<li>掌握嵌入式开发的步骤：编程、编译、烧写程序、运行</li>
+<li>通过GPIO口的操作了解软件如何控制硬件</li>
+</ol>
+<h1 id="GPIO硬件介绍"><a href="#GPIO硬件介绍" class="headerlink" title="GPIO硬件介绍"></a>GPIO硬件介绍</h1><p>GPIO（Genaral Purpose I&#x2F;O Ports）意思是通过通用输入&#x2F;输出端口，通俗的说，就是一些引脚，可以通过它们输出高低电平或者通过它们读入引脚的状态—是高电平还是低电平。<br>S3C2410有117个I&#x2F;O端口，共分为A-H 8组，GPA、GPB、……、GPH。S3C2440有130个I&#x2F;O端口，共分为A-H 9组，GPA、GPB、……、GPJ。可以通过设置寄存器来确定某个引脚用于输入、输出还是其他特殊功能。比如可以设置GPH6作为一般的输入、输出引脚，或者用于串口。<br>GPIO的操作是所有硬件操作的基础，由此扩展开来可以了解所有硬件的操作，这是底层开发人员必须掌握的。</p>
+<h2 id="通过寄存器来操作GPIO引脚"><a href="#通过寄存器来操作GPIO引脚" class="headerlink" title="通过寄存器来操作GPIO引脚"></a>通过寄存器来操作GPIO引脚</h2><p>既然一个引脚可以用于输入、输出或其他功能，那么一定有寄存器用来选择这些功能；对于输入，一定可以通过读取某个寄存器来确定引脚的电平是高还是低；对于输出，一定可以通过写入某个寄存器来让这个引脚输出高电平还是低电平；对于其他特殊功能，则有另外的寄存器来控制它。<br>对于这几组GPIO引脚，它们的寄存器是相似的；GPxCON用于选择引脚功能。GPxDAT用于读写引脚数据。GPxUP用于确定是否使用内部上拉电阻。</p>
+<h3 id="GPxCON寄存器"><a href="#GPxCON寄存器" class="headerlink" title="GPxCON寄存器"></a>GPxCON寄存器</h3><p>从寄存器的名字可以看出，它用于配置（Configure）—选择引脚的功能。<br>PORT A与PORT B-PORT H&#x2F;J在功能选择方面有所不同，GPACON中每一位对应一根引脚（共23根引脚）。当某位被设置为0时，相应引脚为输出引脚，此时我们可以在GPADAT中的相应位写入0或1让此引脚输出高电平或者低电平。当某位被设置为1时，相应的引脚为地址线，或用于地址控制。此时的GPADAT无用。通常而言GPACON全被设置为1，以便访问外部存储器件。<br>PORT B-PORT H&#x2F;J 在寄存器操作方面完全相同。GPxCON中每两位控制一根引脚，00表示输入、01表示输出、10表示特殊功能、11保留。</p>
+<h3 id="GPxDAT寄存器"><a href="#GPxDAT寄存器" class="headerlink" title="GPxDAT寄存器"></a>GPxDAT寄存器</h3><p>GPxDAT用于读&#x2F;写引脚；当引脚被设置为输入时，读此寄存器可知相应引脚的电平状态是高还是低；当引脚被设置为输出时，写此寄存器相应位可令此引脚输出高电平或者低电平。</p>
+<h3 id="GPxUP"><a href="#GPxUP" class="headerlink" title="GPxUP"></a>GPxUP</h3><p>某位为1时，相应引脚无内部上拉电阻；为0时，相应引脚使用内部上拉电阻。<br><img src="/2022/08/10/GPIO%E6%8E%A5%E5%8F%A3/1.jpeg" alt="img not found"><br>上拉、下拉电阻的作用在于，当GPIO引脚处于第三态（既不是输出高电平，也不是输出低电平，而是呈高阻态）时，它的电平状态由上拉、下拉电阻决定。</p>
+<h2 id="怎样使用软件来访问硬件"><a href="#怎样使用软件来访问硬件" class="headerlink" title="怎样使用软件来访问硬件"></a>怎样使用软件来访问硬件</h2><h3 id="访问单个引脚"><a href="#访问单个引脚" class="headerlink" title="访问单个引脚"></a>访问单个引脚</h3><p>单个引脚的操作无外乎3种：输出高低电平、检测引脚状态、中断。对某个引脚的操作一般通过读写寄存器来完成。<br>比如对于图5.2所示的电路，可以设置GPBCON寄存器将GPB5、GPB6、GPB7和GPB8设为输出功能，然会写GPBDAT的寄存器使得这四个引脚输出高电平或低电平。输出高电平时，相应的LED灯熄灭，输出低电平时，相应的LED灯点亮。<br>还可以设置GPFCON寄存器将GPF0、GPF2、GPF3和GPF11设为输入功能，然后通过读出GPFDAT&#x2F;GPGDAT寄存器并判断相应位是0还是1来确定各个按键是否被按下。某个按键按下时，相应引脚电平为低，GPFDAT&#x2F;GPGDAT寄存器相应位为0，否则为1。<br>那么怎么访问这些寄存器呢，通过软件，读写它们的地址。比如，GPBCON和GPBDAT寄存器的地址都是0x56000010、0x56000014，可以通过如下的指令让GPB5输出低电平，点亮LED1。<br><img src="/2022/08/10/GPIO%E6%8E%A5%E5%8F%A3/2.jpeg" alt="img not found"></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> GPBCON (*(volatile unsigned long *)0x56000010)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPBDAT (*(volatile unsigned long *)0x56000014)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPB5_out (1&lt;&lt;(5*2))</span></span><br><span class="line">GPBCON = GPB5_out;<span class="comment">//GPB5引脚设置为输出</span></span><br><span class="line">GPBDAT &amp;= ~(<span class="number">1</span>&lt;&lt;<span class="number">5</span>);<span class="comment">//GPB5输出低电平</span></span><br></pre></td></tr></table></figure>
+<h3 id="以总线方式访问硬件"><a href="#以总线方式访问硬件" class="headerlink" title="以总线方式访问硬件"></a>以总线方式访问硬件</h3><p>并非只能通过寄存器才能发出硬件信号，实际上，通过访问总线的方式控制硬件更常见。以NOR Flash的访问为例：<br><img src="/2022/08/10/GPIO%E6%8E%A5%E5%8F%A3/3.jpeg" alt="img not found"><br>图中，缓冲器的作用是为了提高驱动力、隔离前后级信号。NOR Flash AM29LV800BB的片选信号使用S3C2410&#x2F;S3C2440的nGCS0信号，当CPU发出的地址信号处于0x00000000-0x07FFFFFF之间时，nGCS0信号有效，于是NOR Flash被选中。这时，CPU发出的地址信号传到NOR Flash；进行写操作时，nWE信号为低，数据信号从CPU发出给NOR Flash；进行读操作时，nWE信号为高，数据信号从NOR Flash发给CPU。上图所示的硬件连线决定了读写操作都是以16位为单位的。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*地址对齐的16位读操作*/</span></span><br><span class="line"><span class="type">unsigned</span> <span class="type">short</span> *pwAddr = (<span class="type">unsigned</span> <span class="type">short</span> *)<span class="number">0x2</span>;</span><br><span class="line"><span class="type">unsigned</span> <span class="type">short</span> wVal;</span><br><span class="line">wVal = *pwAddr;</span><br></pre></td></tr></table></figure>
+<p>上述代码就会向NOR Flash发起读操作：CPU发出的读地址为0x2，则地址总线ADDR1-ADDR20、A0-A19的信号都是1、0、…、0（CPU的ADDR0为0，不过ADDR0没有接到NOR Flash上）。NOR Flash接收到的地址就是0x1，NOR Flash在稍后的时间里将此址上的16位数据取出，并通过数据总线D0-D15发给CPU。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*地址不对齐的16位读操作*/</span></span><br><span class="line"><span class="type">unsigned</span> <span class="type">short</span> *pwAddr = (<span class="type">unsigned</span> <span class="type">short</span> *)<span class="number">0x1</span>;</span><br><span class="line"><span class="type">unsigned</span> <span class="type">short</span> wVal;</span><br><span class="line">wVal = *pwAddr;</span><br></pre></td></tr></table></figure>
+<p>由于地址位0x1；不是2对齐的，但是BANK0的位宽被设为16，这将导致异常。我们可以设置异常处理函数来处理这种情况。在异常处理函数中，使用0x0、0x2发起两次读操作，然后将两个结果组合起来。使用地址0x0读到两字节数据D0、D1，再使用地址0x2读到D2、D3。最后D1、D2组合成一个16位的数返回给wVal。如果没有设置地址不对齐异常处理函数，那么上述代码将出错。如果某个BANK位宽被设置为n，访问此BANK时，在总线上永远只会看到地址对齐的n位操作。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*8位读操作*/</span></span><br><span class="line"><span class="type">unsigned</span> <span class="type">char</span> *pucAddr = (<span class="type">unsigned</span> <span class="type">char</span> *)<span class="number">0x6</span>;</span><br><span class="line"><span class="type">unsigned</span> <span class="type">char</span> ucVal;</span><br><span class="line">ucVal = *pucAddr;</span><br></pre></td></tr></table></figure>
+<p>CPU首先使用地址0x6对NOR Flash发起16位的读操作，得到两字节的数据，假设位D1、D0，然后将D0取出赋值给uvVal。在读操作期间，地址总线ADDR1-ADDR20、A0-A19的信号都是1、1、1、…、0。CPU会自动丢弃D1。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*32位读操作*/</span></span><br><span class="line"><span class="type">unsigned</span> <span class="type">int</span> *pdwAddr = (<span class="type">unsigned</span> <span class="type">int</span> *)<span class="number">0x6</span>;</span><br><span class="line"><span class="type">unsigned</span> <span class="type">int</span> dwVal;</span><br><span class="line">dwVal = *pdwAddr;</span><br></pre></td></tr></table></figure>
+<p>CPU首先使用地址0x6对NOR Flash发起16位的读操作，得到两字节的数据，假设为D0，D1；再使用地址0x8发起读操作，得到两字节的数据D2，D3，最后将这4个字节的数据组合后再赋值给变量dwVal。<br>由于NOR Flash的特性，使得对NOR Flash的写操作比较复杂—比如要先发出特定的地址信号通知NOR Flash准备接受数据，然后才发出数据。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*16位写操作*/</span></span><br><span class="line"><span class="type">unsigned</span> <span class="type">short</span> *pwAddr = (<span class="type">unsigned</span> <span class="type">short</span> *)<span class="number">0x6</span>;</span><br><span class="line">*pwAddr = <span class="number">0x1234</span>;</span><br></pre></td></tr></table></figure>
+<p>CPU发起一次对NOR Flash的写操作，地址总线ADDR1-ADDR20、A0-A19的信号都时1、1、…、0；数据线DATA0-DATA15、D0-D15的信号为0、0、1、0、1、1、0、0、0、1、0、0、1、0、0、0。<br>由此可见，CPU使用某个地址进行访问时，这个32位的地址值和ADDR0-ADDR31一一对应，外接的设备可以以8位、16位、32位进行操作—取决于硬件设计。如果以8位进行操作，那么数据出现在数据信号DATA0-DATA7上，如果以16位进行操作，则数值出现在数据线DATA0-DATA15上；如果以32位进行操作，则数值出现在DATA0-DATA31上。</p>
+<h1 id="GPIO操作实例"><a href="#GPIO操作实例" class="headerlink" title="GPIO操作实例"></a>GPIO操作实例</h1><p>LED和按键与处理器的电路连接基于图5.2。程序基于裸机开发，不带操作系统。</p>
+<h2 id="纯汇编实现点亮一个LED"><a href="#纯汇编实现点亮一个LED" class="headerlink" title="纯汇编实现点亮一个LED"></a>纯汇编实现点亮一个LED</h2><p>汇编程序实现。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">.text</span><br><span class="line">.global _start</span><br><span class="line">_start:</span><br><span class="line">    ldr r0,=0x56000010      @r0设置为GPBCON寄存器，用于配置GPIOB系列引脚。</span><br><span class="line">    mov r1,#0x00000400      @r1赋值立即数0x00000400</span><br><span class="line">    str r1,[r0]             @GPBCON写入0x00000400，设置GPB5为输出口，位[10:9]=0b01</span><br><span class="line">    ldr r0,=0x56000014      @r0设置为GPBDAT寄存器，用于读写GPIOB系列引脚的数据。</span><br><span class="line">    mov r1,#0x00000020      @r1赋值立即数0x00000020</span><br><span class="line">    str r1,[r0]             @点亮LED1</span><br><span class="line">main_loop:</span><br><span class="line">    b main_lopp             @死循环</span><br></pre></td></tr></table></figure>
+<p>编译如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">arm-linux-gcc -g -c -o led_on.o led_on.S                        @编译</span><br><span class="line">arm-linux-ld -Ttext 0x00000000 -g led_on.o -o led_on_elf        @链接</span><br><span class="line">arm-linux-objcopy -O binary -S led_on_elf led_on.bin            @将elf格式的可执行文件转换位二进制格式</span><br></pre></td></tr></table></figure>
+
+<h2 id="C代码实现点亮一个LED"><a href="#C代码实现点亮一个LED" class="headerlink" title="C代码实现点亮一个LED"></a>C代码实现点亮一个LED</h2><p>C语言执行的第一条指令并不在main函数中。生成一个C程序的可执行文件时，编译器通常会在我们的代码中加上几个被称为启动文件的代码—crtl.o、crti.o、crtend.o、crtn.o等，它们是标准库文件。这些代码设置C程序的堆栈等，然后调用main函数。它们依赖于操作系统，在裸板上这些代码无法执行，所以需要自己写一个。<br>这段代码很简单，只有6条指令，自己编写的crt0.S文件内容如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">File:crt0.S</span></span><br><span class="line"><span class="comment">通过它转入C程序</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">.text</span><br><span class="line">.global _start</span><br><span class="line">_start:</span><br><span class="line">    ldr r0,=<span class="number">0x56000010</span>      @watchdog地址寄存器</span><br><span class="line">    mov r1,#<span class="number">0x0</span>             @</span><br><span class="line">    str r1,[r0]             @写入<span class="number">0</span>，禁止watchdog，否则CPU会不断重启</span><br><span class="line">    ldr sp,=<span class="number">1024</span>*<span class="number">4</span>          @设置堆栈，注意不能大于<span class="number">4</span>KB，因为当前可以内存只有<span class="number">4</span>KB</span><br><span class="line">                            @NAND Flash中的代码会在复位后移到内部RAM（只有<span class="number">4</span>KB）</span><br><span class="line">    bl main                 @调用C程序中的main函数</span><br><span class="line"></span><br><span class="line">halt_loop:</span><br><span class="line">    b halt_loop</span><br></pre></td></tr></table></figure>
+<p>设置好堆栈指针后，就可以调用C函数main了。C函数执行前，必须设置栈。<br>所以现在可以写出控制LED的C程序了。main函数在led_on_c.c中，代码如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> GPBCON (*(volatile unsigned long *)0x56000010)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPBDAT (*(volatile unsigned long *)0x56000014)</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    GPBCON = <span class="number">0x00000040</span>;    <span class="comment">//设置GPB5为输出端口，位[10:9]=0b01</span></span><br><span class="line">    GPBDAT = <span class="number">0x00000000</span>;    <span class="comment">//GPB5输出0，LED1点亮</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">arm-linux-gcc -g -c -o crt0.o crt0.S</span><br><span class="line">arm-linux-gcc -g -c -o led_on_c.0 led_on_c.c</span><br><span class="line">arm-linux-ld -Ttext 0x00000000 -g crt0.o led_on_c.o -o led_on_c_elf</span><br><span class="line">arm-linux-objcopy -O binary -S led_on_c_elf led_on_c.bin</span><br><span class="line">arm-linux-objdump -D -m arm led_on_c_elf &gt; led_on_c.dis</span><br></pre></td></tr></table></figure>
+<p>先分别编译crt0.S和led_on_c.c(不连接)。然后将编译的结果连接起来。然后把得到的ELF格式的文件led_on_c_elf转换成二进制的bin文件。最后将结果转换为汇编代码以供查看。</p>
+<h2 id="按键来控制LED"><a href="#按键来控制LED" class="headerlink" title="按键来控制LED"></a>按键来控制LED</h2><p>当K1-K4某个按键按下时，点亮LED1-LED4中相应的代码。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">File:key_led.c</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPBCON (* (unsigned long *) 0x56000010)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPBDAT (* (unsigned long *) 0x56000014)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPFCON (* (unsigned long *) 0x56000050)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPFDAT (* (unsigned long *) 0x56000054)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPGCON (* (unsigned long *) 0x56000060)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPGDAT (* (unsigned long *) 0x56000064)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">LED1-LED4对应GPB5、GPB6、GPB7、GPB8</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPB5_out (1&lt;&lt;(5*2))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPB6_out (1&lt;&lt;(6*2))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPB7_out (1&lt;&lt;(7*2))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPB8_out (1&lt;&lt;(8*2))</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">K1-K4对应GPG11、GPG3、GPF2、GPF0</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPG11_in ~(3&lt;&lt;(11*2))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPG3_in ~(3&lt;&lt;(3*2))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPF2_in ~(3&lt;&lt;(2*2))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPF0_in ~(3&lt;&lt;(0*2))</span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> dwDat;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//LED1-LED4对应的4根引脚设置为输出</span></span><br><span class="line">    GPBCON = GPB5_out | GPB6_out | GPB7_out | GPB8_out ;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//K1-K2对应的两根引脚设为输入</span></span><br><span class="line">    GPGCON = GPG11_in &amp; GPG3_in;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        dwDat = GPGDAT;             <span class="comment">//读取GPG管脚电平状态</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span>(dwDat &amp; (<span class="number">1</span> &lt;&lt; <span class="number">11</span>))       <span class="comment">//K1没有按下</span></span><br><span class="line">            GPBDAT  |= (<span class="number">1</span> &lt;&lt; <span class="number">5</span>);    <span class="comment">//LED1熄灭</span></span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            GPBDAT  &amp;= ~(<span class="number">1</span> &lt;&lt; <span class="number">5</span>);   <span class="comment">//LED1点亮</span></span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span>(dwDat &amp; (<span class="number">1</span> &lt;&lt; <span class="number">3</span>))        <span class="comment">//K2没有按下</span></span><br><span class="line">            GPBDAT  |= (<span class="number">1</span> &lt;&lt; <span class="number">6</span>);    <span class="comment">//LED2熄灭</span></span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            GPBDAT  &amp;= ~(<span class="number">1</span> &lt;&lt; <span class="number">6</span>);   <span class="comment">//LED2点亮</span></span><br><span class="line"></span><br><span class="line">        dwDat = GPFDAT;             <span class="comment">//读取GPF管脚电平状态</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span>(dwDat &amp; (<span class="number">1</span> &lt;&lt; <span class="number">2</span>))        <span class="comment">//K3没有按下</span></span><br><span class="line">            GPBDAT  |= (<span class="number">1</span> &lt;&lt; <span class="number">7</span>);    <span class="comment">//LED3熄灭</span></span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            GPBDAT  &amp;= ~(<span class="number">1</span> &lt;&lt; <span class="number">7</span>);   <span class="comment">//LED3点亮</span></span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span>(dwDat &amp; (<span class="number">1</span> &lt;&lt; <span class="number">0</span>))        <span class="comment">//K4没有按下</span></span><br><span class="line">            GPBDAT  |= (<span class="number">1</span> &lt;&lt; <span class="number">8</span>);    <span class="comment">//LED4熄灭</span></span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            GPBDAT  &amp;= ~(<span class="number">1</span> &lt;&lt; <span class="number">8</span>);   <span class="comment">//LED4点亮</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>代码先将LED1-LED4对应的引脚GPB5-GPB8设为输出引脚。<br>然后将K1、K2对应的引脚GPG11、GPG3设为输入引脚，K3、K4对应的引脚GPF2、GPF0设为输入引脚。<br>然后就是一个无穷循环，读取GPGDAT、GPFDAT寄存器，从中判断K1、K2、K3、K4是否按下。若按下则点亮相应的LED，否则熄灭相应的LED。</p>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>嵌入式Linux应用完全开发手册</category>
+        <category>第2篇第5章 GPIO接口</category>
+      </categories>
+      <tags>
+        <tag>嵌入式Linux</tag>
+        <tag>裸机</tag>
       </tags>
   </entry>
   <entry>
@@ -3378,6 +3378,405 @@ hid_irq_in是USB中断传输方式的中断处理函数，当键盘被按下时�
       </tags>
   </entry>
   <entry>
+    <title>块IO层</title>
+    <url>/2022/12/10/%E5%9D%97IO%E5%B1%82/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p><code>系统中能够随机（不需要按顺序）访问固定大小数据片（chunks）的硬件设备称作块设备，这些固定大小的数据片就称作块</code>。最常见的块设备是硬盘，除此之外，还有软盘驱动器、蓝光光驱和闪存等许多其他设备。注意，它们都是以安装文件系统的方式使用的—-这也是块设备一般的访问方式。<br>另一种基本的设备类型是字符设备。字符设备按照字符流的方式被有序访问，像串口和键盘就属于字符设备。如果一个硬件设备是以字符流的方式被访问的话，那就应该将它归于字符设备；反过来，如果一个设备是随机（无序）访问的，那么它就属于块设备。<br>对于这两种类型的设备，它们的区别在于是否可以随机访问数据—-换句话说，就是能否在访问设备时随意地从一个位置跳转到另一个位置。举个例子，键盘这种设备提供的就是一个数据流，当你输入“wolf”这个字符串时，键盘驱动程序会按照和输入完全相同的顺序返回这个由四个字符组成的数据流。如果让键盘驱动程序打乱顺序来读字符串，或读取其他字符，都是没有意义的。所以键盘就是一种典型的字符设备，它提供的就是用户从键盘输入的字符流。对键盘进行读操作会得到一个字符流，首先是“w”，然后是“o”，再是“l”，最后是“f”。当没人敲键盘时，字符流就是空的。硬盘设备的情况就不大一样了。硬盘设备的驱动可能要求读取磁盘上任意块的内容，然后又转去读取别的块的内容了，而被读取的块在磁盘上位置不一定要连续。所以说硬盘的数据可以被随机访问，而不是以流的方式被访问，因此它是一个块设备。<br>内核管理块设备要比管理字符设备细致得多，需要考虑的问题和完成的工作相对于字符设备来说要复杂的多。这是因为字符设备仅仅需要控制一个位置—-当前位置，而块设备访问的位置必须能够在介质的不同区间前后移动。所以事实上内核不必提供一个专门的子系统来管理字符设备，但是对于块设备的管理却必须有一个专门的提供服务的子系统。不仅仅是因为块设备的复杂性远远高于字符设备，更重要的原因是块设备对执行性能的要求很高；对硬盘每多一份利用都会对整个系统的性能带来提升，其效果要远远比键盘吞吐速度成倍的提高大得多。另外，我们将会看到，块设备的复杂性会为这种优化留下很大的施展空间。这一章的主题就是讨论内核如何对块设备和块设备的请求进行管理。该部分在内核中称作块I&#x2F;O层。有趣的是，改写块I&#x2F;O层正是2.5开发板内核的主要目标。本章涵盖了2.6内核中所有新的块I&#x2F;O层。</p>
+<span id="more"></span>
+
+<h1 id="剖析一个块设备"><a href="#剖析一个块设备" class="headerlink" title="剖析一个块设备"></a>剖析一个块设备</h1><p>块设备中最小的可寻址单元是扇区。扇区大小一般是2的整数倍，而最常见的是512字节。扇区的大小是设备的物理属性，扇区是所有块设备的基本单元—-块设备无法对比它还小的单元进行寻址和操作，尽管很多块设备能够一次对多个扇区进行操作。虽然大多数块设备的扇区大小都是512字节，不过其他大小的扇区也很常见。比如，很多CD-ROM盘的扇区都是2KB的大小。<br>因为各种软件的用途不同，所以它们都会用到自己的最小逻辑可寻址单元—-块。块是文件系统的一种抽象—-只能基于块来访问文件系统。虽然物理磁盘寻址是按照扇区级进行的，但是内核执行的所有磁盘操作都是按照块进行的。由于扇区是设备的最小可寻址单元，所以块不能比扇区还小，只能数倍于扇区大小。另外，内核（对有扇区的硬件设备）还要求块大小是2的整数倍，而且不能超过一个页的长度。所以，对块大小的最终要求是，必须是扇区大小的2的整数倍，并且要小于页面大小。所以通常块大小是512字节、1KB或4KB。<br>扇区和块还有一些不同的叫法，为了不引起混淆，我们在这里简要介绍一下它们的其他名称。<code>扇区----设备的最小寻址单元</code>，有时会称作“硬扇区”或“设备块”；同样的，<code>块----文件系统的最小寻址单元</code>，有时会称作“文件块”或“I&#x2F;O块”。在这一章里，会一直使用“扇区”和“块”这两个术语，但你还是应该记住它们的这些别名。下图是扇区和缓冲区之间的关系图。<br><img src="/2022/12/10/%E5%9D%97IO%E5%B1%82/1.jpeg" alt="img not found"><br>至少相对于硬盘而言，另外一些术语更通用—-如簇、柱面以及磁头。这些表示是针对某些特定的块设备的，大多数情况下，对用户空间的软件是不可见的。扇区这一术语之所以对内核重要，是因为所有设备的I&#x2F;O必须以扇区为单位进行操作。以此类推，内核所使用的“块”这一高级概念就是建立在扇区之上的。</p>
+<h1 id="缓冲区和缓冲区头"><a href="#缓冲区和缓冲区头" class="headerlink" title="缓冲区和缓冲区头"></a>缓冲区和缓冲区头</h1><p>当一个块被调入内存时（也就是说，在读入后或等待写出时），它要存储在一个缓存区中。每个缓冲区与一个块对应，它相当于是磁盘块在内存中的表示。前面提到过，块包含一个或多个扇区，但大小不能超过一个页面，所以一个页可以容纳一个或多个内存中的块。由于内核在处理数据时需要一些相关的控制信息（比如块属于哪一个块设备，块对应于哪个缓冲区等），所以每一个缓冲区都有一个对应的描述符。该描述符用buffer_head结构体表示，称作缓冲区头，在文件&lt;linux&#x2F;buffer_head.h&gt;中定义，它包含了内核操作缓冲区所需要的全部信息。<br>下面给出缓冲区头结构体和其中各个域的说明：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">buffer_head</span> &#123;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>           b_state;            <span class="comment">//缓冲区状态标志</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">buffer_head</span>      *<span class="title">b_this_page</span>;</span>       <span class="comment">//页面中的缓冲区</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">page</span>             *<span class="title">b_page</span>;</span>            <span class="comment">//存储缓冲区中的页面</span></span><br><span class="line">    <span class="type">sector_t</span>                b_blocknr;          <span class="comment">//起始块号</span></span><br><span class="line">    <span class="type">size_t</span>                  b_size;             <span class="comment">//映像的大小</span></span><br><span class="line">    <span class="type">char</span>                    *b_data;            <span class="comment">//页面内的数据指针</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">block_device</span>     *<span class="title">b_bdev</span>;</span>            <span class="comment">//相关联的块设备</span></span><br><span class="line">    <span class="type">bh_end_io_t</span>             *b_end_io;          <span class="comment">//I/O完成方法</span></span><br><span class="line">    <span class="type">void</span> *                  b_private;          <span class="comment">//io完成方法</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>        <span class="title">b_assoc_buffers</span>;</span>    <span class="comment">//相关的映射链表</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">address_space</span>    *<span class="title">b_assoc_map</span>;</span>       <span class="comment">//相关的地址空间</span></span><br><span class="line">    <span class="type">atomic_t</span>                b_count;            <span class="comment">//缓冲区使用计数</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>b_state域表示缓冲区的状态，可以是下表中一种标志或多种标志的组合。合法的标志存放在bh_state_bits枚举中，该枚举在&lt;linux&#x2F;buffer_head.h&gt;中定义。<br><strong>bh_state标志</strong></p>
+<table>
+<thead>
+<tr>
+<th>状态标志</th>
+<th>意义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BH_Uptodate</td>
+<td>该缓冲区包含可用数据</td>
+</tr>
+<tr>
+<td>BH_Dirty</td>
+<td>该缓冲区是脏的（缓存中的内容比磁盘中的块内容新，所以缓冲区内容必须被写回磁盘）</td>
+</tr>
+<tr>
+<td>BH_Lock</td>
+<td>该缓冲区正在被I&#x2F;O操作使用，被锁定以防被并发访问</td>
+</tr>
+<tr>
+<td>BH_Req</td>
+<td>该缓冲区有I&#x2F;O请求操作</td>
+</tr>
+<tr>
+<td>BH_Mapped</td>
+<td>该缓冲区是映射磁盘块的可用缓冲区</td>
+</tr>
+<tr>
+<td>BH_New</td>
+<td>该缓冲区是通过get_block()刚刚映射的，尚且不能访问</td>
+</tr>
+<tr>
+<td>BH_Async_Read</td>
+<td>该缓冲区正通过end_buffer_async_read()被异步I&#x2F;O读操作使用</td>
+</tr>
+<tr>
+<td>BH_Async_Write</td>
+<td>该缓冲区正通过end_buffer_async_write()被异步I&#x2F;O写操作使用</td>
+</tr>
+<tr>
+<td>BH_Delay</td>
+<td>该缓冲区尚未和磁盘块关联</td>
+</tr>
+<tr>
+<td>BH_Boundary</td>
+<td>该缓冲区处于连续块区的边界—-下一个块不再连续</td>
+</tr>
+<tr>
+<td>BH_Write_EIO</td>
+<td>该缓冲区在写的时候遇到I&#x2F;O错误</td>
+</tr>
+<tr>
+<td>BH_Ordered</td>
+<td>顺序写</td>
+</tr>
+<tr>
+<td>BH_Eopnotsupp</td>
+<td>该缓冲区发生“不被支持”错误</td>
+</tr>
+<tr>
+<td>BH_Unwritten</td>
+<td>该缓冲区在硬盘上的空间已被申请但是没有实际的数据写出</td>
+</tr>
+<tr>
+<td>BH_Quiet</td>
+<td>此缓冲区禁止错误</td>
+</tr>
+</tbody></table>
+<p>bh_state_bits列表还包含了一个特殊标志—-BH_PrivateStart，该标志不是可用状态标志，使用它是为了指明可被其他代码使用的起始位。块I&#x2F;O层不会使用BH_PrivateStart或更高的位。那么某个驱动程序希望通过b_state域存储信息时就可以安全地使用这些位。驱动程序可以在这些位中定义自己地状态标志，只要保证自定义的状态标志不与块I&#x2F;O层的专用位发生冲突就可以了。<br>b_count域表示缓冲区的使用计数，可通过两个定义在文件&lt;linux&#x2F;buffer_head.h&gt;中的内联函数对此域进行增减。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">void</span> <span class="title function_">get_bh</span><span class="params">(<span class="keyword">struct</span> buffer_head *bh)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">atomic_inc</span>(&amp;bh-&gt;b_count);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">void</span> <span class="title function_">put_bh</span><span class="params">(<span class="keyword">struct</span> buffer_head *bh)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">atomic_dec</span>(&amp;bh-&gt;b_count);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在操作缓冲区头之前，应该先使用get_bh()函数增加缓冲区头的引用计数，确保该缓冲区头不会再被分配出去；当完成对缓冲区头的操作之后，还必须使用put_bh()函数减少引用计数。<br>与缓冲区对应的磁盘物理块由b_blocknr-th域索引，该值是b_bdev域指明的块设备中的逻辑块号。<br>与缓冲区对应的内存物理页由b_page域表示，另外，b_data域直接指向相应的块（它位于b_page域所指明的页面中的某个位置上），块的大小由b_size域表示，所以块在内存中的起始位置在b_data处，结束位置在（b_data + b_size）处。<br>缓冲区头的目的在于描述磁盘块和物理内存缓冲区（在特定页面上的字节序列）之间的映射关系。这个结构体在内核中只扮演一个描述符的角色，说明从缓冲区到块的映射关系。<br>在2.6内核以前，缓冲区头的作用比现在还要重要。因为缓冲区作为内核中的I&#x2F;O操作单元，不仅仅描述了从磁盘块的物理内存的映射，而且还是所有块I&#x2F;O操作的容器。可是，将缓冲区头作为I&#x2F;O操作单元带来了两个弊端。首先，缓冲区头是一个很大且不易控制的数据结构体（现在是缩减过的了），而且缓冲区头对数据的操作既不方便也不清晰。对内核来说，它更倾向于操作页面结构，因为页面操作起来更为简单，同时效率也高。使用一个巨大的缓冲区头表示每一个独立的缓冲区（可能比页面小）效率低下，所以在2.6版本中，许多I&#x2F;O操作都是通过内核直接对页面或地址空间进行操作来完成，不再使用缓冲区头了。<br>缓冲区头带来的第二个弊端就是：它仅能描述单个缓冲区，当作为所有的I&#x2F;O的容器使用时，缓冲区头会促使内核把大块数据的I&#x2F;O操作，分解为对多个buffer_head结构体进行操作。这样做必然会造成不必要的负担和空间浪费。</p>
+<h1 id="bio结构体"><a href="#bio结构体" class="headerlink" title="bio结构体"></a>bio结构体</h1><p>目前内核中块I&#x2F;O操作的基本容器有bio结构体表示，它定义在文件&lt;linux&#x2F;bio.h&gt;中。该结构体代表了正在现场的（活动的）以片段（segment）链表形式组织的块I&#x2F;O操作。一个片段是一小块连续的内存缓冲区，这样的话，就不需要保证单个缓冲区一定要连续。所以通过用片段来描述缓冲区，即使一个缓冲区分散在内存的多个位置上，bio结构体也能对内核保证I&#x2F;O操作的执行。像这样的向量I&#x2F;O就是所谓的聚散I&#x2F;O。<br>bio结构体定义于&lt;linux&#x2F;bio.h&gt;中，下面给出的bio结构体和各个域的描述。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">bio</span> &#123;</span></span><br><span class="line">    <span class="type">sector_t</span>            bi_sector;          <span class="comment">//磁盘上相关的扇区</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">bio</span>          *<span class="title">bi_next</span>;</span>           <span class="comment">//请求链表</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">block_device</span> *<span class="title">bi_bdev</span>;</span>           <span class="comment">//相关的块设备</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>       bi_flags;           <span class="comment">//状态和命令标志</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>       bi_rw;              <span class="comment">//读还是写</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">short</span>      bi_vcnt;            <span class="comment">//bio_vecs偏移的个数</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">short</span>      bi_idx;             <span class="comment">//bio_io_vect的当前索引</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">short</span>      bi_phys_segments;   <span class="comment">//结合后的片段数目</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span>        bi_size;            <span class="comment">//I/O计数</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span>        bi_seg_front_size;  <span class="comment">//第一个可合并的段大小</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span>        bi_seg_back_size;   <span class="comment">//最后一个可合并的段大小</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span>        bi_max_vecs;        <span class="comment">//bio_vecs数目上限</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span>        bi_comp_cpu;        <span class="comment">//结束CPU</span></span><br><span class="line">    <span class="type">atomic_t</span>            bi_cnt;             <span class="comment">//使用计数</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">bio_vec</span>      *<span class="title">bi_io_vec</span>;</span>         <span class="comment">//bio_vecs链表</span></span><br><span class="line">    <span class="type">bio_end_io_t</span>        *bi_end_io;         <span class="comment">//I/O完成方法</span></span><br><span class="line">    <span class="type">void</span>                *bi_provate;        <span class="comment">//拥有者的私有方法</span></span><br><span class="line">    <span class="type">bio_destructor_t</span>    *bi_destructor;     <span class="comment">//撤销方法</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">bio_vec</span>      <span class="title">bi_inline_vecs</span>[0];</span>  <span class="comment">//内嵌bio向量</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>使用bio结构体的目的主要是代表正在现场执行的I&#x2F;O操作，所以该结构体的主要域都是用来管理相关信息的，其中最主要的几个域是bi_io_vecs、bi_vcnt和bi_idx。下图显示了bio结构体及其他结构体之间的关系。</p>
+<h2 id="I-x2F-O向量"><a href="#I-x2F-O向量" class="headerlink" title="I&#x2F;O向量"></a>I&#x2F;O向量</h2><p>bi_io_vec域指向一个bio_vec结构体数组，该结构体链表包含了一个特定的I&#x2F;O操作所需要使用到的所有片段。每个bio_vec结构都是一个形式为&lt;page,offset,len&gt;的向量，它描述的是一个特定的片段：片段所在的物理页、块在物理页中的偏移位置、从给定偏移量开始的块长度。整个bio_io_vec结构体数组表示了一个完整的缓冲区。bio_vec结构定义在&lt;linux&#x2F;bio.h&gt;中：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">bio_vec</span> &#123;</span></span><br><span class="line">    <span class="comment">//指向这个缓冲区所驻留的物理页</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">page</span>         *<span class="title">bv_page</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//这个缓冲区以字节为单位的大小</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span>        bv_len;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//缓冲区所驻留的页中以字节为单位的偏移量</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span>        bv_offset;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>在每个给定的块I&#x2F;O操作中，bi_vcnt域用来描述bi_io_vec所指向的vio_vec数组中的向量数目。当块I&#x2F;O操作执行完毕后，bi_idx域指向数组的当前索引。<br>总而言之，每一块I&#x2F;O请求都通过一个bio结构体表示。每个请求包含一个或多个块，这些块存储在bio_vec结构体数组中。这些结构体描述了每个片段在物理页中的实际位置，并且像向量一样被组织在一起。I&#x2F;O操作的第一个片段由b_io_vec结构体所指向，其他的片段在其后依次放置，共有bi_vcnt个片段。当块I&#x2F;O层开始执行请求、需要使用各个片段时，bi_idx域会不断更新，从而总指向当前片段。<br>bi_idx域指向数组中的当前bio_vec片段，块I&#x2F;O层通过它可以跟踪块I&#x2F;O操作的完成进度。但该域更重要的作用在于分割bio结构体。像冗余廉价磁盘阵列（RAID，出于提高性能和可靠性的目的，将单个磁盘的卷扩展到多个磁盘上）这样的驱动器可以把单独的bio结构体（原本是为单个设备使用准备的），分割到RAID阵列中的各个硬盘上去。RAID设备驱动只需要拷贝这个bio结构体，再把bi_idx域设置为每个独立硬盘操作时需要的位置就可以了。<br>bi_cnt域记录bio结构体的使用计数，如果该域值减为0，就应该撤销该bio结构体，并释放它占用的内存。通过下面两个函数管理使用计数。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">bio_get</span><span class="params">(<span class="keyword">struct</span> bio *bio)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">bio_put</span><span class="params">(<span class="keyword">struct</span> bio *bio)</span>;</span><br></pre></td></tr></table></figure>
+<p>前者增加使用计数，后者减少使用计数（如果计数减到0，则撤销bio结构体）。在操作正在活动的bio结构体时，一定要首先增加它的使用计数，以免在操作过程中该bio结构体被释放；相反，在操作完毕后，要减少使用计数。<br>最后要说明的是bi_private域，这是一个属于拥有者（也就是创建者）的私有域，只有创建了bio结构的拥有者可以读写该域。</p>
+<h2 id="新老方法对比"><a href="#新老方法对比" class="headerlink" title="新老方法对比"></a>新老方法对比</h2><p>缓冲区头和新的bio结构体之间存在显著差别。bio结构体代表的是I&#x2F;O操作，它可以包括内存中的一个或多个页；而另一方面，buffer_head结构体代表的是一个缓冲区，它描述的仅仅是磁盘中的一个块。因为缓冲区头关联的是单独页中的单独磁盘块，所以它可能会引起不必要的分割，将请求按块为单位划分，只能靠以后才能重新组合。由于bio结构体是轻量级的，它描述的块可以不需要连续存储区，并且不需要分割I&#x2F;O操作。<br>利用bio结构体代替buffer_head结构体还有以下好处：</p>
+<ol>
+<li>bio结构体很容易处理高端内存，因为它处理的是物理页而不是直接指针。</li>
+<li>bio结构体既可以代表普通页I&#x2F;O，同时也可以代表直接I&#x2F;O（指那些不通过页高速缓存的I&#x2F;O操作）。</li>
+<li>bio结构体便于执行分散-集中（矢量化的）块I&#x2F;O操作，操作中的数据可取自多个物理页面。</li>
+<li>bio结构体相比缓冲区头属于轻量级的结构体。因为它只需要包含块I&#x2F;O操作所需的信息就行了，不用包含与缓冲区本身相关的不必要信息。</li>
+</ol>
+<p>但是还是需要缓冲区头这个概念，毕竟它还负责描述磁盘块到页面的映射。bio结构体不包含任何和缓冲区相关的状态信息—-它仅仅是一个矢量数组，描述一个或多个单独块I&#x2F;O操作的数据片段和相关信息。在当前设置中，当bio结构体描述当前正在使用的I&#x2F;O操作时，buffer_head结构体仍然需要包含缓冲区的信息。内核通过这两种结构分别保存各自的信息，可以保证每种结构所含的信息量尽可能地少。</p>
+<h1 id="请求队列"><a href="#请求队列" class="headerlink" title="请求队列"></a>请求队列</h1><p>块设备将它们挂起的块I&#x2F;O请求保存在请求队列中，该队列由reques_queue结构体表示，定义在文件&lt;linux&#x2F;blkdev.h&gt;中，包含一个双向请求链表以及相关控制信息。通过内核中像文件系统这样高层的代码将请求加入到队列中。请求队列只要不为空，队列对应的块设备驱动程序就会从队列头获取请求，然后将其送入到对应的块设备上去。请求队列表中的每一项都是一个单独的请求，由reques结构体表示。<br>队列中中的请求由结构体request表示，它定义在文件&lt;linux&#x2F;blkdev.h&gt;中。因为一个请求可能要操作多个连续的磁盘块，所以每个请求可以由多个bio结构体组成。注意，虽然磁盘上的块必须要连续，但是在内存中这些块并不一定要连续—-每个bio结构体都可以描述多个片段，而每个请求也可以包含多个bio结构体。</p>
+<h1 id="I-x2F-O调度程序"><a href="#I-x2F-O调度程序" class="headerlink" title="I&#x2F;O调度程序"></a>I&#x2F;O调度程序</h1><p>如果简单地以内核产生的请求的次序直接将请求发向块设备的话，性能肯定让人难以接受。磁盘寻址是整个计算机中最慢的操作之一，每一次寻址（定位硬盘磁头到特定块上的某个位置）需要花费不少时间。所以尽量缩短寻址时间无疑是提高系统性能的关键。<br>为了优化寻址操作，内核既不会简单地按请求接收次序，也不会立即将其提交给磁盘。相反，它会在提交前，先执行名为合并与排序的预操作，这种预操作可以极大地提高系统的整体性能。在内核中负责提交I&#x2F;O请求的子系统称为I&#x2F;O调度程序。<br>I&#x2F;O调度程序将磁盘I&#x2F;O资源分配给系统中所有挂起的块I&#x2F;O请求。具体地说，这种资源分配是通过将请求队列中挂起的请求合并和排序来完成的。注意不要将I&#x2F;O调度程序和进程调度程序混淆。进程调度程序的作用是将处理器资源分配给系统中的运行进程。这两种子系统看起来非常相似，但并不相同。进程调度程序和I&#x2F;O调度程序都是将一个资源虚拟给多个对象，对进程调度来说，处理器被虚拟并被系统中的运行进程共享。这种虚拟提供给用户的就是多任务和分时操作系统，像Unix系统。相反，I&#x2F;O调度程序虚拟块设备给多个磁盘请求，以便降低磁盘寻址时间，确保磁盘性能的最优化。</p>
+<h2 id="I-x2F-O调度程序的工作"><a href="#I-x2F-O调度程序的工作" class="headerlink" title="I&#x2F;O调度程序的工作"></a>I&#x2F;O调度程序的工作</h2><p>I&#x2F;O调度程序的工作是管理块设备的请求队列。它决定队列中的请求排列顺序以及在什么时刻派发请求到设备。这样做有利于减少磁盘寻址时间，从而提高全局吞吐量。注意，全局这个定语很重要，坦率地讲，一个I&#x2F;O调度器可能为了提高系统整体性能，而对某些请求不公。<br>I&#x2F;O调度程序通过这两种方法减少磁盘寻址时间：合并与排序。合并指将两个或多个请求结合成一个新请求。考虑以下这种情况，文件系统请求提交到请求队列—-从文件中读取一个数据区（当然，最终所有的操作都是针对扇区和块进行的，而不是文件，还假定请求的块都是来自文件块），如果这时队列中已经存在一个请求，它访问的磁盘扇区和当前请求访问的磁盘扇区相邻（比如，同一个文件早些时候被读取的数据区），那么这两个请求就可以合并为一个对单个和多个相邻磁盘扇区操作的新请求。通过合并请求，I&#x2F;O调度程序将多次请求的开销压缩成一次请求的开销。更重要的是，请求合并后只需要传递给传递给磁盘一条寻址命令，就可以访问到请求合并前必须多次寻址才能访问完的磁盘区域了，因此合并请求显然能减少系统开销和磁盘寻址次数。<br>现在，假设在读请求被提交给请求队列的时候，队列中并不需要操作相邻扇区的其他请求，此时就无法将读取请求与其他请求合并，当然，可以将其插入请求队列的尾部。但是如果由其他请求需要操作磁盘上类似的位置呢？如果存在一个请求，它要操作的磁盘扇区位置与当前请求比较接近，那么是不是该让这两个请求在请求队列中也相邻呢？事实上，I&#x2F;O调度程序的确是这样处理上述情况的，整个请求队列将按扇区增长方向有序排列。使所有请求按硬盘上扇区的排列顺序有序排列（尽可能的）的目的不仅是为了缩短单独一次请求的寻址时间，更重要的优化在于，通过保持磁盘头以直线方向移动，缩短了所有请求的磁盘寻址时间。该排序算法类似于电梯调度—-电梯不能随意地从一层跳到另一层，它应该向一个方向移动，当抵达了同一方向上的最后一层后，再掉头向另一个方向移动。出于这种相似性，所以I&#x2F;O调度程序（或这种排序算法）称作电梯调度。</p>
+<h2 id="Linus电梯"><a href="#Linus电梯" class="headerlink" title="Linus电梯"></a>Linus电梯</h2><p>下面看看Linux中实际使用的I&#x2F;O调度程序。我们看到的第一个I&#x2F;O调度程序称为Linus电梯。在2.4版内核中，Linus电梯是默认的I&#x2F;O调度程序。虽然后来在2.6版内核中它被另外两种调度程序取代了，但是由于这个电梯比后来的调度程序简单，而且它们执行的许多功能都相似，所以它可以作为一个优秀的入门介绍程序。<br>Linus电梯能执行合并与排序预处理。当有新的请求加入队列时，它首先会检查其他每一个挂起的请求是否可以和新请求合并。Linus电梯I&#x2F;O调度程序可以执行向前向后合并，合并类型描述的是请求向前面还是向后面，这一点和已有请求相连。如果新请求正好连在一个现存的请求前，就是向前合并；相反如果新请求直接连在一个现存的请求后，就是向后合并。鉴于文件的分布（通常是以扇区号的增长表现）特点和I&#x2F;O操作执行方式具有典型性（一般都是从头读向尾，很少从反方向读），所以向前合并相比向后合并要少的多，但是Linus电梯还是会对两种合并类型都进行检查。<br>如果合并尝试失败，那么就需要寻找可能的插入点（新请求在队列中的位置必须符合请求以扇区方向有序排序的原则）。如果找到，新请求将被插入到该点；如果没有合适的位置，那么新请求就被加入到队列尾部。另外，如果发现队列中有驻留时间过长的请求，那么新请求也将被加入到队列尾部，即使插入后还要排序。这样做是为了避免由于访问相近磁盘位置的请求太多，从而造成访问磁盘其他位置的请求难以得到执行机会这一问题。不幸的是，这种“年龄”检测方法并不很有效，因为它并非是给等待了一段时间的请求提供实质性服务，它仅仅是在经过了一定时间后停止插入-排序请求，这改善了等待时间但最终还是会导致请求饥饿现象的发生，所以这是一个2.4内核I&#x2F;O调度程序中必须要修改的缺陷。<br>总而言之，当一个请求加入到队列中时，有可能发生四种操作，它们依次是：</p>
+<ol>
+<li>如果队列中已存在一个对相邻磁盘扇区操作的请求，那么新请求将和这个已经存在的请求合并成一个请求。</li>
+<li>如果队列中存在一个驻留时间过长的请求，那么新请求将被插入到队列尾部，以防止其他旧的请求饥饿发生。</li>
+<li>如果队列中以扇区方向为序存在合适的插入位置，那么新的请求将被插入到该位置，保证队列中的请求是以被访问磁盘物理位置为序进行排列的。</li>
+<li>如果队列中不存在合适的请求插入位置，请求将被插入到队列尾部。</li>
+</ol>
+<h2 id="最终期限I-x2F-O调度程序"><a href="#最终期限I-x2F-O调度程序" class="headerlink" title="最终期限I&#x2F;O调度程序"></a>最终期限I&#x2F;O调度程序</h2><p>最终期限（deadline）I&#x2F;O调度程序是为了解决Linus电梯所带来的饥饿问题而提出的。出于减少磁盘寻址时间的考虑，对某个磁盘区域上的繁重操作，无疑会使得磁盘上其他位置上的操作请求得不到运行机会。实际上，一个对磁盘同一位置操作的请求流可以造成较远位置的其他请求永远得不到运行机会，这是一种很不公平的饥饿现象。<br>更糟糕的是，普通的请求饥饿还会带来名为写-饥饿-读（writes-starving-reads）这种特殊问题。写操作通常是在内核有空时才将请求提交给磁盘的，写操作完全和提交它的应用程序异步执行；读操作则恰恰相反，通常当应用程序提交一个读请求时，应用程序会发生堵塞直到读请求被满足，也就是说，读操作是和提交它的应用程序同步执行的。所以虽然写反应时间（提交写请求花费的时间）不会给系统响应速度造成很大影响，但是读响应时间（提交读请求花费的时间）对系统响应时间来说却非同小可。虽然写请求时间对应用程序性能带来的影响不大，但是应用程序却必须等待读请求完成后才能运行其他程序，所以读操作响应时间对系统的性能非常重要。</p>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>Linux内核设计与实现</category>
+        <category>第14章 块I/O层</category>
+      </categories>
+      <tags>
+        <tag>Linux Kernel</tag>
+        <tag>操作系统</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>MMU</title>
+    <url>/2022/08/15/MMU/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《嵌入式Linux应用完全开发手册》第2篇第7章总结归纳</p>
+<span id="more"></span>
+<h1 id="本章要点"><a href="#本章要点" class="headerlink" title="本章要点"></a>本章要点</h1><ol>
+<li>了解虚拟地址和物理地址的关系</li>
+<li>掌握如何通过设置MMU来控制虚拟地址到物理地址的转化</li>
+<li>了解MMU的内存访问权限机制</li>
+<li>了解TLB、Cache、Write Buffer的原理，使用时的注意事项</li>
+<li>实例</li>
+</ol>
+<h1 id="内存管理单元MMU介绍"><a href="#内存管理单元MMU介绍" class="headerlink" title="内存管理单元MMU介绍"></a>内存管理单元MMU介绍</h1><h2 id="S3C2410-x2F-S3C2440-MMU特性"><a href="#S3C2410-x2F-S3C2440-MMU特性" class="headerlink" title="S3C2410&#x2F;S3C2440 MMU特性"></a>S3C2410&#x2F;S3C2440 MMU特性</h2><p>内存管理单元（Memory Management Unit）简称MMU，它负责虚拟地址收到物理地址的映射，并提供硬件机制的内存访问权限检查。现代的多用户多进程操作系统通过MMU使得各个用户进程都拥有自己独立的地址空间：地址映射功能使得各进程拥有看起来一样的地址空间，而内存访问权限的检查可以保护每个进程所用的内存不会被其他破坏。</p>
+<ol>
+<li>与ARM V4兼容的映射长度、域、访问权限检查机制。</li>
+<li>4种映射长度：段（1MB）、大页（64KB）、小页（4KB）、极小页（1KB）。</li>
+<li>对每段都可以设置访问权限。</li>
+<li>大页、小页的每个子页（sub-page，被映射页的1&#x2F;4）都可以设置单独的访问权限。</li>
+<li>硬件实现的16个域。</li>
+<li>指令TLB（含64个条目）、数据TLB（含64个条目）。</li>
+<li>硬件访问页表（地址映射、权限检查有硬件自动进行）。</li>
+<li>TLB条目中替换采用round-robin算法（也称cyclic算法）。</li>
+<li>可以使无效整个TLB。</li>
+<li>可以单独使无效某个TLB。</li>
+<li>可以在TLB中锁定某个条目，指令TLB、数据TLB相互独立。<br>重点在于页表的结构与建立、映射的过程。</li>
+</ol>
+<h2 id="S3C2410-x2F-S3C2440-MMU地址变换过程"><a href="#S3C2410-x2F-S3C2440-MMU地址变换过程" class="headerlink" title="S3C2410&#x2F;S3C2440 MMU地址变换过程"></a>S3C2410&#x2F;S3C2440 MMU地址变换过程</h2><h3 id="地址的分类"><a href="#地址的分类" class="headerlink" title="地址的分类"></a>地址的分类</h3><p>以前的程序是非常小的，可以全部装入内存。随着技术的发展，出现了以下两种情况：</p>
+<ol>
+<li>有的程序很大，它所要求的内存，超过了内存总容量，不能一次性装入内存。</li>
+<li>多道系统中有很多程序需要同时执行，它们要求的内存超过了内存总容量，不能把所有程序都装入内存。<br>实际上，一个程序在运行前，没有必要全部装入内存，而仅需要将那些当前需要运行的部分先装入内存，其余部分在用到时再从磁盘调入，而当内存耗光时再将暂时不用的部分调出到磁盘。这使得一个大程序可以在较小的内存空间中运行，这也使得内存中可以同时装入更多的程序并发执行，从用户的角度看，该系统所具有的内存容量将比实际内存容量大得多，人们把这样的存储器称为虚拟存储器。<br>虚拟存储器从逻辑上对内存容量进行了扩充，用户看到的大容量只是一种感觉，是虚的，在32位的CPU系统中，这个虚拟内存地址范围为0-0xFFFFFFFF，我们把这个地址范围称为虚拟地址空间，其中某个地址称为虚拟地址。与虚拟地址空间、虚拟地址对应的是物理地址空间、物理地址，它们对应实际的内存。<br>虚拟地址空间最终需要转化为物理地址才能读写实际的数据，这通过将虚拟地址空间、物理地址空间划分为同样大小的一块块小空间（段或页），然后为这两类小空间建立映射关系。由于虚拟地址空间远大于物理空间，有可能多块虚拟地址空间映射到同一块物理地址空间，或者有些虚拟地址空间没有映射到具体的物理地址空间上去（可以使用到时再映射）。<br><img src="/2022/08/15/MMU/1.jpeg" alt="img not found"></li>
+</ol>
+<p>ARM CPU上的地址转换涉及3个概念：虚拟地址（Virtual Address）、变换后的虚拟地址（Modified Virtual Address）、物理地址（Physical Address）。<br>没启动MMU时，CPU核、cache、MMU、外设等所有部件使用的都是物理地址。<br>启动MMU后，CPU核对外发出虚拟地址VA；VA被转换为MVA供cache、MMU使用，再这里MVA被转换为PA；最后使用PA读写实际设备（S3C2410&#x2F;S3C2440内部寄存器或外界的设备）：</p>
+<ol>
+<li>CPU看到的、用到的只是虚拟地址VA，至于VA如何最终落实到物理地址PA上，CPU核是不理会的。</li>
+<li>而caches和MMU也是看不到VA的，它们利用有MVA转换得到PA。</li>
+<li>而实际设备看不到VA，MVA，它们读写时使用的是物理地址PA。<br>MVA是除CPU核外的其他部分看见的虚拟地址，VA与MVA之间的变化关系如图所示：<br><img src="/2022/08/15/MMU/2.jpeg" alt="img not found"><br>如果VA&lt;32M，需要使用进程标识号（PID）通过读CP15的c13获得来转换MVA。VA与MVA的转换方式如下（这是硬件自动完成的）：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> (VA &lt; <span class="number">32</span>M) then</span><br><span class="line">    MVA = VA | (PID &lt;&lt; <span class="number">25</span>)</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">    MVA = VA</span><br></pre></td></tr></table></figure>
+利用PID生成MVA的目的是为了减少切换进程时的代价；不使用MVA而直接使用VA的话，当两个进程使用的虚拟地址空间VA有重叠时，在切换进程时为了把重叠的VA映射到不同的PA上去，需要重建页表、使无效caches和TLBS等，代价很大。使用MVA后，进程切换就省事多了：假设两个进程1、2运行时的VA都是0-32M，但是它们的MVA并不重叠，分别是0x02000000-0x03FFFFFF、0x04000000-0x05FFFFFF，这样就不必进行重建页表工作了。</li>
+</ol>
+<h3 id="虚拟地址到物理地址的转换过程"><a href="#虚拟地址到物理地址的转换过程" class="headerlink" title="虚拟地址到物理地址的转换过程"></a>虚拟地址到物理地址的转换过程</h3><p>将一个虚拟地址转换为物理地址，一般有两个办法：用一个确定的数学公式进行转换或用表格存储虚拟地址对应的物理地址。这类表格称为页表（Page Table），页表由一个个条目（Entry）组成；每个条目存储了一段虚拟地址对应的物理地址及其访问权限，或者下一级页表地址。<br>在AMR CPU中使用的第二种方法。S3C2410&#x2F;S3C2440最多会用到两级页表：以段（1MB）的方式进行转换时只用到一级页表，以页（Page）的方式进行转换时用到两级页表。页的大小由3种：大页（64KB）、小页（4KB）、极小页（1KB）。条目也称为”描述符“（Descriptor），有段描述符、大页描述符、小页描述符、极小页描述符–它们保存段、大页、小页或极小页的起始物理地址：粗页表描述符、细页表描述符–它们保存二级页表的物理地址。<br>大概的转换过程如下：</p>
+<ol>
+<li>根据给定的虚拟地址找到一级页表中的条目。</li>
+<li>如果此条目是段描述符，则返回物理地址，转换结束。</li>
+<li>否则如果此条目是二级页表描述符，继续利用虚拟地址在此二级页表找到下一个条目。</li>
+<li>如果第二个条目是页描述符，则返回物理地址，转换结束。</li>
+<li>其他情况出错。</li>
+</ol>
+<p><img src="/2022/08/15/MMU/3.jpeg" alt="img not found"><br>图中的“TTB base”代表一级页表的地址，将它写入协处理器CP15的寄存器C2（页表基址寄存器）即可。一级页表的地址必须是16K对应的（[14:0]为0）。<br><img src="/2022/08/15/MMU/4.jpeg" alt="img not found"><br>先介绍一级页表，32位的CPU的虚拟地址空间达到4GB，一级页表使用4096个描述符来表示这4GB空间—每个描述符对应1MB的虚拟地址，要么存储了它对应的1MB物理空间的起始地址，要么存储了下一级页表的地址。使用MVA[31:20]来索引一级页表，得到一个描述符，每个描述符占用4字节，如下图所示：<br><img src="/2022/08/15/MMU/5.jpeg" alt="img not found"><br>根据一级页表描述符的最低两位，可分为以下4种：</p>
+<ol>
+<li>0b00：无效。</li>
+<li>0b01：粗页表（Coarse page table）<br>位[31:10]称为粗页表基址（Coarse page table base address），此描述符的低10位填充0后就是一个二级页表的物理地址。此二级页表含256个条目（所以大小为1KB），称为粗页表。其中每个条目表示大小为4KB的物理地址空间，所以一个粗页表表示1MB的物理地址空间。</li>
+<li>0b10：段（Section）<br>位[31:20]称为段基址（Section Base），此描述符的低20位填充0后就是一块1MB的物理地址空间的起始地址。MVA[19:0]用来在这1MB的空间中寻址。所以，描述符的位[31:20]和MVA[19:0]就构成了这个虚拟地址MVA对应的物理地址。<br>以段的方式进行映射时，虚拟地址MVA到物理地址PA的转换过程如下：<br><img src="/2022/08/15/MMU/6.jpeg" alt="img not found"><br>①页表基址寄存器位[31:14]和MVA[31:20]组成一个低两位为0的32位地址，MMU利用这个地址找到段描述符。<br>②取出段描述符的位[31:20]—段基址，它和MVA[19:0]组成一个32位的物理地址–这就是MVA对应的PA。</li>
+<li>0b11：细页表（Fine page table）<br>位[32：12]称为细页表基址（Fine page table base address），此描述符的低12位填充0后就是一个二级页表的物理地址。此二级页表含1024个条目（所以大小为4KB），称为细页表。其中每个条目表示大小为1KB的物理地址空间，所以一个细页表表示1MB的物理地址空间。<br>以大页（64KB）、小页（4KB）或极小页（1KB）进行地址映射时，需要用到两级页表。二级页表有粗页表、细页表两种，二级页表中描述符的格式如下：<br><img src="/2022/08/15/MMU/7.jpeg" alt="img not found"><br>根据二级描述符的最低两位，可分为以下4种情况：<br>①0b00：无效。<br>②0b01：大页描述符。<br>位[31:16]称为大页基址（Large page base address），此描述符的低16位填充0后就是一块64KB物理地址空间的起始地址。粗页表每个条目只能表示4KB的物理空间，如果大页描述符保存在粗页表中，则连续16个条目都保存同一个大页描述符。类似的，细页表中每个条目只能表示1KB的物理空间，如果大页描述符保存在细页表中，则连续64个条目都保存同一个大页描述符。<br>下面以保存在粗页表中的大页描述符为例，说明地址转换的过程：<br><img src="/2022/08/15/MMU/8.jpeg" alt="img not found"><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1. 页表基址寄存器位[31:14]和MVA[31:20]组成一个低两位为0的32位地址，MMU利用这个地址找到粗页表描述符。</span><br><span class="line">2. 取出粗页表描述符的位[31:10]--即粗页表基址，它和MVA[19:12]组成一个低两位为0的32位物理地址---据此即可找到大页描述符。</span><br><span class="line">3. 取出大页描述符的位[31:16]--即大页基址，它和MVA[15:0]组成一个32位的物理地址---这就是MVA对应的PA。</span><br><span class="line"></span><br><span class="line">上面的步骤2和3中，用于在粗页表中索引的MVA[19:12]、用于在大页内寻址的MVA[15:0]有重合的位：位[15:12]。当位[15:12]从0b0000变化到0b1111时，步骤2返回的大页描述符相同，所以粗页表中连续16个条目都保存同一个大页描述符。</span><br></pre></td></tr></table></figure>
+③0b10：小页描述符<br>位[31:12]称为小页基址，此描述符的低12位填充0后就是一块4KB物理地址空间的起始地址。粗页表中每个条目表示4KB的物理空间，如果小页描述符保存在粗页表中，则只需要用一个条目来保存一个小页描述符。类似的，细页表中每个条目只能表示1KB的物理空间，如果小页表描述符保存在细页表中，则连续4个条目都保存同一个小页描述符。<br><img src="/2022/08/15/MMU/9.jpeg" alt="img not found"><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1. 页表基址寄存器位[31:14]和MVA[31:20]组成一个低两位为0的32位地址，MMU利用这个地址找到粗页表描述符。</span><br><span class="line">2. 取出粗页表描述符的位[31:10]--即粗页表基址，它和MVA[19:12]组成一个低两位为0的32位物理地址---据此即可找到小页描述符。</span><br><span class="line">3. 取出小页描述符的位[31:12]--即小页基址，它和MVA[11:0]组成一个32位的物理地址---这就是MVA对应的PA。</span><br><span class="line"></span><br><span class="line">小页描述符保存在细页表中，地址转换过程与上面类似，不在赘述。</span><br></pre></td></tr></table></figure>
+④0b11：极小页描述符<br>位[31:10]被称为极小页基址，此描述符的低10位填充0后就是一块1KB的物理地址空间的起始地址。极小页描述符只能保存在细页表中，用一个条目来保存一个极小页描述符。<br><img src="/2022/08/15/MMU/10.jpeg" alt="img not found"><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1. 页表基址寄存器位[31:14]和MVA[31:20]组成一个低两位为0的32位地址，MMU利用这个地址找到细页表描述符。</span><br><span class="line">2. 取出细页表描述符的位[31:12]---即细页表基址。它和MVA[19:10]组成一个低两位为0的32位物理地址--据此即可找到极小页描述符。</span><br><span class="line">3. 取出极小页描述符的位[31:10]---即极小页基址，它和MVA[9:0]组成一个32位的物理地址---这是MVA对应的PA。</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>从段、大页、小页、极小页的地址转换过程可知。</p>
+<ol>
+<li>以段进行映射时，通过MVA[31:20]结合页表得到一段（1MB）的起始物理地址，MVA[19:0]用来在段中寻址。</li>
+<li>以大页进行映射时，通过MVA[31:16]结合页表得到一个大页（64KB）的起始物理地址，MVA[15:0]用来在大页中寻址。</li>
+<li>以小页进行映射时，通过MVA[31:12]结合页表得到一个小页（4KB）的起始物理地址，MVA[11:0]用来在大页中寻址。</li>
+<li>以极小页进行映射时，通过MVA[31:10]结合页表得到一个极小页（1KB）的起始物理地址，MVA[9:0]用来在极小页中寻址。</li>
+</ol>
+<h2 id="内存的访问权限检查"><a href="#内存的访问权限检查" class="headerlink" title="内存的访问权限检查"></a>内存的访问权限检查</h2><p>内存的访问权限检查是MMU的主要功能之一，简单的说，它就是决定一块内存是否允许读、是否允许写。这由CP15寄存器C3（域访问控制）、描述符的域（Domain）、CP15寄存器C1的R&#x2F;S&#x2F;A位。描述符的AP位等联合作用。<br>CP15寄存器C1中的A位表示是否对地址进行对齐检查。所谓对齐检查就是，访问字（4字节的数据）时地址是否为4字节对齐。访问半字（2字节的数据）时地址是否2字节对齐，如果地址不对齐则产生”Alignment Fault“异常。无论MMU是否被开启，都可以进行对齐检查。CPU读取指令时不进行对齐检查，以字节为单位访问时也不进行对其检查。对其检查在MMU的权限检查，地址映射前进行。<br>内存的访问权限检查可以概括为一下两点：</p>
+<ol>
+<li>”域“决定是否对某块内存进行权限检查。</li>
+<li>”AP“决定如何对某块内存进行权限检查。</li>
+</ol>
+<p>如图所示，S3C2410&#x2F;S3C2440有16个域，CP15寄存器C3中每两位对应一个域，用来表示这个域是否进行权限检查。图中表示CP15寄存器C3中哪两位对应哪个域，表中给出了CP15寄存器C3中这些”两位数据“的含义。<br><img src="/2022/08/15/MMU/11.jpeg" alt="img not found"></p>
+<table>
+<thead>
+<tr>
+<th>值</th>
+<th>含义</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>00</td>
+<td>无访问权限</td>
+<td>任何访问都将导致”Domain Fault“ 异常</td>
+</tr>
+<tr>
+<td>01</td>
+<td>客户模式</td>
+<td>使用段描述符、页描述符进行权限检查</td>
+</tr>
+<tr>
+<td>10</td>
+<td>保留</td>
+<td>保留，目前相当于”无访问权限“</td>
+</tr>
+<tr>
+<td>11</td>
+<td>管理模式</td>
+<td>运行任何访问</td>
+</tr>
+</tbody></table>
+<p>下图中的”Domain“占4个字节，用来表示这块内存属于上面定义的16个域中哪一个。<br><img src="/2022/08/15/MMU/12.jpeg" alt="img not found"></p>
+<ol>
+<li>段描述符中的”Domain“为0b0000时，表示这1MB内存属于域0，如果域访问控制寄存器的位[1:0]等于0b00，则访问这1MB空间时都会产生”Domain fault“的异常，如果域访问控制器寄存器的位[1:0]等于0b11，则使用描述符中的”AP“位进行权限检查。</li>
+<li>粗页表中的”Domain“为0b1111时，表示这1MB内存属于域15，如果域访问控制寄存器的位[31:30]等于0b00，则访问这1MB空间时都会产生”Domain fault“的异常，如果域访问控制寄存器的位[31:30]等于0b11时，则使用二级页表中的大页&#x2F;小页描述符中的”ap3“、”ap2“、”ap1“、”ap0“进行位权限检查。</li>
+</ol>
+<p>图中的”AP“、”ap3“、”ap2“、”ap1“、”ap0”结合CP15寄存器C1的R&#x2F;S位，决定如何进行访问权限检查。首先说明，段描述符中的“AP”控制整个段（1MB）的访问权限；大页描述符中的每个“apx”（x为0-3）控制一个大页（64KB）中1&#x2F;4内存的访问权限，即“ap3”对应大页高端的16KB，“ap0”对应大页低端的16KB；小页描述符与大页描述符相似，每个“apx”控制一个小页（4KB）的1&#x2F;4内存的访问权限；极小页中的“ap”就控制着整个极小页（1KB）的访问权限。<br>如下表所示，AP位、S位和R位的组合，可以产生多种访问权限。需要指出的是，ARM CPU有7种工作模式，其中6种属于特权模式，一种属于用户模式。在特权模式的用户模式下，相同的AP位、S位和R位的组合，其访问权限也不相同。</p>
+<table>
+<thead>
+<tr>
+<th>AP</th>
+<th>S</th>
+<th>R</th>
+<th>特权模式</th>
+<th>用户模式</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>00</td>
+<td>0</td>
+<td>0</td>
+<td>无访问权限</td>
+<td>无访问权限</td>
+<td>任何访问都将产生“Permission fault”异常</td>
+</tr>
+<tr>
+<td>00</td>
+<td>1</td>
+<td>0</td>
+<td>只读</td>
+<td>无访问权限</td>
+<td>在超级权限下进行读操作</td>
+</tr>
+<tr>
+<td>00</td>
+<td>0</td>
+<td>1</td>
+<td>只读</td>
+<td>只读</td>
+<td>任何写操作都将产生“Permission fault”异常</td>
+</tr>
+<tr>
+<td>00</td>
+<td>1</td>
+<td>1</td>
+<td>保留</td>
+<td>–</td>
+<td>–</td>
+</tr>
+<tr>
+<td>01</td>
+<td>x</td>
+<td>x</td>
+<td>读&#x2F;写</td>
+<td>无访问权限</td>
+<td>只允许在超级模式下访问</td>
+</tr>
+<tr>
+<td>10</td>
+<td>x</td>
+<td>x</td>
+<td>读&#x2F;写</td>
+<td>只读</td>
+<td>在用户模式下进行写操作都将产生“Permission fault”异常</td>
+</tr>
+<tr>
+<td>11</td>
+<td>x</td>
+<td>x</td>
+<td>读&#x2F;写</td>
+<td>读&#x2F;写</td>
+<td>在任何模式下都允许访问</td>
+</tr>
+<tr>
+<td>xx</td>
+<td>1</td>
+<td>1</td>
+<td>保留</td>
+<td>–</td>
+<td>–</td>
+</tr>
+</tbody></table>
+<h2 id="TLB的作用"><a href="#TLB的作用" class="headerlink" title="TLB的作用"></a>TLB的作用</h2><p>从虚拟地址到物理地址的转换过程可得知：使用一级页表进行地址转换时，每次读写数据时需要访问两次内存。第一次访问一级页表获取物理地址，第二次才是真正的读写数据。使用两级页表时，每次读写数据需要访问三次内存，访问两次页表（一级页表和二级页表）获得物理地址，第三次才是真正的读写数据。<br>上述地址的转换过程大大降低了CPU的性能，有没有说明办法改进呢？程序执行过程中，所用到的指令、数据的地址往往集中在一个很小的范围内，其中的地址数据经常多次使用，这称为程序访问的局部性。由此，通过使用一个高速、容量相对较小的存储器来存储近期用过的页表条目（段、大页、小页、极小页描述符），以避免每次地址转换都需要到主存去查找，这样可以大幅度的提高性能。这个存储器用来帮助快速的进行地址转换，称为“转译查找缓存（Translation Lookaside Buffers，TLB）”。<br>当CPU发出一个虚拟地址时，MMU首先访问TLB。如果TLB中含有能转换这个虚拟地址的描述符，则直接利用此描述符进行地址转换和权限检查；否则MMU访问页表找到描述符后再进行地址转化和权限检查，并将这个描述符填入TLB中（如果TLB已满，则利用round-robin算法找到一个条目，然后覆盖他），下次再使用这个虚拟地址时就可以直接使用TLB中的描述符了。<br>使用TLB需要保证TLB的内容与页表一致，在启动MMU之前，在页表中的内容发生变化后，尤其要注意这点。S3C2410&#x2F;S3C2440可以使无效（Invalidate）整个TLB，或者通过某个虚拟地址使无效TLB中某个条目。一般的做法是：在启动MMU之前使无效整个TLB，改变页表时，使无效所涉及的虚拟地址对应的TLB中的条目。</p>
+<h2 id="Cache的作用"><a href="#Cache的作用" class="headerlink" title="Cache的作用"></a>Cache的作用</h2><p>同样基于程序访问的局部性，在主存和CPU通用寄存器之间设置一个高速的、容量相对较小的存储器，把正在执行的指令地址附近的一部分指令或数据从主存调入这个存储器，供CPU在一段时间内使用，这对提高程序的运行速度有很大的作用。这个介于主存和CPU之间的高速小容量存储器称作高速缓存存储器（Cache）。<br>启用Cache后，CPU读取数据时，如果Cache中有这个数据的复本则直接返回，否则从主存中读入数据，并存入Cache中，下次再使用（读&#x2F;写）这个数据时，可以直接使用Cache中的复本。<br>启用Cache后，CPU写数据时有写穿式和写回式两种方式：</p>
+<ol>
+<li>写穿式（Write Through）<br>任一从CPU发出的写信号送到Cache的同时，也写入主存，以保证主存的数据能同步更新。它的优点是操作简单，但是由于主存的慢速，降低了系统的写速度并占用总线时间。</li>
+<li>回写式<br>为了克服写穿式每次写数据时都要访问主存，从而导致系统写速度降低并占用总线时间，尽量减少对主存的访问次数，又有了回写式。<br>它的工作方式：数据一般只写到Cache，这样有可能出现Cache中的数据得到更新而主存数据不变（数据陈旧）的情况。但此时可在Cache中设一标志及数据陈旧的信息，只有当Cache中的数据被换出或强制进行“清空”操作时，才将原更新的数据写入主存相应的单元中。这样保证了Cache和主存的数据一致性。</li>
+</ol>
+<p>下面介绍Cache的两个操作：</p>
+<ol>
+<li>“清空”（clean）：把Cache或Write Buffer中已经脏的（修改过，但是还未写入主存）数据写入主存。</li>
+<li>“使无效”（Invalidate）：使之不能再使用，并不将脏的数据写入主存。</li>
+</ol>
+<p>S3C2410&#x2F;S3C2440内置了指令Cache（ICache）、数据Cache（DCache）、写缓存（Write Buffer）。下面的内容需要用到页表中描述符的C、B位，为了方便读者，先把这些描述符用下图表示出来。下文中，描述符的C位称为Ctt，B位称为Btt。<br><img src="/2022/08/15/MMU/13.jpeg" alt="img not found"></p>
+<h3 id="指令Cache（ICache）"><a href="#指令Cache（ICache）" class="headerlink" title="指令Cache（ICache）"></a>指令Cache（ICache）</h3><p>ICache的使用比较简单。系统刚上电或复位时，ICache中的内容是无效的，并且ICache功能是关闭着的。往Icr位（即CP15写处理器中寄存器1的第12位）写1可以启动ICache，写0可以停止ICache。<br>ICache一般在MMU开启之后被使用，此时页表中描述符的C位用来表示一段内存是否可以被Cache。若C&#x3D;1，则允许Cache，否则不允许被Cache。但是，即使MMU没有开启，ICache也是可以被使用的，这时CPU读取指令（取指）时所涉及的内存都被当作是允许Cache的。<br>ICache被关闭时，CPU每次取指都是需要读取主存，性能非常低，所以需要尽早启动ICache。<br>ICache被开启后，CPU每次取指都会在ICache中查看是否能找到所要的指令，而不管C&#x3D;0还是C&#x3D;1。如果找到了，称为Cache命中，如果找不到，称为Cache缺失。ICache被开启后，CPU的取指分为如下三种情况：</p>
+<ol>
+<li>Cache命中且C&#x3D;1时，从ICache取出指令，返回CPU。</li>
+<li>Cache缺失且C&#x3D;1时，CPU从主存读出指令。同时，一个称为“8-word linefill”的动作将发生，这个动作把该指令所处区域的8个word写进ICache的某个条目中。这有可能会覆盖某个条目。</li>
+<li>C&#x3D;0时，CPU从主存读取指令。</li>
+</ol>
+<h3 id="数据Cache（DCache）"><a href="#数据Cache（DCache）" class="headerlink" title="数据Cache（DCache）"></a>数据Cache（DCache）</h3><p>与ICache相似，系统刚复位或者上电时，DCache中的内容也是无效的，并且DCache功能也是关闭的，而Write Buffer中的内容也是被废弃不用的。往Ccr（Cp15协处理器中寄存器1的第2位）写1可以启动DCache，写0可以停止DCache。Write Buffer与DCache紧密结合，没有专门的控制位来开启、停止它。<br>与ICache不同的是，DCache功能必须在MMU开启之后才能被使用，因为开启MMU之后，才能使用页表的描述符来定义一块内存如何使用DCache和Write Buffer。<br>DCache被关闭时，CPU每次读写数据时都会先在DCache中查看是否能找到所要的数据，而不管C&#x3D;0还是C&#x3D;1。找到了，称为Cache命中，没找到，称为Cache缺失。<br>下表描述了DCache和Write Buffer在CCr、Ctt、Btt的各种取值下如何工作。表中“Ctt and Ccr”一项的值是Ctt与Ccr进行逻辑与之后的值（Ctt &amp;&amp; Ccr）。</p>
+<table>
+<thead>
+<tr>
+<th>Ctt and Ccr</th>
+<th>Btt</th>
+<th>DCache、Write Buffer和主存的访问方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>0</td>
+<td>Non-Cached、Non-buffered（NCNB）；读写数据都是直接操作内存，并且可以被外设中止；写数据时不使用Write Buffer，CPU会等待操作完成；不会出现Cache命中</td>
+</tr>
+<tr>
+<td>0</td>
+<td>1</td>
+<td>Non-Cached、buffered（NCB）；读写数据都是直接操作主存，不会出现Cache命中；写数据时，数据先存入Write Buffer，随后写入主存；数据存入WriteBuffer后，CPU立立即继续执行；读数据时，可以被外设中止；写数据时，无法被外设中止</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td>Cached，write-through（WT，写通）mode；读数据时，如果Cache命中则从Cache中返回数据，不读取主存；读数据时，如果Cache确实则从读主存中返回数据，并导致“linefill”的动作；写数据时，数据先存入Write Buffer，并在随后写入主存；数据存入Write Buffer后，CPU立即继续执行；写数据时，如果Cache命中则新数据也写入Cache中；写数据时，无法被外设中止</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>Cached，write-back（WB，写回）mode；读数据时，如果Cache命中则从Cache中返回数据，不读取主存；读数据时，如果Cache确实则从读主存中返回数据，并导致“linefill”的动作；写数据时，如果Cache缺失则将数据先存入Write Buffer，存储完毕后CPU立即继续执行，这些数据随后写入主存；写数据时，如果Cache命中则在Cache中更新数据，并设置这些数据为“脏”，但是不会写入主存；无论Cache命中与否，写数据都无法被外设中止。</td>
+</tr>
+</tbody></table>
+<p>与TLB类似，使用Cache需要保证Cache、WriteBuffer的内容和主存保持一致，需要遵循以下两个原则：</p>
+<ol>
+<li>清空DCache，使得主存数据得到更新。</li>
+<li>使无效ICache，使得CPU取值时重新读取主存。</li>
+</ol>
+<p>在实际编写程序前，需要注意以下几点：</p>
+<ol>
+<li>开启MMU之前，使无效ICache、DCache、WriteBuffer。</li>
+<li>关闭MMU之前，清空ICache、DCache，即将“脏”数据写入主存。</li>
+<li>如果代码有变，使无效ICache，这样CPU取指时会重新读取主存。</li>
+<li>使用DMA操作可以被Cache的主存时：将内存的数据发送出去时，要清空Cache；将内存的数据读入时，要使无效Cache。</li>
+<li>改变页表中地址映射关系时，也要慎重考虑。</li>
+<li>开启ICache和DCache时，要考虑ICache或DCache中的内容是否与主存保持一致。</li>
+<li>对于I&#x2F;O空间，不使用Cache和Write Buffer。所谓I&#x2F;O空间，就是对于其中的地址连续两次的写操作不能合并在一起，每次读写都必须直接访问设备，否则程序的运行结果无法预料。比如寄存器、非内存的外设（扩展串口、网卡等）。<br>S3C2410&#x2F;S3C2440提供了相关指令来操作Cache和Write buffer，可以使无效整个ICache或其中的条目，可以清空使无效整个DCache或其中的条目。</li>
+</ol>
+<h3 id="S3C2410-x2F-S3C2440-MMU、TLB、Cache的控制指令"><a href="#S3C2410-x2F-S3C2440-MMU、TLB、Cache的控制指令" class="headerlink" title="S3C2410&#x2F;S3C2440 MMU、TLB、Cache的控制指令"></a>S3C2410&#x2F;S3C2440 MMU、TLB、Cache的控制指令</h3><p>S3C2410&#x2F;S3C2440中，除了有一个ARM920T的CPU核之外，还有若干协处理器。协处理器也是一个微处理器，它被用来帮助主CPU来完成一些特殊功能，如浮点运算等。对MMU、TLB、Cache等的操作就涉及协处理器。CPU核与协处理器间传送数据时使用这两条指令：MRC和MCR，它们的格式如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;MCR | MRC&gt;&#123;cond&#125; p#,&lt;expression1&gt;,Rd,cn,cm,&#123;,&lt;expression2&gt;&#125;</span><br><span class="line">MRC             //从协处理器获得数据，传给ARM920T CPU核的寄存器</span><br><span class="line">MCR             //数据从ARM920T CPU核的寄存器传给协处理器</span><br><span class="line">&#123;cond&#125;          //执行条件  为空时表示无条件执行</span><br><span class="line">p#              //协处理器序号</span><br><span class="line">&lt;expression1&gt;  //一个常数</span><br><span class="line">Rd              //ARM920T核的寄存器</span><br><span class="line">cn和cm          //协处理器中的寄存器</span><br><span class="line">&lt;expression2&gt;   //一个常数</span><br></pre></td></tr></table></figure>
+<p>其中，expression1、expression2、cn、cm仅供协处理器使用，它们的作用如何取决于具体的协处理器。</p>
+<h1 id="MMU使用实例"><a href="#MMU使用实例" class="headerlink" title="MMU使用实例"></a>MMU使用实例</h1><h2 id="程序设计"><a href="#程序设计" class="headerlink" title="程序设计"></a>程序设计</h2><p>本开发板的SDRAM的物理地址范围处于0x30000000-0x33ffffff，S3C2410&#x2F;S3C2440的寄存器地址范围都处于0x48000000-0x5FFFFFFF。在第五章中，通过往GPBCON和GPBDAT这两个寄存器的物理地址0x56000000、0x56000014写入特定的数据来驱动4个LED。<br>本章的实例将开启MMU，并将虚拟地址空间0xA0000000-0xA0100000映射到物理地址空间0x56000000-0x56100000上，这样，就可以通过操作地址0xA0000010、0xA0000014来达到驱动者4个LED的同样效果。<br>另外，将虚拟地址空间0xB0000000-0xB3FFFFFFF映射到物理地址空间0x30000000-0x33FFFFFF上，并在连接程序时将一部分代码的运行地址指定为0xB0004000，看看程序能否跳转到0xB0004000运行。<br>实例程序只是用一级页表，以段的方式进行地址映射。32位的CPU的虚拟地址空间达到4GB，一级页表中使用4096个描述符来表示这4GB（每个描述符对应1MB的虚拟地址），每个描述符占用4字节，所以一级页表占16KB。SDRAM的开始16KB来存放一级页表，所以剩下的内存开始物理地址为0xB0004000。<br>将程序代码分为两部分：第一部分的运行地址为0，它用来初始化SDRAM、复制第二部分的代码到SDRAM中（存放在0x30004000开始处），设置页表，启动MMU，最后跳转到SDRAM中（地址0xB0004000）去执行；第二部分的运行地址设为0xB0004000，它用来驱动LED。程序流程图如下：<br><img src="/2022/08/15/MMU/14.jpeg" alt="img not found"></p>
+<h2 id="代码详解"><a href="#代码详解" class="headerlink" title="代码详解"></a>代码详解</h2><h3 id="第一部分代码分析"><a href="#第一部分代码分析" class="headerlink" title="第一部分代码分析"></a>第一部分代码分析</h3><p>程序源码分3个文件：head.S、init.c、leds.c。</p>
+<ol>
+<li>head.S代码详解<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">File:head.S</span></span><br><span class="line"><span class="comment">功能：设置SDRAM，将第二部分代码复制到SDRAM，设置页表，启动MMU，然后跳到SDRAM继续执行。</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"></span><br><span class="line">.text</span><br><span class="line">.global _start</span><br><span class="line">_satrt:</span><br><span class="line">  ldr sp,=<span class="number">4096</span>            @设置栈指针，以下都是C函数，调用前需要设置好栈</span><br><span class="line">  bl  disable_watch_dog   @关闭WATCHDOG，否则CPU会不断重启</span><br><span class="line">  bl  memsetup            @设置控制存储器以使用SDRAM</span><br><span class="line">  bl  copy_2th_to_sdram   @将第二部分代码复制到SDRAM</span><br><span class="line">  bl  create_page_table   @设置页表</span><br><span class="line">  bl  mmu_init            @启动MMU</span><br><span class="line">  bl  sp,=<span class="number">0xB4000000</span>      @重设栈指针，指向SDRAM顶端（使用虚拟地址）</span><br><span class="line">  bl  pc,=<span class="number">0xB0004000</span>      @跳到SDRAM中继续执行第二部分代码</span><br><span class="line"></span><br><span class="line">halt_loop:</span><br><span class="line">  b halt_loop</span><br></pre></td></tr></table></figure>
+head.S调用的函数都在init.c中实现。<br>值得注意的是，在第15行开启MMU之后，无论是CPU取指还是CPU读写数据，使用的都是虚拟地址。<br>在第14行设置页表时，在create_page_table函数中令head.S、init.c程序所在的内存的虚拟地址和物理地址一样，这使得head.S和init.c中的代码在开启MMU后能够没有任何障碍的继续运行。</li>
+<li>init.c代码详解<br>disable_watch_dog、memsetup两个接口已经在前两章讨论过，下面不再赘述。<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">init.c：进行一些初始化，在Steppingstone中运行</span></span><br><span class="line"><span class="comment">它和head.S同属第一部分程序，此时MMU尚未开启，使用物理地址</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//WATCHDOG寄存器</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> WTCON (*(volatile unsigned long *)0x53000000)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//存储控制器的寄存器起始地址</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MEM_CTL_BASE  0x48000000</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//关闭WATCHAOG，否则CPU会不断重启</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">disable_watch_dog</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">  WTCON = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//设置存储控制器以使用SDRAM</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">memsetup</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">//SDRAM 13个寄存器的值</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">long</span> <span class="type">const</span> mem_cfg_val[]=&#123;<span class="number">0x22011110</span>,<span class="comment">//BWSCON</span></span><br><span class="line">                                    <span class="number">0x00000700</span>,<span class="comment">//BANKCON0</span></span><br><span class="line">                                    <span class="number">0x00000700</span>,<span class="comment">//BANKCON1</span></span><br><span class="line">                                    <span class="number">0x00000700</span>,<span class="comment">//BANKCON2</span></span><br><span class="line">                                    <span class="number">0x00000700</span>,<span class="comment">//BANKCON3</span></span><br><span class="line">                                    <span class="number">0x00000700</span>,<span class="comment">//BANKCON4</span></span><br><span class="line">                                    <span class="number">0x00000700</span>,<span class="comment">//BANKCON5</span></span><br><span class="line">                                    <span class="number">0x00018005</span>,<span class="comment">//BANKCON6</span></span><br><span class="line">                                    <span class="number">0x00018005</span>,<span class="comment">//BANKCON7</span></span><br><span class="line">                                    <span class="number">0x008C07A3</span>,<span class="comment">//REFRESH</span></span><br><span class="line">                                    <span class="number">0x000000B1</span>,<span class="comment">//BANKSIZE</span></span><br><span class="line">                                    <span class="number">0x00000030</span>,<span class="comment">//MRSRB6</span></span><br><span class="line">                                    <span class="number">0x00000030</span><span class="comment">//MRSRB7</span></span><br><span class="line">                                    &#125;;</span><br><span class="line">  <span class="type">int</span> i = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">volatile</span> <span class="type">unsigned</span> <span class="type">long</span> *p = (<span class="keyword">volatile</span> <span class="type">unsigned</span> <span class="type">long</span> *)MEM_CTL_BASE;</span><br><span class="line">  <span class="keyword">for</span>(;i &lt; <span class="number">13</span>;i++)</span><br><span class="line">    p[i] = mem_cfg_val[i];</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+copy_2th_to_sdram函数用来将第二部分代码（即由leds.c编译得来的代码）从Steppingstone复制到SDRAM中。在连接程序时，第二部分代码的加载地址被指定为2048，重定位地址为0xB0004000。所以系统从NAND Flash启动后，第二部分代码Steppingstone中地址2048之后，需要把它复制到0x30004000处（此时尚未开启MMU，虚拟地址0xB0004000对应的物理地址在后面设为0x30004000）。Steppingstone总大小为4KB，不妨把地址2048后的所有数据复制到SDRAM中，所以源数据的结束地址为4096。<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//将第二部分代码复制到SDRAM</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">copy_2th_to_sdram</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">int</span> *pdwSrc = (<span class="type">unsigned</span> <span class="type">int</span> *)<span class="number">2048</span>;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">int</span> *pdwDest = (<span class="type">unsigned</span> <span class="type">int</span> *)<span class="number">0x30004000</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">while</span>(pdwSrc &lt; (<span class="type">unsigned</span> <span class="type">int</span> *)<span class="number">4096</span>)</span><br><span class="line">  &#123;</span><br><span class="line">    *pdwDest = *pdwSrc;</span><br><span class="line">    pdwDest++;</span><br><span class="line">    pdwSrc++;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+剩下的create_page_table、mmu_init就是本章的重点了。前者用来设置页表，后者用来开启MMU。<br>先看看create_page_table函数，它用于设置3个区域的地址映射关系。<br>①将虚拟地址0-（1M-1）映射到同样的物理地址去，Steppingstone（从0地址开始的4KB内存）就处于这个范围中。使虚拟地址等于物理地址，可以让Steppingstone中的程序（head.S和init.c）在开启MMU前后不需要考虑太多的事情。<br>②GPIO寄存器的起始物理地址范围为0x56000000，将虚拟地址0xA0000000-（0xA0000000+1M-1）映射到物理地址0x56000000-（0x56000000+1M-1）。<br>③本开发板中SDRAM的物理地址范围为0x30000000-0x33fffffff，将虚拟地址0xB0000000-0xB3fffffff映射到物理地址0x30000000-0x33fffffff。<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//设置页表</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">create_page_table</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="comment">//用于段描述符的一些宏定义</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MMU_FULL_ACCESS (3 &lt;&lt; 10)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MMU_DOMAIN (0 &lt;&lt; 5)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MMU_SPECIAL (1 &lt;&lt; 4)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MMU_CACHEABLE (1 &lt;&lt; 3)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MMU_BUFFERABLE (1 &lt;&lt; 2)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MMU_SECTION (2)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MMU_SECDEDSC (MMU_FULL_ACCESS | MMU_DOMAIN | MMU_SPECIAL | MMU_SECTION)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MMU_SECDEDSC_WB (MMU_FULL_ACCESS | MMU_DOMAIN | MMU_SPECIAL | MMU_SECTION | MMU_BUFFERABLE | MMU_CACHEABLE)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MMU_SECDEDSC_SIZE (0x00100000)</span></span><br><span class="line"></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">long</span> virtualaddr,physicaladdr;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">long</span> *mmu_tlb_base = (<span class="type">unsigned</span> <span class="type">long</span> *)<span class="number">0x30000000</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/*</span></span><br><span class="line"><span class="comment">  Steppingstone的起始物理地址为0，第一部分程序的起始运行地址也是0，</span></span><br><span class="line"><span class="comment">  为了在开启MMU后仍能运行第一部分的程序，</span></span><br><span class="line"><span class="comment">  将0-1M的虚拟地址空间映射到同样的物理地址</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line">  virtualaddr = <span class="number">0</span>;</span><br><span class="line">  physicaladdr = <span class="number">0</span>;</span><br><span class="line">  *(mmu_tlb_base + (virtualaddr &gt;&gt; <span class="number">20</span>)) = (physicaladdr &amp; <span class="number">0xFFF00000</span>) | MMU_SECDESC_WB;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/*</span></span><br><span class="line"><span class="comment">  0x56000000是GPIO寄存器的起始物理地址</span></span><br><span class="line"><span class="comment">  GPBCON和GPBDAT这两个寄存器的物理地址0x56000010、0x56000014，</span></span><br><span class="line"><span class="comment">  为了在第二部分程序中能以地址0xA0000010、0xA0000014来操作GPBCON和GPBDAT这两个寄存器，</span></span><br><span class="line"><span class="comment">  把从0xA0000000开始的1MB虚拟地址空间映射到0x56000000开始的1MB物理地址空间</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line">  virtualaddr = <span class="number">0xA0000000</span>;</span><br><span class="line">  physicaladdr = <span class="number">0x56000000</span>;</span><br><span class="line">  *(mmu_tlb_base + (virtualaddr &gt;&gt; <span class="number">20</span>)) = (physicaladdr &amp; <span class="number">0xFFF00000</span>) | MMU_SECDESC;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/*</span></span><br><span class="line"><span class="comment">  SDRAM的物理地址范围是0x3000000-0x33FFFFFF，</span></span><br><span class="line"><span class="comment">  将虚拟地址0xB0000000-0xB3fffffff映射到物理地址0x30000000-0x33fffffff上</span></span><br><span class="line"><span class="comment">  总共64MB，涉及64个段描述符</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line">  virtualaddr = <span class="number">0xB0000000</span>;</span><br><span class="line">  physicaladdr = <span class="number">0x30000000</span>;</span><br><span class="line">  <span class="keyword">while</span>(virtualaddr &lt; <span class="number">0xB4000000</span>)</span><br><span class="line">  &#123;</span><br><span class="line">    *(mmu_tlb_base + (virtualaddr &gt;&gt; <span class="number">20</span>)) = (physicaladdr &amp; <span class="number">0xFFF00000</span>) | MMU_SECDESC_WB;</span><br><span class="line">    virtualaddr += <span class="number">0x100000</span>;</span><br><span class="line">    virtualphysicaladdraddr += <span class="number">0x100000</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+mmu_tlb_base被定义为unsigned long 指针，所指向的内存为4字节，刚好是一个描述符的大小。在SDRAM的开始存放页表—第81行令mmu_tlb_base指向SDRAM的起始地址0x3000000。其中最能体现页表结构的代码是下列代码<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">*(mmu_tlb_base + (virtualaddr &gt;&gt; <span class="number">20</span>)) = (physicaladdr &amp; <span class="number">0xFFF00000</span>) | MMU_SECDESC_WB;</span><br><span class="line">*(mmu_tlb_base + (virtualaddr &gt;&gt; <span class="number">20</span>)) = (physicaladdr &amp; <span class="number">0xFFF00000</span>) | MMU_SECDESC;</span><br><span class="line">*(mmu_tlb_base + (virtualaddr &gt;&gt; <span class="number">20</span>)) = (physicaladdr &amp; <span class="number">0xFFF00000</span>) | MMU_SECDESC_WB;</span><br></pre></td></tr></table></figure>
+虚拟地址的位[31:20]用于索引一级页表，找到它所对应的描述符，对应于“(virtualaddr &gt;&gt; 20)”。<br>段描述符中位[31:20]中保存段的物理地址，对应于“(physicaladdr &amp; 0xFFF00000)”。<br>位[11:0]中用来设置段的访问权限，包括所属的域、AP位、C位（是否可Cache）、B位（是否使用Write buffer）—这对应“MMU_SECDESC”或“MMU_SECDESC_WB”，它们的域都被设为0，AP位被设为0b11（进行权限检查，读写操作都被允许）。“MMU_SECDESC”中C&#x2F;B位都没有设置，表示不使用Cache和Write Buffer，所以映射寄存器空间时使用“MMU_SECDESC”。“MMU_SECDESC_WB”中C&#x2F;B都设置了，表示使用Cache和Write Buffer，即所谓的回写式。在映射Steppingstone和SDRAM等内存时使用“MMU_SECDESC_WB”。<br>现在看看mmu_init函数。Create_page_table函数设置好了页表，还需要把页表地址告诉CPU，并且在开启MMU之前做好一些准备工作，比如使无效ICache、DCache，设置域访问控制寄存器等。代码的注释就可以帮助读者很好的理解mmu_init函数。<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">启动MMU</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">mmu_init</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">long</span> ttb <span class="number">0x30000000</span>;</span><br><span class="line"></span><br><span class="line">  __asm__(</span><br><span class="line">    <span class="string">&quot;mov  r0,  #0\n&quot;</span></span><br><span class="line">    <span class="string">&quot;mcr  p15,  0,  r0,  c7,  c7,   0\n&quot;</span>                  <span class="comment">//使无效ICache和DCache</span></span><br><span class="line">    <span class="string">&quot;mcr  p15,  0,  r0,  c7,  c10,  4\n&quot;</span>                  <span class="comment">//drain write buffer on v4</span></span><br><span class="line">    <span class="string">&quot;mcr  p15,  0,  r0,  c8,  c7,   0\n&quot;</span>                  <span class="comment">//使无效指令、数据TLB</span></span><br><span class="line">    <span class="string">&quot;mov  r4,   %0\n&quot;</span>                                     <span class="comment">//r4 = 页表基址</span></span><br><span class="line">    <span class="string">&quot;mcr  p15,  0,  r4,   c2,   c0,   0\n&quot;</span>                <span class="comment">//设置页表基址寄存器</span></span><br><span class="line">    <span class="string">&quot;mvn  r0,   #0\n&quot;</span></span><br><span class="line">    <span class="string">&quot;mcr  p15,  0,  r0,   c3,   c0,   0\n&quot;</span>                <span class="comment">//域访问控制寄存器设为0xFFFFFFFFF，不进行权限检查</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    对于控制寄存器，先读出其值，在这基础上修改感兴趣的位</span></span><br><span class="line"><span class="comment">    然后再写入</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="string">&quot;mrc  p15,  0,  r0, c1, c0, 0\n&quot;</span>                      <span class="comment">//读出控制寄存器的值</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    控制寄存器的低16位含义为：.RVI ..RS B... .CAM</span></span><br><span class="line"><span class="comment">    R：表示换出Cache中的条目时使用的算法，0 = Random repalcement；1 = Round robin replacement</span></span><br><span class="line"><span class="comment">    V：表示异常向量表所在的位置；0 = Low address = 0x00000000；1 = High address = 0xFFFF0000</span></span><br><span class="line"><span class="comment">    I：0 = 关闭ICache；1 = 开启ICache；</span></span><br><span class="line"><span class="comment">    R、S：用来与页表中的描述符一起确定内存的访问权限；</span></span><br><span class="line"><span class="comment">    B：0 = CPU为小字节序；1 = CPU为大字节序；</span></span><br><span class="line"><span class="comment">    C：0 = 关闭DCache；1 = 开启DCache；</span></span><br><span class="line"><span class="comment">    A：0 = 数据访问时不进行地址对齐检查；1 = 数据访问时进行地址对齐检查；</span></span><br><span class="line"><span class="comment">    M：0 = 关闭MMU；1 = 开启MMU；</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    先清除不需要的位，往下若需要则重新设置它们</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="comment">/*.RVI ..RS B... .CAM*/</span></span><br><span class="line">    <span class="string">&quot;bic  r0,  r0,   #0x3000\n&quot;</span>                             <span class="comment">//..11 .... .... .... 清除V、I位</span></span><br><span class="line">    <span class="string">&quot;bic  r0,  r0,   #0x0300\n&quot;</span>                             <span class="comment">//.... ..11 .... .... 清除R、S位</span></span><br><span class="line">    <span class="string">&quot;bic  r0,  r0,   #0x0087\n&quot;</span>                             <span class="comment">//.... .... 1... .111 清除B/C/A/M位</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    设置需要的位</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="string">&quot;orr  r0, r0, #0x0002\n&quot;</span>                                <span class="comment">//.... .... .... ..1. 开启对齐检查</span></span><br><span class="line">    <span class="string">&quot;orr  r0, r0, #0x0004\n&quot;</span>                                <span class="comment">//.... .... .... .1.. 开启DCache</span></span><br><span class="line">    <span class="string">&quot;orr  r0, r0, #0x1000\n&quot;</span>                                <span class="comment">//...1 .... .... .... 开启ICache</span></span><br><span class="line">    <span class="string">&quot;orr  r0, r0, #0x0001\n&quot;</span>                                <span class="comment">//.... .... .... ...1 使能MMU</span></span><br><span class="line"></span><br><span class="line">    <span class="string">&quot;mcr  p15,  0,  r0,   c1,   c0,   0\n&quot;</span>                  <span class="comment">//将修改的值写入到控制寄存器</span></span><br><span class="line">    :<span class="comment">/*无输出*/</span></span><br><span class="line">    :<span class="string">&quot;r&quot;</span>(ttb));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h3 id="第二部分代码分析"><a href="#第二部分代码分析" class="headerlink" title="第二部分代码分析"></a>第二部分代码分析</h3><p>第二部分代码leds.c中只有两个函数：wait和main。wait函数用来延时，main函数用来循环点亮4个LED。</p>
+<ol>
+<li>操作GPBCON、GPBDAT两个寄存器时使用虚拟地址0xA0000010、0xA0000014。在init.c中已经把虚拟地址0xA0000000-（0xA0000000 + 1M-1）映射到物理地址0x56000000-（0x56000000+1M-1）；</li>
+<li>在定义wait函数时使用了一点小技巧，将它定义成“static inline”类型，原因在代码中给出：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">  leds.c：循环点亮4个LED</span></span><br><span class="line"><span class="comment">  属于第二部分程序，此时MMU已开启，使用虚拟地址</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPBCON (* (unsigned long *) 0xA0000010)             <span class="comment">//物理地址0x56000010</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPBDAT (* (unsigned long *) 0xA0000014)             <span class="comment">//物理地址0x56000014</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">LED1-LED4对应GPB5、GPB6、GPB7、GPB8</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPB5_out (1&lt;&lt;(5*2))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPB6_out (1&lt;&lt;(6*2))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPB7_out (1&lt;&lt;(7*2))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPB8_out (1&lt;&lt;(8*2))</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">wait函数加上“static inline”是有原因的，</span></span><br><span class="line"><span class="comment">这样可以使得编译leds.c时，wait嵌入main中，编译结果只有main一个函数。</span></span><br><span class="line"><span class="comment">于是在连接时，main函数的地址就是由连接文件指定的运行地址。</span></span><br><span class="line"><span class="comment">而连接文件mmu.lds中，指定了leds.o的运行时装载地址为0xB0004000，</span></span><br><span class="line"><span class="comment">这样，head.s中的“ldr pc,=0xB0004000“就是跳去执行main函数</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">void</span> <span class="title function_">wait</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> dly)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">for</span>(;dly &gt; <span class="number">0</span>;dly--)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">long</span> i = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//将LED1NLED4对应的GPB5GPB8引脚设置为输出</span></span><br><span class="line">  GPBCON = GPB5out | GPB6_out | GPB7_out | GPB8_out;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">  &#123;</span><br><span class="line">    wait(<span class="number">3000000</span>);</span><br><span class="line">    GPBDAT = (~(i&lt;&lt;<span class="number">5</span>));</span><br><span class="line">    <span class="keyword">if</span>(++i == <span class="number">16</span>)</span><br><span class="line">      i = <span class="number">0</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h3 id="Makefile和连接脚本mmu-lds"><a href="#Makefile和连接脚本mmu-lds" class="headerlink" title="Makefile和连接脚本mmu.lds"></a>Makefile和连接脚本mmu.lds</h3><p>Makefile内容如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">objs := head.o init.o leds.o</span><br><span class="line"></span><br><span class="line">mmu.bin:  $(objs)</span><br><span class="line">  arm-linux-ld -Tmmu.lds -o mmuj_elf $^</span><br><span class="line">  arm-linux-objcopy -O binary -S mmu_elf $@</span><br><span class="line">  arm-linux-objdump -D -m arm mmu_elf &gt; mmu.dis</span><br><span class="line"></span><br><span class="line">%.o:%.c</span><br><span class="line">  arm-linux-gcc -Wall -O2 -c -o $@ $&lt;</span><br><span class="line"></span><br><span class="line">%.o:%.s</span><br><span class="line">  arm-linux-gcc -Wall -O2 -c -o $@ $&lt;</span><br><span class="line"></span><br><span class="line">clean:</span><br><span class="line">  rm -f mmu.bin mmu_elf mmu.lds *.o</span><br></pre></td></tr></table></figure>
+<p>Makefile第4行命令用来连接程序，它使用连接脚本mmu.lds来控制连接器的行为。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">SECTIONS  &#123;</span><br><span class="line">    first <span class="number">0x00000000</span>  : &#123;head.o init.o&#125;</span><br><span class="line">    second  <span class="number">0xB0004000</span>  : AT(<span class="number">2048</span>)  &#123;leds.o&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>连接脚本mmu.lds将程序分为两个段：first和second。前者由head.o和init.o组成，它的加载地址和运行地址都是0，所以运行前不需要重新移动代码。后者由leds.o组成，它的加载地址为2048，重定位地址为0xB0004000，这表明段second存放在编译所得映像文件地址2048处，在运行前需要将它复制到0xB0004000处，这由init.c中的copy_2th_to_sdram函数完成（此函数将代码复制到开始地址为0x30004000的内存中，这是开启MMU后虚拟地址0xB0004000对应的物理地址）。<br>实例程序涉及了代码的复制、开启MMU前使用物理地址寻址，开启MMU后使用虚拟地址寻址，相对复杂。下图更形象的演示了代码的执行。<br><img src="/2022/08/15/MMU/15.jpg" alt="img not found"><br><img src="/2022/08/15/MMU/16.jpg" alt="img not found"><br><img src="/2022/08/15/MMU/17.jpg" alt="img not found"><br><img src="/2022/08/15/MMU/18.jpg" alt="img not found"><br><img src="/2022/08/15/MMU/19.jpg" alt="img not found"></p>
+<h1 id="实例测试结果"><a href="#实例测试结果" class="headerlink" title="实例测试结果"></a>实例测试结果</h1><p>程序烧入NAND Flash后，复位启动系统。可以看到4个LED被循环点亮，闪烁速度比SDRAM实验快，那是因为开启了Cache。</p>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>嵌入式Linux应用完全开发手册</category>
+        <category>第2篇第7章 MMU</category>
+      </categories>
+      <tags>
+        <tag>嵌入式Linux</tag>
+        <tag>MMU</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>嵌入式编程基础知识</title>
     <url>/2022/08/05/%E5%B5%8C%E5%85%A5%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《嵌入式Linux应用完全开发手册》第1篇第3章总结归纳</p>
@@ -3862,285 +4261,6 @@ ldm和stm属于批量内存访问指令，只用一条指令就可以读写多�
       </categories>
       <tags>
         <tag>嵌入式Linux</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>MMU</title>
-    <url>/2022/08/15/MMU/</url>
-    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《嵌入式Linux应用完全开发手册》第2篇第7章总结归纳</p>
-<span id="more"></span>
-<h1 id="本章要点"><a href="#本章要点" class="headerlink" title="本章要点"></a>本章要点</h1><ol>
-<li>了解虚拟地址和物理地址的关系</li>
-<li>掌握如何通过设置MMU来控制虚拟地址到物理地址的转化</li>
-<li>了解MMU的内存访问权限机制</li>
-<li>了解TLB、Cache、Write Buffer的原理，使用时的注意事项</li>
-<li>实例</li>
-</ol>
-<h1 id="内存管理单元MMU介绍"><a href="#内存管理单元MMU介绍" class="headerlink" title="内存管理单元MMU介绍"></a>内存管理单元MMU介绍</h1><h2 id="S3C2410-x2F-S3C2440-MMU特性"><a href="#S3C2410-x2F-S3C2440-MMU特性" class="headerlink" title="S3C2410&#x2F;S3C2440 MMU特性"></a>S3C2410&#x2F;S3C2440 MMU特性</h2><p>内存管理单元（Memory Management Unit）简称MMU，它负责虚拟地址收到物理地址的映射，并提供硬件机制的内存访问权限检查。现代的多用户多进程操作系统通过MMU使得各个用户进程都拥有自己独立的地址空间：地址映射功能使得各进程拥有看起来一样的地址空间，而内存访问权限的检查可以保护每个进程所用的内存不会被其他破坏。</p>
-<ol>
-<li>与ARM V4兼容的映射长度、域、访问权限检查机制。</li>
-<li>4种映射长度：段（1MB）、大页（64KB）、小页（4KB）、极小页（1KB）。</li>
-<li>对每段都可以设置访问权限。</li>
-<li>大页、小页的每个子页（sub-page，被映射页的1&#x2F;4）都可以设置单独的访问权限。</li>
-<li>硬件实现的16个域。</li>
-<li>指令TLB（含64个条目）、数据TLB（含64个条目）。</li>
-<li>硬件访问页表（地址映射、权限检查有硬件自动进行）。</li>
-<li>TLB条目中替换采用round-robin算法（也称cyclic算法）。</li>
-<li>可以使无效整个TLB。</li>
-<li>可以单独使无效某个TLB。</li>
-<li>可以在TLB中锁定某个条目，指令TLB、数据TLB相互独立。<br>重点在于页表的结构与建立、映射的过程。</li>
-</ol>
-<h2 id="S3C2410-x2F-S3C2440-MMU地址变换过程"><a href="#S3C2410-x2F-S3C2440-MMU地址变换过程" class="headerlink" title="S3C2410&#x2F;S3C2440 MMU地址变换过程"></a>S3C2410&#x2F;S3C2440 MMU地址变换过程</h2><h3 id="地址的分类"><a href="#地址的分类" class="headerlink" title="地址的分类"></a>地址的分类</h3><p>以前的程序是非常小的，可以全部装入内存。随着技术的发展，出现了以下两种情况：</p>
-<ol>
-<li>有的程序很大，它所要求的内存，超过了内存总容量，不能一次性装入内存。</li>
-<li>多道系统中有很多程序需要同时执行，它们要求的内存超过了内存总容量，不能把所有程序都装入内存。<br>实际上，一个程序在运行前，没有必要全部装入内存，而仅需要将那些当前需要运行的部分先装入内存，其余部分在用到时再从磁盘调入，而当内存耗光时再将暂时不用的部分调出到磁盘。这使得一个大程序可以在较小的内存空间中运行，这也使得内存中可以同时装入更多的程序并发执行，从用户的角度看，该系统所具有的内存容量将比实际内存容量大得多，人们把这样的存储器称为虚拟存储器。<br>虚拟存储器从逻辑上对内存容量进行了扩充，用户看到的大容量只是一种感觉，是虚的，在32位的CPU系统中，这个虚拟内存地址范围为0-0xFFFFFFFF，我们把这个地址范围称为虚拟地址空间，其中某个地址称为虚拟地址。与虚拟地址空间、虚拟地址对应的是物理地址空间、物理地址，它们对应实际的内存。<br>虚拟地址空间最终需要转化为物理地址才能读写实际的数据，这通过将虚拟地址空间、物理地址空间划分为同样大小的一块块小空间（段或页），然后为这两类小空间建立映射关系。由于虚拟地址空间远大于物理空间，有可能多块虚拟地址空间映射到同一块物理地址空间，或者有些虚拟地址空间没有映射到具体的物理地址空间上去（可以使用到时再映射）。<br><img src="/2022/08/15/MMU/1.jpeg" alt="img not found"></li>
-</ol>
-<p>ARM CPU上的地址转换涉及3个概念：虚拟地址（Virtual Address）、变换后的虚拟地址（Modified Virtual Address）、物理地址（Physical Address）。<br>没启动MMU时，CPU核、cache、MMU、外设等所有部件使用的都是物理地址。<br>启动MMU后，CPU核对外发出虚拟地址VA；VA被转换为MVA供cache、MMU使用，再这里MVA被转换为PA；最后使用PA读写实际设备（S3C2410&#x2F;S3C2440内部寄存器或外界的设备）：</p>
-<ol>
-<li>CPU看到的、用到的只是虚拟地址VA，至于VA如何最终落实到物理地址PA上，CPU核是不理会的。</li>
-<li>而caches和MMU也是看不到VA的，它们利用有MVA转换得到PA。</li>
-<li>而实际设备看不到VA，MVA，它们读写时使用的是物理地址PA。<br>MVA是除CPU核外的其他部分看见的虚拟地址，VA与MVA之间的变化关系如图所示：<br><img src="/2022/08/15/MMU/2.jpeg" alt="img not found"><br>如果VA&lt;32M，需要使用进程标识号（PID）通过读CP15的c13获得来转换MVA。VA与MVA的转换方式如下（这是硬件自动完成的）：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> (VA &lt; <span class="number">32</span>M) then</span><br><span class="line">    MVA = VA | (PID &lt;&lt; <span class="number">25</span>)</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">    MVA = VA</span><br></pre></td></tr></table></figure>
-利用PID生成MVA的目的是为了减少切换进程时的代价；不使用MVA而直接使用VA的话，当两个进程使用的虚拟地址空间VA有重叠时，在切换进程时为了把重叠的VA映射到不同的PA上去，需要重建页表、使无效caches和TLBS等，代价很大。使用MVA后，进程切换就省事多了：假设两个进程1、2运行时的VA都是0-32M，但是它们的MVA并不重叠，分别是0x02000000-0x03FFFFFF、0x04000000-0x05FFFFFF，这样就不必进行重建页表工作了。</li>
-</ol>
-<h3 id="虚拟地址到物理地址的转换过程"><a href="#虚拟地址到物理地址的转换过程" class="headerlink" title="虚拟地址到物理地址的转换过程"></a>虚拟地址到物理地址的转换过程</h3><p>将一个虚拟地址转换为物理地址，一般有两个办法：用一个确定的数学公式进行转换或用表格存储虚拟地址对应的物理地址。这类表格称为页表（Page Table），页表由一个个条目（Entry）组成；每个条目存储了一段虚拟地址对应的物理地址及其访问权限，或者下一级页表地址。<br>在AMR CPU中使用的第二种方法。S3C2410&#x2F;S3C2440最多会用到两级页表：以段（1MB）的方式进行转换时只用到一级页表，以页（Page）的方式进行转换时用到两级页表。页的大小由3种：大页（64KB）、小页（4KB）、极小页（1KB）。条目也称为”描述符“（Descriptor），有段描述符、大页描述符、小页描述符、极小页描述符–它们保存段、大页、小页或极小页的起始物理地址：粗页表描述符、细页表描述符–它们保存二级页表的物理地址。<br>大概的转换过程如下：</p>
-<ol>
-<li>根据给定的虚拟地址找到一级页表中的条目。</li>
-<li>如果此条目是段描述符，则返回物理地址，转换结束。</li>
-<li>否则如果此条目是二级页表描述符，继续利用虚拟地址在此二级页表找到下一个条目。</li>
-<li>如果第二个条目是页描述符，则返回物理地址，转换结束。</li>
-<li>其他情况出错。</li>
-</ol>
-<p><img src="/2022/08/15/MMU/3.jpeg" alt="img not found"><br>图中的“TTB base”代表一级页表的地址，将它写入协处理器CP15的寄存器C2（页表基址寄存器）即可。一级页表的地址必须是16K对应的（[14:0]为0）。<br><img src="/2022/08/15/MMU/4.jpeg" alt="img not found"><br>先介绍一级页表，32位的CPU的虚拟地址空间达到4GB，一级页表使用4096个描述符来表示这4GB空间—每个描述符对应1MB的虚拟地址，要么存储了它对应的1MB物理空间的起始地址，要么存储了下一级页表的地址。使用MVA[31:20]来索引一级页表，得到一个描述符，每个描述符占用4字节，如下图所示：<br><img src="/2022/08/15/MMU/5.jpeg" alt="img not found"><br>根据一级页表描述符的最低两位，可分为以下4种：</p>
-<ol>
-<li>0b00：无效。</li>
-<li>0b01：粗页表（Coarse page table）<br>位[31:10]称为粗页表基址（Coarse page table base address），此描述符的低10位填充0后就是一个二级页表的物理地址。此二级页表含256个条目（所以大小为1KB），称为粗页表。其中每个条目表示大小为4KB的物理地址空间，所以一个粗页表表示1MB的物理地址空间。</li>
-<li>0b10：段（Section）<br>位[31:20]称为段基址（Section Base），此描述符的低20位填充0后就是一块1MB的物理地址空间的起始地址。MVA[19:0]用来在这1MB的空间中寻址。所以，描述符的位[31:20]和MVA[19:0]就构成了这个虚拟地址MVA对应的物理地址。<br>以段的方式进行映射时，虚拟地址MVA到物理地址PA的转换过程如下：<br><img src="/2022/08/15/MMU/6.jpeg" alt="img not found"><br>①页表基址寄存器位[31:14]和MVA[31:20]组成一个低两位为0的32位地址，MMU利用这个地址找到段描述符。<br>②取出段描述符的位[31:20]—段基址，它和MVA[19:0]组成一个32位的物理地址–这就是MVA对应的PA。</li>
-<li>0b11：细页表（Fine page table）<br>位[32：12]称为细页表基址（Fine page table base address），此描述符的低12位填充0后就是一个二级页表的物理地址。此二级页表含1024个条目（所以大小为4KB），称为细页表。其中每个条目表示大小为1KB的物理地址空间，所以一个细页表表示1MB的物理地址空间。<br>以大页（64KB）、小页（4KB）或极小页（1KB）进行地址映射时，需要用到两级页表。二级页表有粗页表、细页表两种，二级页表中描述符的格式如下：<br><img src="/2022/08/15/MMU/7.jpeg" alt="img not found"><br>根据二级描述符的最低两位，可分为以下4种情况：<br>①0b00：无效。<br>②0b01：大页描述符。<br>位[31:16]称为大页基址（Large page base address），此描述符的低16位填充0后就是一块64KB物理地址空间的起始地址。粗页表每个条目只能表示4KB的物理空间，如果大页描述符保存在粗页表中，则连续16个条目都保存同一个大页描述符。类似的，细页表中每个条目只能表示1KB的物理空间，如果大页描述符保存在细页表中，则连续64个条目都保存同一个大页描述符。<br>下面以保存在粗页表中的大页描述符为例，说明地址转换的过程：<br><img src="/2022/08/15/MMU/8.jpeg" alt="img not found"><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1. 页表基址寄存器位[31:14]和MVA[31:20]组成一个低两位为0的32位地址，MMU利用这个地址找到粗页表描述符。</span><br><span class="line">2. 取出粗页表描述符的位[31:10]--即粗页表基址，它和MVA[19:12]组成一个低两位为0的32位物理地址---据此即可找到大页描述符。</span><br><span class="line">3. 取出大页描述符的位[31:16]--即大页基址，它和MVA[15:0]组成一个32位的物理地址---这就是MVA对应的PA。</span><br><span class="line"></span><br><span class="line">上面的步骤2和3中，用于在粗页表中索引的MVA[19:12]、用于在大页内寻址的MVA[15:0]有重合的位：位[15:12]。当位[15:12]从0b0000变化到0b1111时，步骤2返回的大页描述符相同，所以粗页表中连续16个条目都保存同一个大页描述符。</span><br></pre></td></tr></table></figure>
-③0b10：小页描述符<br>位[31:12]称为小页基址，此描述符的低12位填充0后就是一块4KB物理地址空间的起始地址。粗页表中每个条目表示4KB的物理空间，如果小页描述符保存在粗页表中，则只需要用一个条目来保存一个小页描述符。类似的，细页表中每个条目只能表示1KB的物理空间，如果小页表描述符保存在细页表中，则连续4个条目都保存同一个小页描述符。<br><img src="/2022/08/15/MMU/9.jpeg" alt="img not found"><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1. 页表基址寄存器位[31:14]和MVA[31:20]组成一个低两位为0的32位地址，MMU利用这个地址找到粗页表描述符。</span><br><span class="line">2. 取出粗页表描述符的位[31:10]--即粗页表基址，它和MVA[19:12]组成一个低两位为0的32位物理地址---据此即可找到小页描述符。</span><br><span class="line">3. 取出小页描述符的位[31:12]--即小页基址，它和MVA[11:0]组成一个32位的物理地址---这就是MVA对应的PA。</span><br><span class="line"></span><br><span class="line">小页描述符保存在细页表中，地址转换过程与上面类似，不在赘述。</span><br></pre></td></tr></table></figure>
-④0b11：极小页描述符<br>位[31:10]被称为极小页基址，此描述符的低10位填充0后就是一块1KB的物理地址空间的起始地址。极小页描述符只能保存在细页表中，用一个条目来保存一个极小页描述符。<br><img src="/2022/08/15/MMU/10.jpeg" alt="img not found"><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1. 页表基址寄存器位[31:14]和MVA[31:20]组成一个低两位为0的32位地址，MMU利用这个地址找到细页表描述符。</span><br><span class="line">2. 取出细页表描述符的位[31:12]---即细页表基址。它和MVA[19:10]组成一个低两位为0的32位物理地址--据此即可找到极小页描述符。</span><br><span class="line">3. 取出极小页描述符的位[31:10]---即极小页基址，它和MVA[9:0]组成一个32位的物理地址---这是MVA对应的PA。</span><br></pre></td></tr></table></figure></li>
-</ol>
-<p>从段、大页、小页、极小页的地址转换过程可知。</p>
-<ol>
-<li>以段进行映射时，通过MVA[31:20]结合页表得到一段（1MB）的起始物理地址，MVA[19:0]用来在段中寻址。</li>
-<li>以大页进行映射时，通过MVA[31:16]结合页表得到一个大页（64KB）的起始物理地址，MVA[15:0]用来在大页中寻址。</li>
-<li>以小页进行映射时，通过MVA[31:12]结合页表得到一个小页（4KB）的起始物理地址，MVA[11:0]用来在大页中寻址。</li>
-<li>以极小页进行映射时，通过MVA[31:10]结合页表得到一个极小页（1KB）的起始物理地址，MVA[9:0]用来在极小页中寻址。</li>
-</ol>
-<h2 id="内存的访问权限检查"><a href="#内存的访问权限检查" class="headerlink" title="内存的访问权限检查"></a>内存的访问权限检查</h2><p>内存的访问权限检查是MMU的主要功能之一，简单的说，它就是决定一块内存是否允许读、是否允许写。这由CP15寄存器C3（域访问控制）、描述符的域（Domain）、CP15寄存器C1的R&#x2F;S&#x2F;A位。描述符的AP位等联合作用。<br>CP15寄存器C1中的A位表示是否对地址进行对齐检查。所谓对齐检查就是，访问字（4字节的数据）时地址是否为4字节对齐。访问半字（2字节的数据）时地址是否2字节对齐，如果地址不对齐则产生”Alignment Fault“异常。无论MMU是否被开启，都可以进行对齐检查。CPU读取指令时不进行对齐检查，以字节为单位访问时也不进行对其检查。对其检查在MMU的权限检查，地址映射前进行。<br>内存的访问权限检查可以概括为一下两点：</p>
-<ol>
-<li>”域“决定是否对某块内存进行权限检查。</li>
-<li>”AP“决定如何对某块内存进行权限检查。</li>
-</ol>
-<p>如图所示，S3C2410&#x2F;S3C2440有16个域，CP15寄存器C3中每两位对应一个域，用来表示这个域是否进行权限检查。图中表示CP15寄存器C3中哪两位对应哪个域，表中给出了CP15寄存器C3中这些”两位数据“的含义。<br><img src="/2022/08/15/MMU/11.jpeg" alt="img not found"></p>
-<table>
-<thead>
-<tr>
-<th>值</th>
-<th>含义</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>00</td>
-<td>无访问权限</td>
-<td>任何访问都将导致”Domain Fault“ 异常</td>
-</tr>
-<tr>
-<td>01</td>
-<td>客户模式</td>
-<td>使用段描述符、页描述符进行权限检查</td>
-</tr>
-<tr>
-<td>10</td>
-<td>保留</td>
-<td>保留，目前相当于”无访问权限“</td>
-</tr>
-<tr>
-<td>11</td>
-<td>管理模式</td>
-<td>运行任何访问</td>
-</tr>
-</tbody></table>
-<p>下图中的”Domain“占4个字节，用来表示这块内存属于上面定义的16个域中哪一个。<br><img src="/2022/08/15/MMU/12.jpeg" alt="img not found"></p>
-<ol>
-<li>段描述符中的”Domain“为0b0000时，表示这1MB内存属于域0，如果域访问控制寄存器的位[1:0]等于0b00，则访问这1MB空间时都会产生”Domain fault“的异常，如果域访问控制器寄存器的位[1:0]等于0b11，则使用描述符中的”AP“位进行权限检查。</li>
-<li>粗页表中的”Domain“为0b1111时，表示这1MB内存属于域15，如果域访问控制寄存器的位[31:30]等于0b00，则访问这1MB空间时都会产生”Domain fault“的异常，如果域访问控制寄存器的位[31:30]等于0b11时，则使用二级页表中的大页&#x2F;小页描述符中的”ap3“、”ap2“、”ap1“、”ap0“进行位权限检查。</li>
-</ol>
-<p>图中的”AP“、”ap3“、”ap2“、”ap1“、”ap0”结合CP15寄存器C1的R&#x2F;S位，决定如何进行访问权限检查。首先说明，段描述符中的“AP”控制整个段（1MB）的访问权限；大页描述符中的每个“apx”（x为0-3）控制一个大页（64KB）中1&#x2F;4内存的访问权限，即“ap3”对应大页高端的16KB，“ap0”对应大页低端的16KB；小页描述符与大页描述符相似，每个“apx”控制一个小页（4KB）的1&#x2F;4内存的访问权限；极小页中的“ap”就控制着整个极小页（1KB）的访问权限。<br>如下表所示，AP位、S位和R位的组合，可以产生多种访问权限。需要指出的是，ARM CPU有7种工作模式，其中6种属于特权模式，一种属于用户模式。在特权模式的用户模式下，相同的AP位、S位和R位的组合，其访问权限也不相同。</p>
-<table>
-<thead>
-<tr>
-<th>AP</th>
-<th>S</th>
-<th>R</th>
-<th>特权模式</th>
-<th>用户模式</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>00</td>
-<td>0</td>
-<td>0</td>
-<td>无访问权限</td>
-<td>无访问权限</td>
-<td>任何访问都将产生“Permission fault”异常</td>
-</tr>
-<tr>
-<td>00</td>
-<td>1</td>
-<td>0</td>
-<td>只读</td>
-<td>无访问权限</td>
-<td>在超级权限下进行读操作</td>
-</tr>
-<tr>
-<td>00</td>
-<td>0</td>
-<td>1</td>
-<td>只读</td>
-<td>只读</td>
-<td>任何写操作都将产生“Permission fault”异常</td>
-</tr>
-<tr>
-<td>00</td>
-<td>1</td>
-<td>1</td>
-<td>保留</td>
-<td>–</td>
-<td>–</td>
-</tr>
-<tr>
-<td>01</td>
-<td>x</td>
-<td>x</td>
-<td>读&#x2F;写</td>
-<td>无访问权限</td>
-<td>只允许在超级模式下访问</td>
-</tr>
-<tr>
-<td>10</td>
-<td>x</td>
-<td>x</td>
-<td>读&#x2F;写</td>
-<td>只读</td>
-<td>在用户模式下进行写操作都将产生“Permission fault”异常</td>
-</tr>
-<tr>
-<td>11</td>
-<td>x</td>
-<td>x</td>
-<td>读&#x2F;写</td>
-<td>读&#x2F;写</td>
-<td>在任何模式下都允许访问</td>
-</tr>
-<tr>
-<td>xx</td>
-<td>1</td>
-<td>1</td>
-<td>保留</td>
-<td>–</td>
-<td>–</td>
-</tr>
-</tbody></table>
-<h2 id="TLB的作用"><a href="#TLB的作用" class="headerlink" title="TLB的作用"></a>TLB的作用</h2><p>从虚拟地址到物理地址的转换过程可得知：使用一级页表进行地址转换时，每次读写数据时需要访问两次内存。第一次访问一级页表获取物理地址，第二次才是真正的读写数据。使用两级页表时，每次读写数据需要访问三次内存，访问两次页表（一级页表和二级页表）获得物理地址，第三次才是真正的读写数据。<br>上述地址的转换过程大大降低了CPU的性能，有没有说明办法改进呢？程序执行过程中，所用到的指令、数据的地址往往集中在一个很小的范围内，其中的地址数据经常多次使用，这称为程序访问的局部性。由此，通过使用一个高速、容量相对较小的存储器来存储近期用过的页表条目（段、大页、小页、极小页描述符），以避免每次地址转换都需要到主存去查找，这样可以大幅度的提高性能。这个存储器用来帮助快速的进行地址转换，称为“转译查找缓存（Translation Lookaside Buffers，TLB）”。<br>当CPU发出一个虚拟地址时，MMU首先访问TLB。如果TLB中含有能转换这个虚拟地址的描述符，则直接利用此描述符进行地址转换和权限检查；否则MMU访问页表找到描述符后再进行地址转化和权限检查，并将这个描述符填入TLB中（如果TLB已满，则利用round-robin算法找到一个条目，然后覆盖他），下次再使用这个虚拟地址时就可以直接使用TLB中的描述符了。<br>使用TLB需要保证TLB的内容与页表一致，在启动MMU之前，在页表中的内容发生变化后，尤其要注意这点。S3C2410&#x2F;S3C2440可以使无效（Invalidate）整个TLB，或者通过某个虚拟地址使无效TLB中某个条目。一般的做法是：在启动MMU之前使无效整个TLB，改变页表时，使无效所涉及的虚拟地址对应的TLB中的条目。</p>
-<h2 id="Cache的作用"><a href="#Cache的作用" class="headerlink" title="Cache的作用"></a>Cache的作用</h2><p>同样基于程序访问的局部性，在主存和CPU通用寄存器之间设置一个高速的、容量相对较小的存储器，把正在执行的指令地址附近的一部分指令或数据从主存调入这个存储器，供CPU在一段时间内使用，这对提高程序的运行速度有很大的作用。这个介于主存和CPU之间的高速小容量存储器称作高速缓存存储器（Cache）。<br>启用Cache后，CPU读取数据时，如果Cache中有这个数据的复本则直接返回，否则从主存中读入数据，并存入Cache中，下次再使用（读&#x2F;写）这个数据时，可以直接使用Cache中的复本。<br>启用Cache后，CPU写数据时有写穿式和写回式两种方式：</p>
-<ol>
-<li>写穿式（Write Through）<br>任一从CPU发出的写信号送到Cache的同时，也写入主存，以保证主存的数据能同步更新。它的优点是操作简单，但是由于主存的慢速，降低了系统的写速度并占用总线时间。</li>
-<li>回写式<br>为了克服写穿式每次写数据时都要访问主存，从而导致系统写速度降低并占用总线时间，尽量减少对主存的访问次数，又有了回写式。<br>它的工作方式：数据一般只写到Cache，这样有可能出现Cache中的数据得到更新而主存数据不变（数据陈旧）的情况。但此时可在Cache中设一标志及数据陈旧的信息，只有当Cache中的数据被换出或强制进行“清空”操作时，才将原更新的数据写入主存相应的单元中。这样保证了Cache和主存的数据一致性。</li>
-</ol>
-<p>下面介绍Cache的两个操作：</p>
-<ol>
-<li>“清空”（clean）：把Cache或Write Buffer中已经脏的（修改过，但是还未写入主存）数据写入主存。</li>
-<li>“使无效”（Invalidate）：使之不能再使用，并不将脏的数据写入主存。</li>
-</ol>
-<p>S3C2410&#x2F;S3C2440内置了指令Cache（ICache）、数据Cache（DCache）、写缓存（Write Buffer）。下面的内容需要用到页表中描述符的C、B位，为了方便读者，先把这些描述符用下图表示出来。下文中，描述符的C位称为Ctt，B位称为Btt。<br><img src="/2022/08/15/MMU/13.jpeg" alt="img not found"></p>
-<h3 id="指令Cache（ICache）"><a href="#指令Cache（ICache）" class="headerlink" title="指令Cache（ICache）"></a>指令Cache（ICache）</h3><p>ICache的使用比较简单。系统刚上电或复位时，ICache中的内容是无效的，并且ICache功能是关闭着的。往Icr位（即CP15写处理器中寄存器1的第12位）写1可以启动ICache，写0可以停止ICache。<br>ICache一般在MMU开启之后被使用，此时页表中描述符的C位用来表示一段内存是否可以被Cache。若C&#x3D;1，则允许Cache，否则不允许被Cache。但是，即使MMU没有开启，ICache也是可以被使用的，这时CPU读取指令（取指）时所涉及的内存都被当作是允许Cache的。<br>ICache被关闭时，CPU每次取指都是需要读取主存，性能非常低，所以需要尽早启动ICache。<br>ICache被开启后，CPU每次取指都会在ICache中查看是否能找到所要的指令，而不管C&#x3D;0还是C&#x3D;1。如果找到了，称为Cache命中，如果找不到，称为Cache缺失。ICache被开启后，CPU的取指分为如下三种情况：</p>
-<ol>
-<li>Cache命中且C&#x3D;1时，从ICache取出指令，返回CPU。</li>
-<li>Cache缺失且C&#x3D;1时，CPU从主存读出指令。同时，一个称为“8-word linefill”的动作将发生，这个动作把该指令所处区域的8个word写进ICache的某个条目中。这有可能会覆盖某个条目。</li>
-<li>C&#x3D;0时，CPU从主存读取指令。</li>
-</ol>
-<h3 id="数据Cache（DCache）"><a href="#数据Cache（DCache）" class="headerlink" title="数据Cache（DCache）"></a>数据Cache（DCache）</h3><p>与ICache相似，系统刚复位或者上电时，DCache中的内容也是无效的，并且DCache功能也是关闭的，而Write Buffer中的内容也是被废弃不用的。往Ccr（Cp15协处理器中寄存器1的第2位）写1可以启动DCache，写0可以停止DCache。Write Buffer与DCache紧密结合，没有专门的控制位来开启、停止它。<br>与ICache不同的是，DCache功能必须在MMU开启之后才能被使用，因为开启MMU之后，才能使用页表的描述符来定义一块内存如何使用DCache和Write Buffer。<br>DCache被关闭时，CPU每次读写数据时都会先在DCache中查看是否能找到所要的数据，而不管C&#x3D;0还是C&#x3D;1。找到了，称为Cache命中，没找到，称为Cache缺失。<br>下表描述了DCache和Write Buffer在CCr、Ctt、Btt的各种取值下如何工作。表中“Ctt and Ccr”一项的值是Ctt与Ccr进行逻辑与之后的值（Ctt &amp;&amp; Ccr）。</p>
-<table>
-<thead>
-<tr>
-<th>Ctt and Ccr</th>
-<th>Btt</th>
-<th>DCache、Write Buffer和主存的访问方式</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>0</td>
-<td>0</td>
-<td>Non-Cached、Non-buffered（NCNB）；读写数据都是直接操作内存，并且可以被外设中止；写数据时不使用Write Buffer，CPU会等待操作完成；不会出现Cache命中</td>
-</tr>
-<tr>
-<td>0</td>
-<td>1</td>
-<td>Non-Cached、buffered（NCB）；读写数据都是直接操作主存，不会出现Cache命中；写数据时，数据先存入Write Buffer，随后写入主存；数据存入WriteBuffer后，CPU立立即继续执行；读数据时，可以被外设中止；写数据时，无法被外设中止</td>
-</tr>
-<tr>
-<td>1</td>
-<td>0</td>
-<td>Cached，write-through（WT，写通）mode；读数据时，如果Cache命中则从Cache中返回数据，不读取主存；读数据时，如果Cache确实则从读主存中返回数据，并导致“linefill”的动作；写数据时，数据先存入Write Buffer，并在随后写入主存；数据存入Write Buffer后，CPU立即继续执行；写数据时，如果Cache命中则新数据也写入Cache中；写数据时，无法被外设中止</td>
-</tr>
-<tr>
-<td>1</td>
-<td>1</td>
-<td>Cached，write-back（WB，写回）mode；读数据时，如果Cache命中则从Cache中返回数据，不读取主存；读数据时，如果Cache确实则从读主存中返回数据，并导致“linefill”的动作；写数据时，如果Cache缺失则将数据先存入Write Buffer，存储完毕后CPU立即继续执行，这些数据随后写入主存；写数据时，如果Cache命中则在Cache中更新数据，并设置这些数据为“脏”，但是不会写入主存；无论Cache命中与否，写数据都无法被外设中止。</td>
-</tr>
-</tbody></table>
-<p>与TLB类似，使用Cache需要保证Cache、WriteBuffer的内容和主存保持一致，需要遵循以下两个原则：</p>
-<ol>
-<li>清空DCache，使得主存数据得到更新。</li>
-<li>使无效ICache，使得CPU取值时重新读取主存。</li>
-</ol>
-<p>在实际编写程序前，需要注意以下几点：</p>
-<ol>
-<li>开启MMU之前，使无效ICache、DCache、WriteBuffer。</li>
-<li>关闭MMU之前，清空ICache、DCache，即将“脏”数据写入主存。</li>
-<li>如果代码有变，使无效ICache，这样CPU取指时会重新读取主存。</li>
-<li>使用DMA操作可以被Cache的主存时：将内存的数据发送出去时，要清空Cache；将内存的数据读入时，要使无效Cache。</li>
-<li>改变页表中地址映射关系时，也要慎重考虑。</li>
-<li>开启ICache和DCache时，要考虑ICache或DCache中的内容是否与主存保持一致。</li>
-<li>对于I&#x2F;O空间，不使用Cache和Write Buffer。所谓I&#x2F;O空间，就是对于其中的地址连续两次的写操作不能合并在一起，每次读写都必须直接访问设备，否则程序的运行结果无法预料。比如寄存器、非内存的外设（扩展串口、网卡等）。<br>S3C2410&#x2F;S3C2440提供了相关指令来操作Cache和Write buffer，可以使无效整个ICache或其中的条目，可以清空使无效整个DCache或其中的条目。</li>
-</ol>
-<h3 id="S3C2410-x2F-S3C2440-MMU、TLB、Cache的控制指令"><a href="#S3C2410-x2F-S3C2440-MMU、TLB、Cache的控制指令" class="headerlink" title="S3C2410&#x2F;S3C2440 MMU、TLB、Cache的控制指令"></a>S3C2410&#x2F;S3C2440 MMU、TLB、Cache的控制指令</h3><p>S3C2410&#x2F;S3C2440中，除了有一个ARM920T的CPU核之外，还有若干协处理器。协处理器也是一个微处理器，它被用来帮助主CPU来完成一些特殊功能，如浮点运算等。对MMU、TLB、Cache等的操作就涉及协处理器。CPU核与协处理器间传送数据时使用这两条指令：MRC和MCR，它们的格式如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;MCR | MRC&gt;&#123;cond&#125; p#,&lt;expression1&gt;,Rd,cn,cm,&#123;,&lt;expression2&gt;&#125;</span><br><span class="line">MRC             //从协处理器获得数据，传给ARM920T CPU核的寄存器</span><br><span class="line">MCR             //数据从ARM920T CPU核的寄存器传给协处理器</span><br><span class="line">&#123;cond&#125;          //执行条件  为空时表示无条件执行</span><br><span class="line">p#              //协处理器序号</span><br><span class="line">&lt;expression1&gt;  //一个常数</span><br><span class="line">Rd              //ARM920T核的寄存器</span><br><span class="line">cn和cm          //协处理器中的寄存器</span><br><span class="line">&lt;expression2&gt;   //一个常数</span><br></pre></td></tr></table></figure>
-<p>其中，expression1、expression2、cn、cm仅供协处理器使用，它们的作用如何取决于具体的协处理器。</p>
-<h1 id="MMU使用实例"><a href="#MMU使用实例" class="headerlink" title="MMU使用实例"></a>MMU使用实例</h1><h2 id="程序设计"><a href="#程序设计" class="headerlink" title="程序设计"></a>程序设计</h2><p>本开发板的SDRAM的物理地址范围处于0x30000000-0x33ffffff，S3C2410&#x2F;S3C2440的寄存器地址范围都处于0x48000000-0x5FFFFFFF。在第五章中，通过往GPBCON和GPBDAT这两个寄存器的物理地址0x56000000、0x56000014写入特定的数据来驱动4个LED。<br>本章的实例将开启MMU，并将虚拟地址空间0xA0000000-0xA0100000映射到物理地址空间0x56000000-0x56100000上，这样，就可以通过操作地址0xA0000010、0xA0000014来达到驱动者4个LED的同样效果。<br>另外，将虚拟地址空间0xB0000000-0xB3FFFFFFF映射到物理地址空间0x30000000-0x33FFFFFF上，并在连接程序时将一部分代码的运行地址指定为0xB0004000，看看程序能否跳转到0xB0004000运行。<br>实例程序只是用一级页表，以段的方式进行地址映射。32位的CPU的虚拟地址空间达到4GB，一级页表中使用4096个描述符来表示这4GB（每个描述符对应1MB的虚拟地址），每个描述符占用4字节，所以一级页表占16KB。SDRAM的开始16KB来存放一级页表，所以剩下的内存开始物理地址为0xB0004000。<br>将程序代码分为两部分：第一部分的运行地址为0，它用来初始化SDRAM、复制第二部分的代码到SDRAM中（存放在0x30004000开始处），设置页表，启动MMU，最后跳转到SDRAM中（地址0xB0004000）去执行；第二部分的运行地址设为0xB0004000，它用来驱动LED。程序流程图如下：<br><img src="/2022/08/15/MMU/14.jpeg" alt="img not found"></p>
-<h2 id="代码详解"><a href="#代码详解" class="headerlink" title="代码详解"></a>代码详解</h2><h3 id="第一部分代码分析"><a href="#第一部分代码分析" class="headerlink" title="第一部分代码分析"></a>第一部分代码分析</h3><p>程序源码分3个文件：head.S、init.c、leds.c。</p>
-<ol>
-<li>head.S代码详解<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">File:head.S</span></span><br><span class="line"><span class="comment">功能：设置SDRAM，将第二部分代码复制到SDRAM，设置页表，启动MMU，然后跳到SDRAM继续执行。</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"></span><br><span class="line">.text</span><br><span class="line">.global _start</span><br><span class="line">_satrt:</span><br><span class="line">  ldr sp,=<span class="number">4096</span>            @设置栈指针，以下都是C函数，调用前需要设置好栈</span><br><span class="line">  bl  disable_watch_dog   @关闭WATCHDOG，否则CPU会不断重启</span><br><span class="line">  bl  memsetup            @设置控制存储器以使用SDRAM</span><br><span class="line">  bl  copy_2th_to_sdram   @将第二部分代码复制到SDRAM</span><br><span class="line">  bl  create_page_table   @设置页表</span><br><span class="line">  bl  mmu_init            @启动MMU</span><br><span class="line">  bl  sp,=<span class="number">0xB4000000</span>      @重设栈指针，指向SDRAM顶端（使用虚拟地址）</span><br><span class="line">  bl  pc,=<span class="number">0xB0004000</span>      @跳到SDRAM中继续执行第二部分代码</span><br><span class="line"></span><br><span class="line">halt_loop:</span><br><span class="line">  b halt_loop</span><br></pre></td></tr></table></figure>
-head.S调用的函数都在init.c中实现。<br>值得注意的是，在第15行开启MMU之后，无论是CPU取指还是CPU读写数据，使用的都是虚拟地址。<br>在第14行设置页表时，在create_page_table函数中令head.S、init.c程序所在的内存的虚拟地址和物理地址一样，这使得head.S和init.c中的代码在开启MMU后能够没有任何障碍的继续运行。</li>
-<li>init.c代码详解<br>disable_watch_dog、memsetup两个接口已经在前两章讨论过，下面不再赘述。<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">init.c：进行一些初始化，在Steppingstone中运行</span></span><br><span class="line"><span class="comment">它和head.S同属第一部分程序，此时MMU尚未开启，使用物理地址</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//WATCHDOG寄存器</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> WTCON (*(volatile unsigned long *)0x53000000)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//存储控制器的寄存器起始地址</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MEM_CTL_BASE  0x48000000</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//关闭WATCHAOG，否则CPU会不断重启</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">disable_watch_dog</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">  WTCON = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//设置存储控制器以使用SDRAM</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">memsetup</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">//SDRAM 13个寄存器的值</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">long</span> <span class="type">const</span> mem_cfg_val[]=&#123;<span class="number">0x22011110</span>,<span class="comment">//BWSCON</span></span><br><span class="line">                                    <span class="number">0x00000700</span>,<span class="comment">//BANKCON0</span></span><br><span class="line">                                    <span class="number">0x00000700</span>,<span class="comment">//BANKCON1</span></span><br><span class="line">                                    <span class="number">0x00000700</span>,<span class="comment">//BANKCON2</span></span><br><span class="line">                                    <span class="number">0x00000700</span>,<span class="comment">//BANKCON3</span></span><br><span class="line">                                    <span class="number">0x00000700</span>,<span class="comment">//BANKCON4</span></span><br><span class="line">                                    <span class="number">0x00000700</span>,<span class="comment">//BANKCON5</span></span><br><span class="line">                                    <span class="number">0x00018005</span>,<span class="comment">//BANKCON6</span></span><br><span class="line">                                    <span class="number">0x00018005</span>,<span class="comment">//BANKCON7</span></span><br><span class="line">                                    <span class="number">0x008C07A3</span>,<span class="comment">//REFRESH</span></span><br><span class="line">                                    <span class="number">0x000000B1</span>,<span class="comment">//BANKSIZE</span></span><br><span class="line">                                    <span class="number">0x00000030</span>,<span class="comment">//MRSRB6</span></span><br><span class="line">                                    <span class="number">0x00000030</span><span class="comment">//MRSRB7</span></span><br><span class="line">                                    &#125;;</span><br><span class="line">  <span class="type">int</span> i = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">volatile</span> <span class="type">unsigned</span> <span class="type">long</span> *p = (<span class="keyword">volatile</span> <span class="type">unsigned</span> <span class="type">long</span> *)MEM_CTL_BASE;</span><br><span class="line">  <span class="keyword">for</span>(;i &lt; <span class="number">13</span>;i++)</span><br><span class="line">    p[i] = mem_cfg_val[i];</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-copy_2th_to_sdram函数用来将第二部分代码（即由leds.c编译得来的代码）从Steppingstone复制到SDRAM中。在连接程序时，第二部分代码的加载地址被指定为2048，重定位地址为0xB0004000。所以系统从NAND Flash启动后，第二部分代码Steppingstone中地址2048之后，需要把它复制到0x30004000处（此时尚未开启MMU，虚拟地址0xB0004000对应的物理地址在后面设为0x30004000）。Steppingstone总大小为4KB，不妨把地址2048后的所有数据复制到SDRAM中，所以源数据的结束地址为4096。<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//将第二部分代码复制到SDRAM</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">copy_2th_to_sdram</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">int</span> *pdwSrc = (<span class="type">unsigned</span> <span class="type">int</span> *)<span class="number">2048</span>;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">int</span> *pdwDest = (<span class="type">unsigned</span> <span class="type">int</span> *)<span class="number">0x30004000</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">while</span>(pdwSrc &lt; (<span class="type">unsigned</span> <span class="type">int</span> *)<span class="number">4096</span>)</span><br><span class="line">  &#123;</span><br><span class="line">    *pdwDest = *pdwSrc;</span><br><span class="line">    pdwDest++;</span><br><span class="line">    pdwSrc++;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-剩下的create_page_table、mmu_init就是本章的重点了。前者用来设置页表，后者用来开启MMU。<br>先看看create_page_table函数，它用于设置3个区域的地址映射关系。<br>①将虚拟地址0-（1M-1）映射到同样的物理地址去，Steppingstone（从0地址开始的4KB内存）就处于这个范围中。使虚拟地址等于物理地址，可以让Steppingstone中的程序（head.S和init.c）在开启MMU前后不需要考虑太多的事情。<br>②GPIO寄存器的起始物理地址范围为0x56000000，将虚拟地址0xA0000000-（0xA0000000+1M-1）映射到物理地址0x56000000-（0x56000000+1M-1）。<br>③本开发板中SDRAM的物理地址范围为0x30000000-0x33fffffff，将虚拟地址0xB0000000-0xB3fffffff映射到物理地址0x30000000-0x33fffffff。<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//设置页表</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">create_page_table</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="comment">//用于段描述符的一些宏定义</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MMU_FULL_ACCESS (3 &lt;&lt; 10)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MMU_DOMAIN (0 &lt;&lt; 5)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MMU_SPECIAL (1 &lt;&lt; 4)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MMU_CACHEABLE (1 &lt;&lt; 3)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MMU_BUFFERABLE (1 &lt;&lt; 2)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MMU_SECTION (2)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MMU_SECDEDSC (MMU_FULL_ACCESS | MMU_DOMAIN | MMU_SPECIAL | MMU_SECTION)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MMU_SECDEDSC_WB (MMU_FULL_ACCESS | MMU_DOMAIN | MMU_SPECIAL | MMU_SECTION | MMU_BUFFERABLE | MMU_CACHEABLE)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MMU_SECDEDSC_SIZE (0x00100000)</span></span><br><span class="line"></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">long</span> virtualaddr,physicaladdr;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">long</span> *mmu_tlb_base = (<span class="type">unsigned</span> <span class="type">long</span> *)<span class="number">0x30000000</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/*</span></span><br><span class="line"><span class="comment">  Steppingstone的起始物理地址为0，第一部分程序的起始运行地址也是0，</span></span><br><span class="line"><span class="comment">  为了在开启MMU后仍能运行第一部分的程序，</span></span><br><span class="line"><span class="comment">  将0-1M的虚拟地址空间映射到同样的物理地址</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line">  virtualaddr = <span class="number">0</span>;</span><br><span class="line">  physicaladdr = <span class="number">0</span>;</span><br><span class="line">  *(mmu_tlb_base + (virtualaddr &gt;&gt; <span class="number">20</span>)) = (physicaladdr &amp; <span class="number">0xFFF00000</span>) | MMU_SECDESC_WB;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/*</span></span><br><span class="line"><span class="comment">  0x56000000是GPIO寄存器的起始物理地址</span></span><br><span class="line"><span class="comment">  GPBCON和GPBDAT这两个寄存器的物理地址0x56000010、0x56000014，</span></span><br><span class="line"><span class="comment">  为了在第二部分程序中能以地址0xA0000010、0xA0000014来操作GPBCON和GPBDAT这两个寄存器，</span></span><br><span class="line"><span class="comment">  把从0xA0000000开始的1MB虚拟地址空间映射到0x56000000开始的1MB物理地址空间</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line">  virtualaddr = <span class="number">0xA0000000</span>;</span><br><span class="line">  physicaladdr = <span class="number">0x56000000</span>;</span><br><span class="line">  *(mmu_tlb_base + (virtualaddr &gt;&gt; <span class="number">20</span>)) = (physicaladdr &amp; <span class="number">0xFFF00000</span>) | MMU_SECDESC;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/*</span></span><br><span class="line"><span class="comment">  SDRAM的物理地址范围是0x3000000-0x33FFFFFF，</span></span><br><span class="line"><span class="comment">  将虚拟地址0xB0000000-0xB3fffffff映射到物理地址0x30000000-0x33fffffff上</span></span><br><span class="line"><span class="comment">  总共64MB，涉及64个段描述符</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line">  virtualaddr = <span class="number">0xB0000000</span>;</span><br><span class="line">  physicaladdr = <span class="number">0x30000000</span>;</span><br><span class="line">  <span class="keyword">while</span>(virtualaddr &lt; <span class="number">0xB4000000</span>)</span><br><span class="line">  &#123;</span><br><span class="line">    *(mmu_tlb_base + (virtualaddr &gt;&gt; <span class="number">20</span>)) = (physicaladdr &amp; <span class="number">0xFFF00000</span>) | MMU_SECDESC_WB;</span><br><span class="line">    virtualaddr += <span class="number">0x100000</span>;</span><br><span class="line">    virtualphysicaladdraddr += <span class="number">0x100000</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-mmu_tlb_base被定义为unsigned long 指针，所指向的内存为4字节，刚好是一个描述符的大小。在SDRAM的开始存放页表—第81行令mmu_tlb_base指向SDRAM的起始地址0x3000000。其中最能体现页表结构的代码是下列代码<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">*(mmu_tlb_base + (virtualaddr &gt;&gt; <span class="number">20</span>)) = (physicaladdr &amp; <span class="number">0xFFF00000</span>) | MMU_SECDESC_WB;</span><br><span class="line">*(mmu_tlb_base + (virtualaddr &gt;&gt; <span class="number">20</span>)) = (physicaladdr &amp; <span class="number">0xFFF00000</span>) | MMU_SECDESC;</span><br><span class="line">*(mmu_tlb_base + (virtualaddr &gt;&gt; <span class="number">20</span>)) = (physicaladdr &amp; <span class="number">0xFFF00000</span>) | MMU_SECDESC_WB;</span><br></pre></td></tr></table></figure>
-虚拟地址的位[31:20]用于索引一级页表，找到它所对应的描述符，对应于“(virtualaddr &gt;&gt; 20)”。<br>段描述符中位[31:20]中保存段的物理地址，对应于“(physicaladdr &amp; 0xFFF00000)”。<br>位[11:0]中用来设置段的访问权限，包括所属的域、AP位、C位（是否可Cache）、B位（是否使用Write buffer）—这对应“MMU_SECDESC”或“MMU_SECDESC_WB”，它们的域都被设为0，AP位被设为0b11（进行权限检查，读写操作都被允许）。“MMU_SECDESC”中C&#x2F;B位都没有设置，表示不使用Cache和Write Buffer，所以映射寄存器空间时使用“MMU_SECDESC”。“MMU_SECDESC_WB”中C&#x2F;B都设置了，表示使用Cache和Write Buffer，即所谓的回写式。在映射Steppingstone和SDRAM等内存时使用“MMU_SECDESC_WB”。<br>现在看看mmu_init函数。Create_page_table函数设置好了页表，还需要把页表地址告诉CPU，并且在开启MMU之前做好一些准备工作，比如使无效ICache、DCache，设置域访问控制寄存器等。代码的注释就可以帮助读者很好的理解mmu_init函数。<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">启动MMU</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">mmu_init</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">long</span> ttb <span class="number">0x30000000</span>;</span><br><span class="line"></span><br><span class="line">  __asm__(</span><br><span class="line">    <span class="string">&quot;mov  r0,  #0\n&quot;</span></span><br><span class="line">    <span class="string">&quot;mcr  p15,  0,  r0,  c7,  c7,   0\n&quot;</span>                  <span class="comment">//使无效ICache和DCache</span></span><br><span class="line">    <span class="string">&quot;mcr  p15,  0,  r0,  c7,  c10,  4\n&quot;</span>                  <span class="comment">//drain write buffer on v4</span></span><br><span class="line">    <span class="string">&quot;mcr  p15,  0,  r0,  c8,  c7,   0\n&quot;</span>                  <span class="comment">//使无效指令、数据TLB</span></span><br><span class="line">    <span class="string">&quot;mov  r4,   %0\n&quot;</span>                                     <span class="comment">//r4 = 页表基址</span></span><br><span class="line">    <span class="string">&quot;mcr  p15,  0,  r4,   c2,   c0,   0\n&quot;</span>                <span class="comment">//设置页表基址寄存器</span></span><br><span class="line">    <span class="string">&quot;mvn  r0,   #0\n&quot;</span></span><br><span class="line">    <span class="string">&quot;mcr  p15,  0,  r0,   c3,   c0,   0\n&quot;</span>                <span class="comment">//域访问控制寄存器设为0xFFFFFFFFF，不进行权限检查</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    对于控制寄存器，先读出其值，在这基础上修改感兴趣的位</span></span><br><span class="line"><span class="comment">    然后再写入</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="string">&quot;mrc  p15,  0,  r0, c1, c0, 0\n&quot;</span>                      <span class="comment">//读出控制寄存器的值</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    控制寄存器的低16位含义为：.RVI ..RS B... .CAM</span></span><br><span class="line"><span class="comment">    R：表示换出Cache中的条目时使用的算法，0 = Random repalcement；1 = Round robin replacement</span></span><br><span class="line"><span class="comment">    V：表示异常向量表所在的位置；0 = Low address = 0x00000000；1 = High address = 0xFFFF0000</span></span><br><span class="line"><span class="comment">    I：0 = 关闭ICache；1 = 开启ICache；</span></span><br><span class="line"><span class="comment">    R、S：用来与页表中的描述符一起确定内存的访问权限；</span></span><br><span class="line"><span class="comment">    B：0 = CPU为小字节序；1 = CPU为大字节序；</span></span><br><span class="line"><span class="comment">    C：0 = 关闭DCache；1 = 开启DCache；</span></span><br><span class="line"><span class="comment">    A：0 = 数据访问时不进行地址对齐检查；1 = 数据访问时进行地址对齐检查；</span></span><br><span class="line"><span class="comment">    M：0 = 关闭MMU；1 = 开启MMU；</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    先清除不需要的位，往下若需要则重新设置它们</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="comment">/*.RVI ..RS B... .CAM*/</span></span><br><span class="line">    <span class="string">&quot;bic  r0,  r0,   #0x3000\n&quot;</span>                             <span class="comment">//..11 .... .... .... 清除V、I位</span></span><br><span class="line">    <span class="string">&quot;bic  r0,  r0,   #0x0300\n&quot;</span>                             <span class="comment">//.... ..11 .... .... 清除R、S位</span></span><br><span class="line">    <span class="string">&quot;bic  r0,  r0,   #0x0087\n&quot;</span>                             <span class="comment">//.... .... 1... .111 清除B/C/A/M位</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    设置需要的位</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="string">&quot;orr  r0, r0, #0x0002\n&quot;</span>                                <span class="comment">//.... .... .... ..1. 开启对齐检查</span></span><br><span class="line">    <span class="string">&quot;orr  r0, r0, #0x0004\n&quot;</span>                                <span class="comment">//.... .... .... .1.. 开启DCache</span></span><br><span class="line">    <span class="string">&quot;orr  r0, r0, #0x1000\n&quot;</span>                                <span class="comment">//...1 .... .... .... 开启ICache</span></span><br><span class="line">    <span class="string">&quot;orr  r0, r0, #0x0001\n&quot;</span>                                <span class="comment">//.... .... .... ...1 使能MMU</span></span><br><span class="line"></span><br><span class="line">    <span class="string">&quot;mcr  p15,  0,  r0,   c1,   c0,   0\n&quot;</span>                  <span class="comment">//将修改的值写入到控制寄存器</span></span><br><span class="line">    :<span class="comment">/*无输出*/</span></span><br><span class="line">    :<span class="string">&quot;r&quot;</span>(ttb));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-</ol>
-<h3 id="第二部分代码分析"><a href="#第二部分代码分析" class="headerlink" title="第二部分代码分析"></a>第二部分代码分析</h3><p>第二部分代码leds.c中只有两个函数：wait和main。wait函数用来延时，main函数用来循环点亮4个LED。</p>
-<ol>
-<li>操作GPBCON、GPBDAT两个寄存器时使用虚拟地址0xA0000010、0xA0000014。在init.c中已经把虚拟地址0xA0000000-（0xA0000000 + 1M-1）映射到物理地址0x56000000-（0x56000000+1M-1）；</li>
-<li>在定义wait函数时使用了一点小技巧，将它定义成“static inline”类型，原因在代码中给出：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">  leds.c：循环点亮4个LED</span></span><br><span class="line"><span class="comment">  属于第二部分程序，此时MMU已开启，使用虚拟地址</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPBCON (* (unsigned long *) 0xA0000010)             <span class="comment">//物理地址0x56000010</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPBDAT (* (unsigned long *) 0xA0000014)             <span class="comment">//物理地址0x56000014</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">LED1-LED4对应GPB5、GPB6、GPB7、GPB8</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPB5_out (1&lt;&lt;(5*2))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPB6_out (1&lt;&lt;(6*2))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPB7_out (1&lt;&lt;(7*2))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPB8_out (1&lt;&lt;(8*2))</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">wait函数加上“static inline”是有原因的，</span></span><br><span class="line"><span class="comment">这样可以使得编译leds.c时，wait嵌入main中，编译结果只有main一个函数。</span></span><br><span class="line"><span class="comment">于是在连接时，main函数的地址就是由连接文件指定的运行地址。</span></span><br><span class="line"><span class="comment">而连接文件mmu.lds中，指定了leds.o的运行时装载地址为0xB0004000，</span></span><br><span class="line"><span class="comment">这样，head.s中的“ldr pc,=0xB0004000“就是跳去执行main函数</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">void</span> <span class="title function_">wait</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> dly)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">for</span>(;dly &gt; <span class="number">0</span>;dly--)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">long</span> i = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//将LED1NLED4对应的GPB5GPB8引脚设置为输出</span></span><br><span class="line">  GPBCON = GPB5out | GPB6_out | GPB7_out | GPB8_out;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">  &#123;</span><br><span class="line">    wait(<span class="number">3000000</span>);</span><br><span class="line">    GPBDAT = (~(i&lt;&lt;<span class="number">5</span>));</span><br><span class="line">    <span class="keyword">if</span>(++i == <span class="number">16</span>)</span><br><span class="line">      i = <span class="number">0</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-</ol>
-<h3 id="Makefile和连接脚本mmu-lds"><a href="#Makefile和连接脚本mmu-lds" class="headerlink" title="Makefile和连接脚本mmu.lds"></a>Makefile和连接脚本mmu.lds</h3><p>Makefile内容如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">objs := head.o init.o leds.o</span><br><span class="line"></span><br><span class="line">mmu.bin:  $(objs)</span><br><span class="line">  arm-linux-ld -Tmmu.lds -o mmuj_elf $^</span><br><span class="line">  arm-linux-objcopy -O binary -S mmu_elf $@</span><br><span class="line">  arm-linux-objdump -D -m arm mmu_elf &gt; mmu.dis</span><br><span class="line"></span><br><span class="line">%.o:%.c</span><br><span class="line">  arm-linux-gcc -Wall -O2 -c -o $@ $&lt;</span><br><span class="line"></span><br><span class="line">%.o:%.s</span><br><span class="line">  arm-linux-gcc -Wall -O2 -c -o $@ $&lt;</span><br><span class="line"></span><br><span class="line">clean:</span><br><span class="line">  rm -f mmu.bin mmu_elf mmu.lds *.o</span><br></pre></td></tr></table></figure>
-<p>Makefile第4行命令用来连接程序，它使用连接脚本mmu.lds来控制连接器的行为。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">SECTIONS  &#123;</span><br><span class="line">    first <span class="number">0x00000000</span>  : &#123;head.o init.o&#125;</span><br><span class="line">    second  <span class="number">0xB0004000</span>  : AT(<span class="number">2048</span>)  &#123;leds.o&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>连接脚本mmu.lds将程序分为两个段：first和second。前者由head.o和init.o组成，它的加载地址和运行地址都是0，所以运行前不需要重新移动代码。后者由leds.o组成，它的加载地址为2048，重定位地址为0xB0004000，这表明段second存放在编译所得映像文件地址2048处，在运行前需要将它复制到0xB0004000处，这由init.c中的copy_2th_to_sdram函数完成（此函数将代码复制到开始地址为0x30004000的内存中，这是开启MMU后虚拟地址0xB0004000对应的物理地址）。<br>实例程序涉及了代码的复制、开启MMU前使用物理地址寻址，开启MMU后使用虚拟地址寻址，相对复杂。下图更形象的演示了代码的执行。<br><img src="/2022/08/15/MMU/15.jpg" alt="img not found"><br><img src="/2022/08/15/MMU/16.jpg" alt="img not found"><br><img src="/2022/08/15/MMU/17.jpg" alt="img not found"><br><img src="/2022/08/15/MMU/18.jpg" alt="img not found"><br><img src="/2022/08/15/MMU/19.jpg" alt="img not found"></p>
-<h1 id="实例测试结果"><a href="#实例测试结果" class="headerlink" title="实例测试结果"></a>实例测试结果</h1><p>程序烧入NAND Flash后，复位启动系统。可以看到4个LED被循环点亮，闪烁速度比SDRAM实验快，那是因为开启了Cache。</p>
-]]></content>
-      <categories>
-        <category>学习</category>
-        <category>书籍</category>
-        <category>嵌入式Linux应用完全开发手册</category>
-        <category>第2篇第7章 MMU</category>
-      </categories>
-      <tags>
-        <tag>嵌入式Linux</tag>
-        <tag>MMU</tag>
       </tags>
   </entry>
   <entry>
