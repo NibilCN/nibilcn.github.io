@@ -28,6 +28,7 @@
 <meta property="og:description" content="系统中能够随机（不需要按顺序）访问固定大小数据片（chunks）的硬件设备称作块设备，这些固定大小的数据片就称作块。最常见的块设备是硬盘，除此之外，还有软盘驱动器、蓝光光驱和闪存等许多其他设备。注意，它们都是以安装文件系统的方式使用的—-这也是块设备一般的访问方式。另一种基本的设备类型是字符设备。字符设备按照字符流的方式被有序访问，像串口和键盘就属于字符设备。如果一个硬件设备是以字符流的方式被访问">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/2022/12/10/%E5%9D%97IO%E5%B1%82/1.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/10/%E5%9D%97IO%E5%B1%82/3.jpeg">
 <meta property="article:published_time" content="2022-12-10T05:45:52.000Z">
 <meta property="article:modified_time" content="2022-12-10T05:45:52.000Z">
 <meta property="article:author" content="Nibil">
@@ -149,7 +150,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%96%E6%9E%90%E4%B8%80%E4%B8%AA%E5%9D%97%E8%AE%BE%E5%A4%87"><span class="nav-number">1.</span> <span class="nav-text">剖析一个块设备</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BC%93%E5%86%B2%E5%8C%BA%E5%92%8C%E7%BC%93%E5%86%B2%E5%8C%BA%E5%A4%B4"><span class="nav-number">2.</span> <span class="nav-text">缓冲区和缓冲区头</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#bio%E7%BB%93%E6%9E%84%E4%BD%93"><span class="nav-number">3.</span> <span class="nav-text">bio结构体</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#I-x2F-O%E5%90%91%E9%87%8F"><span class="nav-number">3.1.</span> <span class="nav-text">I&#x2F;O向量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%B0%E8%80%81%E6%96%B9%E6%B3%95%E5%AF%B9%E6%AF%94"><span class="nav-number">3.2.</span> <span class="nav-text">新老方法对比</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%B7%E6%B1%82%E9%98%9F%E5%88%97"><span class="nav-number">4.</span> <span class="nav-text">请求队列</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#I-x2F-O%E8%B0%83%E5%BA%A6%E7%A8%8B%E5%BA%8F"><span class="nav-number">5.</span> <span class="nav-text">I&#x2F;O调度程序</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#I-x2F-O%E8%B0%83%E5%BA%A6%E7%A8%8B%E5%BA%8F%E7%9A%84%E5%B7%A5%E4%BD%9C"><span class="nav-number">5.1.</span> <span class="nav-text">I&#x2F;O调度程序的工作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linus%E7%94%B5%E6%A2%AF"><span class="nav-number">5.2.</span> <span class="nav-text">Linus电梯</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E7%BB%88%E6%9C%9F%E9%99%90I-x2F-O%E8%B0%83%E5%BA%A6%E7%A8%8B%E5%BA%8F"><span class="nav-number">5.3.</span> <span class="nav-text">最终期限I&#x2F;O调度程序</span></a></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%96%E6%9E%90%E4%B8%80%E4%B8%AA%E5%9D%97%E8%AE%BE%E5%A4%87"><span class="nav-number">1.</span> <span class="nav-text">剖析一个块设备</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BC%93%E5%86%B2%E5%8C%BA%E5%92%8C%E7%BC%93%E5%86%B2%E5%8C%BA%E5%A4%B4"><span class="nav-number">2.</span> <span class="nav-text">缓冲区和缓冲区头</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#bio%E7%BB%93%E6%9E%84%E4%BD%93"><span class="nav-number">3.</span> <span class="nav-text">bio结构体</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#I-x2F-O%E5%90%91%E9%87%8F"><span class="nav-number">3.1.</span> <span class="nav-text">I&#x2F;O向量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%B0%E8%80%81%E6%96%B9%E6%B3%95%E5%AF%B9%E6%AF%94"><span class="nav-number">3.2.</span> <span class="nav-text">新老方法对比</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%B7%E6%B1%82%E9%98%9F%E5%88%97"><span class="nav-number">4.</span> <span class="nav-text">请求队列</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#I-x2F-O%E8%B0%83%E5%BA%A6%E7%A8%8B%E5%BA%8F"><span class="nav-number">5.</span> <span class="nav-text">I&#x2F;O调度程序</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#I-x2F-O%E8%B0%83%E5%BA%A6%E7%A8%8B%E5%BA%8F%E7%9A%84%E5%B7%A5%E4%BD%9C"><span class="nav-number">5.1.</span> <span class="nav-text">I&#x2F;O调度程序的工作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linus%E7%94%B5%E6%A2%AF"><span class="nav-number">5.2.</span> <span class="nav-text">Linus电梯</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E7%BB%88%E6%9C%9F%E9%99%90I-x2F-O%E8%B0%83%E5%BA%A6%E7%A8%8B%E5%BA%8F"><span class="nav-number">5.3.</span> <span class="nav-text">最终期限I&#x2F;O调度程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%A2%84%E6%B5%8BI-x2F-O%E8%B0%83%E5%BA%A6%E7%A8%8B%E5%BA%8F"><span class="nav-number">5.4.</span> <span class="nav-text">预测I&#x2F;O调度程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%8C%E5%85%A8%E5%85%AC%E6%AD%A3%E7%9A%84%E6%8E%92%E9%98%9FI-x2F-O%E8%B0%83%E5%BA%A6%E7%A8%8B%E5%BA%8F"><span class="nav-number">5.5.</span> <span class="nav-text">完全公正的排队I&#x2F;O调度程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A9%BA%E6%93%8D%E4%BD%9C%E7%9A%84I-x2F-O%E8%B0%83%E5%BA%A6%E7%A8%8B%E5%BA%8F"><span class="nav-number">5.6.</span> <span class="nav-text">空操作的I&#x2F;O调度程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#I-x2F-O%E8%B0%83%E5%BA%A6%E7%A8%8B%E5%BA%8F%E7%9A%84%E9%80%89%E6%8B%A9"><span class="nav-number">5.7.</span> <span class="nav-text">I&#x2F;O调度程序的选择</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">6.</span> <span class="nav-text">小结</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -162,13 +163,13 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">44</span>
+          <span class="site-state-item-count">45</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">52</span>
+        <span class="site-state-item-count">53</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
@@ -311,14 +312,14 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>11k</span>
+      <span>15k</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
         <i class="far fa-clock"></i>
       </span>
       <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>10 分钟</span>
+      <span>13 分钟</span>
     </span>
 </div>
 
@@ -433,7 +434,37 @@
 <li>如果队列中以扇区方向为序存在合适的插入位置，那么新的请求将被插入到该位置，保证队列中的请求是以被访问磁盘物理位置为序进行排列的。</li>
 <li>如果队列中不存在合适的请求插入位置，请求将被插入到队列尾部。</li>
 </ol>
-<h2 id="最终期限I-x2F-O调度程序"><a href="#最终期限I-x2F-O调度程序" class="headerlink" title="最终期限I&#x2F;O调度程序"></a>最终期限I&#x2F;O调度程序</h2><p>最终期限（deadline）I&#x2F;O调度程序是为了解决Linus电梯所带来的饥饿问题而提出的。出于减少磁盘寻址时间的考虑，对某个磁盘区域上的繁重操作，无疑会使得磁盘上其他位置上的操作请求得不到运行机会。实际上，一个对磁盘同一位置操作的请求流可以造成较远位置的其他请求永远得不到运行机会，这是一种很不公平的饥饿现象。<br>更糟糕的是，普通的请求饥饿还会带来名为写-饥饿-读（writes-starving-reads）这种特殊问题。写操作通常是在内核有空时才将请求提交给磁盘的，写操作完全和提交它的应用程序异步执行；读操作则恰恰相反，通常当应用程序提交一个读请求时，应用程序会发生堵塞直到读请求被满足，也就是说，读操作是和提交它的应用程序同步执行的。所以虽然写反应时间（提交写请求花费的时间）不会给系统响应速度造成很大影响，但是读响应时间（提交读请求花费的时间）对系统响应时间来说却非同小可。虽然写请求时间对应用程序性能带来的影响不大，但是应用程序却必须等待读请求完成后才能运行其他程序，所以读操作响应时间对系统的性能非常重要。</p>
+<h2 id="最终期限I-x2F-O调度程序"><a href="#最终期限I-x2F-O调度程序" class="headerlink" title="最终期限I&#x2F;O调度程序"></a>最终期限I&#x2F;O调度程序</h2><p>最终期限（deadline）I&#x2F;O调度程序是为了解决Linus电梯所带来的饥饿问题而提出的。出于减少磁盘寻址时间的考虑，对某个磁盘区域上的繁重操作，无疑会使得磁盘上其他位置上的操作请求得不到运行机会。实际上，一个对磁盘同一位置操作的请求流可以造成较远位置的其他请求永远得不到运行机会，这是一种很不公平的饥饿现象。<br>更糟糕的是，普通的请求饥饿还会带来名为写-饥饿-读（writes-starving-reads）这种特殊问题。写操作通常是在内核有空时才将请求提交给磁盘的，写操作完全和提交它的应用程序异步执行；读操作则恰恰相反，通常当应用程序提交一个读请求时，应用程序会发生堵塞直到读请求被满足，也就是说，读操作是和提交它的应用程序同步执行的。所以虽然写反应时间（提交写请求花费的时间）不会给系统响应速度造成很大影响，但是读响应时间（提交读请求花费的时间）对系统响应时间来说却非同小可。虽然写请求时间对应用程序性能带来的影响不大，但是应用程序却必须等待读请求完成后才能运行其他程序，所以读操作响应时间对系统的性能非常重要。<br>问题还可能更严重，这是因为读请求往往会相互依靠。比如，要读大量的文件，每次都是针对一块很小的缓冲区数据区进行读操作，而应用程序只有将上一个数据区从磁盘中读取并返回之后，才能继续读取下一个数据区（或下一个文件）。糟糕的是，不管是读还是写，二者都需要读取像索引节点这样的元数据。从磁盘进一步读取这些块会使I&#x2F;O操作串行化。所以如果每一次请求都会发生饥饿现象，那么对读取文件的应用程序来说，全部延迟加起来会造成过长的等待时间，让用户无法忍受。综上所述，读操作具有同步性，并且彼此之间往往相互依靠，所以读请求响应时间直接影响系统性能，因此2.6版本内核新引入了最后期限I&#x2F;O调度程序来较少请求饥饿现象，特别是读请求饥饿现象。<br>注意，减少请求饥饿必须以降低全局吞吐量为代价。Linus电梯调度程序虽然也做了这样的折中，但显然不够—-Linus电梯可以提供更好的系统吞吐量（通过最小化寻址），可是它总按照扇区顺序将请求插入到队列，从不检查驻留时间过长的请求，更不会将请求插入到队列尾部，所以它虽然能让寻址时间最短，但是却会带来同样不可取的请求饥饿问题。为了避免饥饿同时提供良好的全局吞吐量，最后期限I&#x2F;O调度程序做了更多的努力。既要尽量提高全局吞吐量，又要使请求得到公平处理，这是很困难的。<br>在最后期限I&#x2F;O调度程序中，每个请求都有一个超时时间。默认情况下，读请求的超时时间是500ms，写请求的超时时间是5s。最后期限I&#x2F;O调度请求类似于Linus电梯，也以硬盘物理位置为次序维护请求队列，这个队列称为排序队列。当一个新请求递交给排序队列时，最后期限I&#x2F;O调度程序在执行合并和插入请求时类似于Linus电梯，但是最后期限I&#x2F;O调度程序同时也会以请求类型为依据将它们插入到额外队列中。读请求按次序被插入到特定的读FIFO队列中，写请求被插入到特定的写FIFO队列中。虽然普通队列以磁盘扇区为序进行排序，但是这些队列是以FIFO（很有效，以时间为基准排序）形式组织的，结果新队列总是被加入到队列尾部。对于普通操作来说，最后期限I&#x2F;O调度程序将请求从排序队列的头部取下，再推入到派发队列中，派发队列然后将请求提交给磁盘驱动，从而保证了最小化的请求寻址。<br>如果在写FIFO队列头，或是在读FIFO队列头的请求超时（也就是，当前时间超过了请求指定的超时时间），那么最后期限I&#x2F;O调度程序便从FIFO队列中提取请求进行服务。依靠这种方法，最后期限I&#x2F;O调度程序试图保证不会发生有请求在明显超期的情况下仍不能得到服务的现象，参见下图。<br><img src="/2022/12/10/%E5%9D%97IO%E5%B1%82/3.jpeg" alt="img not found"><br>注意，最后期限I&#x2F;O调度程序并不能严格保证请求的响应时间，但是通常情况下，可以在请求超时或超时前提交和执行，以防止请求饥饿现象的发生。由于读请求给定的超时时间要比写请求短许多，所以最后期限I&#x2F;O调度程序也确保了写请求不会因为堵塞读请求而使读请求发生饥饿。这种对读操作的照顾确保了读响应时间尽可能短。<br>最后期限I&#x2F;O调度程序的实现在文件<code>block/deadline-iosched.c</code>中。</p>
+<h2 id="预测I-x2F-O调度程序"><a href="#预测I-x2F-O调度程序" class="headerlink" title="预测I&#x2F;O调度程序"></a>预测I&#x2F;O调度程序</h2><p>虽然最后期限I&#x2F;O调度程序为降低读操作响应时间做了许多工作，但是它同时也降低了系统吞吐量。假设一个系统处于很繁重的写操作期间，每次提交读请求，I&#x2F;O调度程序都会迅速处理读请求，所以磁盘首先为读操作进行寻址，执行读操作，然后返回再寻址进行写操作，并且对每个读请求都重复这个过程。这种做法对读请求来说是件好事，但是两次寻址操作（一次对读操作定位，一次返回来进行写操作定位）却损害了系统全局吞吐量。预测I&#x2F;O调度程序的目标就是在保持良好的读响应的同时也能提供良好的全局吞吐量。<br>预测I&#x2F;O调度的基础仍然是最后期限I&#x2F;O调度程序，所以它们有很多相同之处。预测I&#x2F;O调度程序也实现了三个队列（加上一个派发队列），并为每个请求设置了超时时间，这点与最后期限I&#x2F;O调度程序一样。预测I&#x2F;O调度程序最主要的改进是它增加了预测启发能力。<br>预测I&#x2F;O调度试图减少在进行I&#x2F;O操作期间，处理新到的读请求所带来的寻址数量。和最后期限I&#x2F;O调度程序一样，读请求通常会在超时前得到处理，但是预测I&#x2F;O调度程序的不同之处在于，请求提交后并不直接返回处理其他请求，而是会有意空闲片刻（实际空闲时间可以设置，默认为6ms）。这几ms，对应用程序来说是个提交其他读请求的好机会—-任何对相邻磁盘位置操作的请求都会立刻得到处理。在等待时间结束后，预测I&#x2F;O调度程序重新返回原来的位置，继续执行以前剩下的请求。<br>要注意，如果等待可以减少读请求所带来的向后再向前（back-and-forth）寻址操作，那么完全值得画一些时间来等待更多的请求；如果一个相邻的I&#x2F;O请求在等待期到来，那么I&#x2F;O调度程序可以节省两次寻址操作。如果存在愈来愈多的访问同样区域的读请求到来，那么片刻等待无疑会避免大量的寻址操作。<br>当然，如果没有I&#x2F;O请求在等待期到来，那么预测I&#x2F;O调度程序会给系统性能会给系统性能带来轻微的损失，浪费掉几ms。预测I&#x2F;O调度程序所能带来的优势取决于能否正确预测应用程序和文件系统的行为。这种预测依靠一系列的启发和统计工作。预测I&#x2F;O调度程序跟踪并且统计每个应用程序块I&#x2F;O操作的习惯行为，以便正确预测应用程序的未来行为。如果预测准确率足够高，那么预测调度程序便可以大大减少服务读请求所需的寻址开销，而且同时仍能满足请求所需要的系统响应时间要求。这样的话，预测I&#x2F;O调度程序既减少了读响应时间，又能减少寻址次数和时间，所以说它既缩短了系统响应时间，又提高了系统吞吐量。<br>预测I&#x2F;O调度程序的实现在文件内核源代码树的<code>block/as-iosched.c</code>中，它是Linux内核中缺省的I&#x2F;O调度程序，对大多数工作负荷来说都执行良好，对服务器也是理想的。不过，在某些非常见而又有严格工作负荷的服务器（包括数据库挖掘服务器）上，这个调度程序执行的效果不好。</p>
+<h2 id="完全公正的排队I-x2F-O调度程序"><a href="#完全公正的排队I-x2F-O调度程序" class="headerlink" title="完全公正的排队I&#x2F;O调度程序"></a>完全公正的排队I&#x2F;O调度程序</h2><p>完全公正的排队I&#x2F;O调度程序（Complete Fair Queuing，CFQ），是为专有工作负荷设计的，不过，在实际中，也为多种工作负荷提供了良好的性能。但是，它与前面介绍的I&#x2F;O调度程序有根本的不同。<br>CFQ I&#x2F;O调度程序把进入的I&#x2F;O请求放入特定的队列中，这种队列是根据I&#x2F;O请求的进程组织的。例如，来自foo进程的I&#x2F;O请求进入foo队列，而来自bar进程的I&#x2F;O请求进入bar队列。在每个队列中，刚进入的请求与相邻请求合并在一起，并进行插入分类。队列由此按扇区方式分类，这与其他I&#x2F;O调度程序队列类似。CFQ I&#x2F;O调度程序的差异在于每一个提交I&#x2F;O的进程都有自己的队列。<br>CFQ I&#x2F;O调度程序以时间片轮转调度队列，从每个队列中选取请求数（默认值为4，可以进行配置），然后进行下一轮调度。这就在进程级提供了公平，确保每个进程接收公平的磁盘带宽片段。预定的工作负荷是多媒体，在这种多媒体中，这种公平的算法可以得到保证，比如，音频播放器总能够及时从磁盘再填满它的音频缓冲区。不过，实际上，CFQ I&#x2F;O调度程序在很多场合都能够很好地执行。<br>完全公正的排队I&#x2F;O调度程序位于<code>block/cfq-iosched.c</code>。尽管这主要推荐给桌面工作负荷使用，但是，如果没有其他异常情况，它在几乎所有的工作负荷中都能很好地执行。</p>
+<h2 id="空操作的I-x2F-O调度程序"><a href="#空操作的I-x2F-O调度程序" class="headerlink" title="空操作的I&#x2F;O调度程序"></a>空操作的I&#x2F;O调度程序</h2><p>第四种也是最后一种I&#x2F;O调度程序是空操作（Noop）I&#x2F;O调度程序，之所以这样命名是因为它基本上是一个空操作，不管做多少事情。空操作I&#x2F;O调度程序不进行排序，或者也不进行什么其他形式的预寻址操作。依此类推，它也没必要实现那些老套的算法，也就是在以前的I&#x2F;O调度程序中看到的为了最小化请求周期而采用的算法。<br>不过，空操作I&#x2F;O调度程序忘不了执行合并，这就像它的家务事。当一个新的请求提交到队列时，就把它与任一相邻的请求合并。除了这一操作，空操作I&#x2F;O调度程序的确不再做什么，只是维护请求队列以近乎FIFO的顺序排列，块设备驱动程序便可以从这种队列中摘取请求。<br>空操作I&#x2F;O调度程序不勤奋工作是有道理的。因为它打算用在块设备，那是真正的随机访问设备，比如闪存卡。如果块设备只有一点或没有“寻道”的负担，那么，就没有必要对进入的请求进行插入排序，因此，空操作I&#x2F;O调度程序是理想的候选者。<br>空操作I&#x2F;O调度程序位于<code>block/noop-iosched.c</code>，它是专为随机访问设备而设计的。</p>
+<h2 id="I-x2F-O调度程序的选择"><a href="#I-x2F-O调度程序的选择" class="headerlink" title="I&#x2F;O调度程序的选择"></a>I&#x2F;O调度程序的选择</h2><p>你现在已经看到2.6内核中四种不同的I&#x2F;O调度程序。其中的每一种I&#x2F;O调度程序都可以被启用，并内置在内核中。作为缺省，块设备使用完全公平的I&#x2F;O调度程序。在启动时，可以通过命令行选项elevator&#x3D;foo来覆盖缺省，这里foo是一个有效而激活的I&#x2F;O调度程序，参看下表。<br><strong>给定elevator选项的参数</strong></p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>I&#x2F;O调度程序</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>as</td>
+<td>预测</td>
+</tr>
+<tr>
+<td>cfq</td>
+<td>完全公正的排队</td>
+</tr>
+<tr>
+<td>deadline</td>
+<td>最终期限</td>
+</tr>
+<tr>
+<td>noop</td>
+<td>空操作</td>
+</tr>
+</tbody></table>
+<p>例如，内核命令行选项elevator&#x3D;as会启用预测I&#x2F;O调度程序给所有的块设备，从而覆盖默认的完全公正调度程序。</p>
+<h1 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h1><p>在本章中，我们讨论了块设备的基本知识，并考察了块I&#x2F;O所用的数据结构：bio，表示活动的I&#x2F;O操作；buffer_head，表示块到页的映射；还有请求结构，表示具体的I&#x2F;O请求。我们追寻了I&#x2F;O请求简单但重要的生命历程，其生命的重要点就是I&#x2F;O调度程序。我们讨论了I&#x2F;O调度程序所涉及的困惑问题，同时仔细推敲了当前内核的4种I&#x2F;O调度程序，以及2.4版本种原有的Linus电梯调度。</p>
 
     </div>
 
@@ -456,6 +487,9 @@
                 </a>
             </div>
             <div class="post-nav-item">
+                <a href="/2022/12/13/%E8%BF%9B%E7%A8%8B%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4/" rel="next" title="进程地址空间">
+                  进程地址空间 <i class="fa fa-chevron-right"></i>
+                </a>
             </div>
           </div>
     </footer>
@@ -487,13 +521,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="站点总字数">678k</span>
+    <span title="站点总字数">688k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">10:16</span>
+    <span title="站点阅读时长">10:26</span>
   </span>
 </div>
 <div class="busuanzi-count">
