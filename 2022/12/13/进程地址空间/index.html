@@ -29,6 +29,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/2022/12/13/%E8%BF%9B%E7%A8%8B%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4/1.jpeg">
 <meta property="og:image" content="http://example.com/2022/12/13/%E8%BF%9B%E7%A8%8B%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4/2.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/13/%E8%BF%9B%E7%A8%8B%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4/3.jpeg">
 <meta property="article:published_time" content="2022-12-13T07:28:25.000Z">
 <meta property="article:modified_time" content="2022-12-13T07:28:25.000Z">
 <meta property="article:author" content="Nibil">
@@ -150,7 +151,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4"><span class="nav-number">1.</span> <span class="nav-text">地址空间</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E6%8F%8F%E8%BF%B0%E7%AC%A6"><span class="nav-number">2.</span> <span class="nav-text">内存描述符</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E9%85%8D%E5%86%85%E5%AD%98%E6%8F%8F%E8%BF%B0%E7%AC%A6"><span class="nav-number">2.1.</span> <span class="nav-text">分配内存描述符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%92%A4%E9%94%80%E5%86%85%E5%AD%98%E6%8F%8F%E8%BF%B0%E7%AC%A6"><span class="nav-number">2.2.</span> <span class="nav-text">撤销内存描述符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mm-struct%E4%B8%8E%E5%86%85%E6%A0%B8%E7%BA%BF%E7%A8%8B"><span class="nav-number">2.3.</span> <span class="nav-text">mm_struct与内核线程</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F"><span class="nav-number">3.</span> <span class="nav-text">虚拟内存区域</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#VMA%E6%A0%87%E5%BF%97"><span class="nav-number">3.1.</span> <span class="nav-text">VMA标志</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VMA%E6%93%8D%E4%BD%9C"><span class="nav-number">3.2.</span> <span class="nav-text">VMA操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F%E7%9A%84%E6%A0%91%E5%BD%A2%E7%BB%93%E6%9E%84%E5%92%8C%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F%E7%9A%84%E9%93%BE%E8%A1%A8%E7%BB%93%E6%9E%84"><span class="nav-number">3.3.</span> <span class="nav-text">内存区域的树形结构和内存区域的链表结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E9%99%85%E4%BD%BF%E7%94%A8%E4%B8%AD%E7%9A%84%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F"><span class="nav-number">3.4.</span> <span class="nav-text">实际使用中的内存区域</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%93%8D%E4%BD%9C%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F"><span class="nav-number">4.</span> <span class="nav-text">操作内存区域</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#find-vma"><span class="nav-number">4.1.</span> <span class="nav-text">find_vma()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#find-vma-prev"><span class="nav-number">4.2.</span> <span class="nav-text">find_vma_prev()</span></a></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4"><span class="nav-number">1.</span> <span class="nav-text">地址空间</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E6%8F%8F%E8%BF%B0%E7%AC%A6"><span class="nav-number">2.</span> <span class="nav-text">内存描述符</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E9%85%8D%E5%86%85%E5%AD%98%E6%8F%8F%E8%BF%B0%E7%AC%A6"><span class="nav-number">2.1.</span> <span class="nav-text">分配内存描述符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%92%A4%E9%94%80%E5%86%85%E5%AD%98%E6%8F%8F%E8%BF%B0%E7%AC%A6"><span class="nav-number">2.2.</span> <span class="nav-text">撤销内存描述符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mm-struct%E4%B8%8E%E5%86%85%E6%A0%B8%E7%BA%BF%E7%A8%8B"><span class="nav-number">2.3.</span> <span class="nav-text">mm_struct与内核线程</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F"><span class="nav-number">3.</span> <span class="nav-text">虚拟内存区域</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#VMA%E6%A0%87%E5%BF%97"><span class="nav-number">3.1.</span> <span class="nav-text">VMA标志</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VMA%E6%93%8D%E4%BD%9C"><span class="nav-number">3.2.</span> <span class="nav-text">VMA操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F%E7%9A%84%E6%A0%91%E5%BD%A2%E7%BB%93%E6%9E%84%E5%92%8C%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F%E7%9A%84%E9%93%BE%E8%A1%A8%E7%BB%93%E6%9E%84"><span class="nav-number">3.3.</span> <span class="nav-text">内存区域的树形结构和内存区域的链表结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E9%99%85%E4%BD%BF%E7%94%A8%E4%B8%AD%E7%9A%84%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F"><span class="nav-number">3.4.</span> <span class="nav-text">实际使用中的内存区域</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%93%8D%E4%BD%9C%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F"><span class="nav-number">4.</span> <span class="nav-text">操作内存区域</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#find-vma"><span class="nav-number">4.1.</span> <span class="nav-text">find_vma()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#find-vma-prev"><span class="nav-number">4.2.</span> <span class="nav-text">find_vma_prev()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#find-vma-intersection"><span class="nav-number">4.3.</span> <span class="nav-text">find_vma_intersection()</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mmap-%E5%92%8Cdo-mmap-%EF%BC%9A%E5%88%9B%E5%BB%BA%E5%9C%B0%E5%9D%80%E5%8C%BA%E9%97%B4"><span class="nav-number">5.</span> <span class="nav-text">mmap()和do_mmap()：创建地址区间</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#munmap-%E5%92%8Cdo-munmap-%EF%BC%9A%E5%88%A0%E9%99%A4%E5%9C%B0%E5%9D%80%E5%8C%BA%E9%97%B4"><span class="nav-number">6.</span> <span class="nav-text">munmap()和do_munmap()：删除地址区间</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%A1%B5%E8%A1%A8"><span class="nav-number">7.</span> <span class="nav-text">页表</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">8.</span> <span class="nav-text">小结</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -163,13 +164,13 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">45</span>
+          <span class="site-state-item-count">46</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">53</span>
+        <span class="site-state-item-count">54</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
@@ -312,14 +313,14 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>12k</span>
+      <span>17k</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
         <i class="far fa-clock"></i>
       </span>
       <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>11 分钟</span>
+      <span>15 分钟</span>
     </span>
 </div>
 
@@ -481,7 +482,53 @@
 <p>该函数在指定的地址空间中搜索第一个vm_end大于addr的内存区域。换句话说，该函数寻找第一个包含addr或首地址大于addr的内存区域，如果没有发现这样的区域，该函数返回NULL；否则返回指向匹配的内存区域的vm_area_struct结构体指针。注意，由于返回的VMA首地址可能大于addr，所以指定的地址并不一定就包含在返回的VMA中。因为很有可能在对某个VMA执行操作后，还有其他更多的操作会对该VMA接着进行操作，所以find_vma()函数返回的结果被缓存在内存描述符的mmap_cache域中。实践证明，被缓存的VMA会有相当好的命中率（30%-40%），而且检查被缓存的VMA速度会很快，如果指定的地址不在缓存中，那么必须搜索和内存描述符相关的所有内存区域。这种搜索通过红-黑树进行：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> vm_area_struct *<span class="title function_">find_vma</span><span class="params">(<span class="keyword">struct</span> mm_struct *mm,<span class="type">unsigned</span> <span class="type">long</span> addr)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">vm_area_struct</span> *<span class="title">vma</span> =</span> <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(mm) &#123;</span><br><span class="line">        vma = mm-&gt;mmap_cache;</span><br><span class="line">        <span class="keyword">if</span>(!(vma &amp;&amp; vma-&gt;vm_end &gt; addr &amp;&amp; vma-&gt;vm_start &lt;= addr)) &#123;</span><br><span class="line">            <span class="class"><span class="keyword">struct</span> <span class="title">rb_node</span> *<span class="title">rb_node</span>;</span></span><br><span class="line"></span><br><span class="line">            rb_node = mm-&gt;mm_rb.rb_node;</span><br><span class="line">            vma = <span class="literal">NULL</span>;</span><br><span class="line">            <span class="keyword">while</span>(rb_node) &#123;</span><br><span class="line">                <span class="class"><span class="keyword">struct</span> <span class="title">vm_area_struct</span> *<span class="title">vma_tmp</span>;</span></span><br><span class="line"></span><br><span class="line">                vma_tmp = rb_entry(rb_node,</span><br><span class="line">                                   <span class="keyword">struct</span> vm_area_struct,vm_rb);</span><br><span class="line">                <span class="keyword">if</span>(vma_tmp-&gt;vm_end &gt; addr) &#123;</span><br><span class="line">                    vma = vma_tmp;</span><br><span class="line">                    <span class="keyword">if</span>(vma_tmp-&gt;vm_start &lt;= addr)</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    rb_node = rb_node-&gt;rb_left;    </span><br><span class="line">                &#125; <span class="keyword">else</span></span><br><span class="line">                    rb_node = rb_node-&gt;rb_right;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span>(vma)</span><br><span class="line">                mm-&gt;mmap_cache = vma;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> vma;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>首先，该函数检查mmap_cache，看看缓存的VMA是否包含了所需地址。注意简单地检查VMA的vm_end是否大于addr，并不能保证该VMA是第一个大于addr的内存区域，所以缓存要想发挥作用，就要求指定的地址必须包含在缓存的VMA中—-幸好，这也正是连续操作同一VMA必然发生的情况。<br>如果缓存中并未包含希望的VMA，那么该函数必须搜索红-黑树。如果当前VMA的vm_end大于addr，进入左子节点继续搜索；否则，沿右边子节点搜索，直到找到包含addr的VMA为止。如果没有包含addr的VMA被找到，那么该函数继续搜索树，并且返回大于addr的第一个VMA。如果也不存在满足要求的VMA，那该函数返回NULL。</p>
-<h2 id="find-vma-prev"><a href="#find-vma-prev" class="headerlink" title="find_vma_prev()"></a>find_vma_prev()</h2>
+<h2 id="find-vma-prev"><a href="#find-vma-prev" class="headerlink" title="find_vma_prev()"></a>find_vma_prev()</h2><p>find_vma_prev()函数和find_vma()工作方式相同，但是它返回第一个小于addr的VMA。该函数定义和声明分别在文件<code>mm/mmap.c</code>和文件&lt;linux&#x2F;mm.h&gt;中。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> vm_area_struct *<span class="title function_">find_vma_prev</span><span class="params">(<span class="keyword">struct</span> mm_struct *mm,<span class="type">unsigned</span> <span class="type">long</span> addr,<span class="keyword">struct</span> vm_area_struct **pprev)</span>;</span><br></pre></td></tr></table></figure>
+<p>pprev参数存放指向先于addr的VMA指针。</p>
+<h2 id="find-vma-intersection"><a href="#find-vma-intersection" class="headerlink" title="find_vma_intersection()"></a>find_vma_intersection()</h2><p>find_vma_intersection()函数返回第一个和指定地址区间相交的VMA。因为该函数是内联函数，所以定义在文件&lt;linux&#x2F;mm.h&gt;中：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="keyword">struct</span> vm_area_struct *</span><br><span class="line"><span class="title function_">find_vma_intersection</span><span class="params">(<span class="keyword">struct</span> mm_struct *mm,</span></span><br><span class="line"><span class="params">                      <span class="type">unsigned</span> <span class="type">long</span> start_addr,</span></span><br><span class="line"><span class="params">                      <span class="type">unsigned</span> <span class="type">long</span> end_addr)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">vm_area_struct</span> *<span class="title">vma</span>;</span></span><br><span class="line"></span><br><span class="line">    vma = find_vma(mm,start_addr);</span><br><span class="line">    <span class="keyword">if</span>(vma &amp;&amp; end_addr &lt;= vma-&gt;vm_start)</span><br><span class="line">        vma = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="keyword">return</span> vma;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>第一个参数mm是要搜索的地址空间，start_addr是区间的开始首位置，end_addr是区间的尾位置。<br>显然，如果find_vma()返回NULL，那么find_vma_intersection()也会返回NULL。但是如果find_vma()返回有效的VMA，find_vma_intersection()只有在该VMA的起始位置于给定的地址区间结束位置之前，才将其返回。如果VMA的起始位置大于指定地址范围的结束位置，则该函数返回NULL。</p>
+<h1 id="mmap-和do-mmap-：创建地址区间"><a href="#mmap-和do-mmap-：创建地址区间" class="headerlink" title="mmap()和do_mmap()：创建地址区间"></a>mmap()和do_mmap()：创建地址区间</h1><p>内核使用do_mmap()函数创建一个新的线性地址区间。但是说该函数创建了一个新的VMA并不非常准确，因为如果创建的地址区间和一个已经存在的地址区间相邻，并且它们具有相同的访问权限的话，两个区间将合并为一个。如果不能合并，就确实需要创建一个新的VMA了。但无论哪种情况，do_mmap()函数都会将一个地址区间加入到进程的地址空间中—-无论是扩展已存在的内存区域还是创建一个新的区域。<br>do_mmap()函数定义在文件&lt;linux&#x2F;mm.h&gt;中。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> <span class="title function_">do_mmap</span><span class="params">(<span class="keyword">struct</span> file *file,<span class="type">unsigned</span> <span class="type">long</span> addr,</span></span><br><span class="line"><span class="params">                      <span class="type">unsigned</span> <span class="type">long</span> len,<span class="type">unsigned</span> <span class="type">long</span> prot,</span></span><br><span class="line"><span class="params">                      <span class="type">unsigned</span> <span class="type">long</span> flag,<span class="type">unsigned</span> <span class="type">long</span> offset)</span>;</span><br></pre></td></tr></table></figure>
+<p>该函数映射由file指定的文件，具体映射的是文件中从偏移offset处开始，长度为len字节的范围内的数据。如果file参数是NULL并且offset参数也是0，那么就代表这次映射没有和文件相关，该情况称作匿名映射。如果指定了文件名和偏移量，那么该映射称为文件映射。<br>addr是可选参数，它指定搜索空闲区域的起始位置。<br>prot参数指定内存区域中页面的访问权限。访问权限标志定义在文件&lt;asm&#x2F;mman.h&gt;中，不同体系结构标志的定义有所不同，但是对所有体系结构而言，都会包含下表中所列举的标志。<br><strong>页保护标志</strong></p>
+<table>
+<thead>
+<tr>
+<th>标志</th>
+<th>对新建区间中页的要求</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>PROT_READ</td>
+<td>对应于VM_READ</td>
+</tr>
+<tr>
+<td>PROT_WRITE</td>
+<td>对应于VM_WRITE</td>
+</tr>
+<tr>
+<td>PROT_EXEC</td>
+<td>对应于VM_EXEC</td>
+</tr>
+<tr>
+<td>PROT_NONE</td>
+<td>页不可被访问</td>
+</tr>
+</tbody></table>
+<p>flag参数指定了VMA标志，这些标志指定类型并改变映射的行为。它们也在文件&lt;asm&#x2F;mman.h&gt;中定义，参见下表：<br><strong>页保护标志</strong><br>| MAP_SHARED | 映射可以被共享 |<br>| MAP_PRIVATE | 映射不能被共享 |<br>| MAP_FIXED | 新区间必须开始于指定的地址addr |<br>| MAP_ANONYMOUS | 映射不是file-backed，而是匿名的 |<br>| MAP_GROWSDOWN | 对应于VM_GROWSDOWN |<br>| MAP_DENYWRITE | 对应于VM_DENYWRITE |<br>| MAP_EXECUTABLE | 对应于VM_EXECUTABLE |<br>| MAP_LOCKED | 对应于VM_LOCKED |<br>| MAP_NORESERVE | 不需要为映射保留空间 |<br>| MAP_POPULATE | 填充页表 |<br>| MAP_NONBLOCK | 在I&#x2F;O操作上不堵塞 |</p>
+<p>如果系统调用do_mmap()的参数中有无效参数，那么它返回一个负值；否则，它会在虚拟内存中分配一个合适的新内存区域。如果有可能的话，将新区域和邻近区域进行合并，否则内核从vm_area_cachep长字节（slab）缓存中分配一个vm_area_struct结构体，并且使用vma_link()函数将新分配的内存区域添加到地址空间的内存区域链表和红-黑树中，随后还要更新内存描述符中的total_vm域，然后才返回新分配的地址区间的初始地址。<br>在用户空间可以通过mmap()系统调用获取内核函数do_mmap()的功能。mmap()系统调用定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> *<span class="title function_">mmap2</span><span class="params">(<span class="type">void</span> *start,<span class="type">size_t</span> length,<span class="type">int</span> prot,<span class="type">int</span> flags,<span class="type">int</span> fd,<span class="type">off_t</span> pgoff)</span>;</span><br></pre></td></tr></table></figure>
+<p>由于该系统调用是mmap()调用的第二种变种，所以起名为mmap2()。最原始的mmap()调用中最后一个参数是字节偏移量，而目前这个mmap2()使用页面偏移作最后一个参数。使用页面偏移量可以映射更大的文件和更大的偏移位置。原始的mmap()调用由POSIX定义，仍然在C库中作为mmap()方法使用，但是内核中已经没有对应的实现了，而实现的是新方法mmap2()。虽然C库仍然可以使用原始版本的映射方法，但是它其实还是基于函数mmap2()进行的，因为对原始mmap()方法的调用是通过将字节偏移转化为页面偏移，从而转化对mmap2()函数的调用来实现的。</p>
+<h1 id="munmap-和do-munmap-：删除地址区间"><a href="#munmap-和do-munmap-：删除地址区间" class="headerlink" title="munmap()和do_munmap()：删除地址区间"></a>munmap()和do_munmap()：删除地址区间</h1><p>do_munmap()函数从特定的进程地址空间中删除指定地址区间，该函数定义在文件&lt;linux&#x2F;mm.h&gt;中：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">do_munmap</span><span class="params">(<span class="keyword">struct</span> mm_struct *mm,<span class="type">unsigned</span> <span class="type">long</span> start,<span class="type">size_t</span> len)</span>;</span><br></pre></td></tr></table></figure>
+<p>第一个参数指定要删除区域所在的地址空间，删除从地址start开始，长度为len字节的地址区间。如果成功，返回零。否则，返回负的错误码。<br>系统调用munmap()给用户空间程序提供了一种从自身地址空间中删除指定地址区间的方法，它和系统调用mmap()的作用相反。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">munmap</span><span class="params">(<span class="type">void</span> *start,<span class="type">size_t</span> length)</span>;</span><br></pre></td></tr></table></figure>
+<p>该系统调用定义在文件<code>mm/mmap.c</code>中，它是对do_munmap()函数的一个简单的封装：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">asmlinkage <span class="type">long</span> <span class="title function_">sys_munmap</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> addr,<span class="type">size_t</span> len)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> ret;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">mm_struct</span> *<span class="title">mm</span>;</span></span><br><span class="line"></span><br><span class="line">    mm = current-&gt;mm;</span><br><span class="line">    down_write(&amp;mm-&gt;mmap_sem);</span><br><span class="line">    ret = do_munmap(mm,addr,len);</span><br><span class="line">    up_write(&amp;mm-&gt;mmap_sem);</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="页表"><a href="#页表" class="headerlink" title="页表"></a>页表</h1><p>虽然应用程序操作的对象是映射到物理内存之上的虚拟内存，但是处理器直接操作的却是物理内存。所以当应用程序访问一个虚拟地址时，首先必须将虚拟地址转化为物理地址，然后处理器才能解析地址访问请求。地址的转换工作需要通过查询页表才能完成，概括的讲，地址转换需要将虚拟虚拟地址分段，使每段虚拟地址都作为一个索引指向页表，而页表项则指向下一级别的页表或者指向最终的物理页面。<br>Linux中使用三级页表完成地址转换。利用多级页表能够节约地址转换需占用的存放空间。如果利用三级页表转换地址，即使是64位机器，占用的空间也很有限。但是如果使用静态数组实现页表，那么即使在32位机器上，该数组也将占用巨大的存放空间。Linux对所有体系结构，包括对那些不支持三级页表的体系结构（比如，有些体系结构只使用两级页表或者使用散列表完成地址转换）都使用三级页表管理，因为使用三级页表结构可以利用“最大公约数”的思想—-一种设计简单的体系结构，可以按照需要在编译时简化使用页表的三级结构，比如只使用两级。<br>顶级页表是页全局目录（PGD），它包含了一个pgd_t类型数组，多数体系结构中pgd_t类型等同于无符号长整型类型。PGD中的表项指向二级页目录中的表项：PMD。<br>二级页表是中间页目录（PMD），它是个pmd_t类型数组，其中的表项指向PTE中的表项。<br>最后一级的页表简称页表，其中包含了pte_t类型的页表项，该页表项指向物理页面。<br>多数体系结构中，搜索页表的工作是由硬件完成的。虽然通常操作中，很多使用页表的工作都可以由硬件执行，但是只有在内核正确设置页表的前提下，硬件才能方便地操作它们。下图描述了虚拟地址通过页表找到物理地址的过程。<br><img src="/2022/12/13/%E8%BF%9B%E7%A8%8B%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4/3.jpeg" alt="img not found"><br>每个进程都有自己的页表（当然，线程会共享页表）。内存描述符的pgd域指向的就是进程的页全局目录。注意，操作和检索页表时必须使用page_table_lock锁，该锁在相应的进程的内存描述符中，以防止竞争条件。<br>页表对应的结构体依赖于具体的体系结构，所以定义在文件&lt;asm&#x2F;page.h&gt;中。<br><code>由于几乎每次对虚拟内存中的页面访问都必须先解析它，从而得到物理内存中的对应地址，所以页表操作的性能非常关键。但不幸的是，搜索内存中的物理地址速度很有限，因此为了加快搜索，多数体系结构都实现了一个翻译后备缓冲器（translate lookaside buffer，TLB）。TLB作为一个将虚拟地址映射到物理地址的硬件缓存，当请求访问一个虚拟地址时，处理器将首先检查TLB中是否缓存了该虚拟地址到物理地址的映射，如果在缓存中直接命中，物理地址立刻返回；否则，就需要再通过页表搜索需要的物理地址。</code><br>虽然硬件完成了有关页表的部分工作，但是页表的管理仍是内核的关键部分—-而且在不断改进。2.6版内核对页表管理的主要改进是：从高端内存分配部分页表。今后可能的改进包括通过在写时拷贝（copy-on-write）的方式共享页表。这种机制使得在fork()操作中可由父子进程共享页表。因为只有当子进程或父进程试图修改特定页表项时。可以看到，利用共享页表可以消除fork()操作中页表拷贝所带来的消耗。</p>
+<h1 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h1><p>这章的内容不能不说是很“难缠”啦。其中，我们看到了抽象出来的进程虚拟内存，看到了内核如何表示进程空间（通过mm_struct）以及内核如何表示该空间中的内存区域（通过结构体vm_area_struct）。除此之外，我们还了解了内核如何创建（通过mmap()）和撤销（通过munmap()）这些内存区域，最后还讨论了页表。因为Linux是一个基于虚拟内存的操作系统，所以这些概念对于系统运行来说都是非常基础的，一定要仔细领会。<br>下一章，我们要讨论页缓存—-一种用于所有页I&#x2F;O操作的内存数据缓存，而且还要涵盖内核执行基于页的数据回写。</p>
+
     </div>
 
     
@@ -503,6 +550,9 @@
                 </a>
             </div>
             <div class="post-nav-item">
+                <a href="/2022/12/16/%E9%A1%B5%E9%AB%98%E9%80%9F%E7%BC%93%E5%AD%98Cache%E5%92%8C%E9%A1%B5%E5%9B%9E%E5%86%99/" rel="next" title="页高速缓存Cache和页回写">
+                  页高速缓存Cache和页回写 <i class="fa fa-chevron-right"></i>
+                </a>
             </div>
           </div>
     </footer>
@@ -534,13 +584,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="站点总字数">694k</span>
+    <span title="站点总字数">700k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">10:31</span>
+    <span title="站点阅读时长">10:36</span>
   </span>
 </div>
 <div class="busuanzi-count">
