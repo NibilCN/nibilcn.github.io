@@ -147,7 +147,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E6%89%8B%E6%AE%B5"><span class="nav-number">1.</span> <span class="nav-text">缓存手段</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%99%E7%BC%93%E5%AD%98"><span class="nav-number">1.1.</span> <span class="nav-text">写缓存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E5%9B%9E%E6%94%B6"><span class="nav-number">1.2.</span> <span class="nav-text">缓存回收</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%80%E8%BF%91%E6%9C%80%E5%B0%91%E4%BD%BF%E7%94%A8"><span class="nav-number">1.2.1.</span> <span class="nav-text">最近最少使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%8C%E9%93%BE%E7%AD%96%E7%95%A5"><span class="nav-number">1.2.2.</span> <span class="nav-text">双链策略</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux%E9%A1%B5%E9%AB%98%E9%80%9F%E7%BC%93%E5%AD%98"><span class="nav-number">2.</span> <span class="nav-text">Linux页高速缓存</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#address-space%E5%AF%B9%E8%B1%A1"><span class="nav-number">2.1.</span> <span class="nav-text">address_space对象</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#address-space%E6%93%8D%E4%BD%9C"><span class="nav-number">2.2.</span> <span class="nav-text">address_space操作</span></a></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E6%89%8B%E6%AE%B5"><span class="nav-number">1.</span> <span class="nav-text">缓存手段</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%99%E7%BC%93%E5%AD%98"><span class="nav-number">1.1.</span> <span class="nav-text">写缓存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E5%9B%9E%E6%94%B6"><span class="nav-number">1.2.</span> <span class="nav-text">缓存回收</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%80%E8%BF%91%E6%9C%80%E5%B0%91%E4%BD%BF%E7%94%A8"><span class="nav-number">1.2.1.</span> <span class="nav-text">最近最少使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%8C%E9%93%BE%E7%AD%96%E7%95%A5"><span class="nav-number">1.2.2.</span> <span class="nav-text">双链策略</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux%E9%A1%B5%E9%AB%98%E9%80%9F%E7%BC%93%E5%AD%98"><span class="nav-number">2.</span> <span class="nav-text">Linux页高速缓存</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#address-space%E5%AF%B9%E8%B1%A1"><span class="nav-number">2.1.</span> <span class="nav-text">address_space对象</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#address-space%E6%93%8D%E4%BD%9C"><span class="nav-number">2.2.</span> <span class="nav-text">address_space操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%A0%91"><span class="nav-number">2.3.</span> <span class="nav-text">基树</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A5%E5%89%8D%E7%9A%84%E9%A1%B5%E6%95%A3%E5%88%97%E8%A1%A8"><span class="nav-number">2.4.</span> <span class="nav-text">以前的页散列表</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BC%93%E5%86%B2%E5%8C%BA%E9%AB%98%E9%80%9F%E7%BC%93%E5%AD%98"><span class="nav-number">3.</span> <span class="nav-text">缓冲区高速缓存</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#flusher%E7%BA%BF%E7%A8%8B"><span class="nav-number">4.</span> <span class="nav-text">flusher线程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%86%9D%E4%B8%8A%E5%9E%8B%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%A8%A1%E5%BC%8F"><span class="nav-number">4.1.</span> <span class="nav-text">膝上型计算机模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8E%86%E5%8F%B2%E4%B8%8A%E7%9A%84bdflush%E3%80%81kupdated%E5%92%8Cpdflush"><span class="nav-number">4.2.</span> <span class="nav-text">历史上的bdflush、kupdated和pdflush</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%81%BF%E5%85%8D%E6%8B%A5%E5%A1%9E%E7%9A%84%E5%8A%9E%E6%B3%95%EF%BC%9A%E4%BD%BF%E7%94%A8%E5%A4%9A%E7%BA%BF%E7%A8%8B"><span class="nav-number">4.3.</span> <span class="nav-text">避免拥塞的办法：使用多线程</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">小结</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -309,14 +309,14 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>6.5k</span>
+      <span>13k</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
         <i class="far fa-clock"></i>
       </span>
       <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>6 分钟</span>
+      <span>12 分钟</span>
     </span>
 </div>
 
@@ -344,6 +344,69 @@
 <p>这些方法指针指向那些为指定缓存对象实现的页I&#x2F;O操作。每个后备存储都通过自己的address_space_operation描述自己如何与页高速缓存交互。比如ext3文件系统在文件<code>fs/ext3/inode.c</code>中定义自己的操作表。这些方法提供了管理页高速缓存的各种行为，包括最常用的读页到缓存、更新缓存数据。这里面readpage()和writepage()两个方法最为重要。我们下面就来看看一个页面的读操作会包含哪些步骤。首先Linux内核试图在页高速缓存中找到需要的数据；find_get_page()负责完成这个检查动作。一个address_space对象和一个偏移量会传给find_get_page()方法，用于在页高速缓存中搜索需要的数据：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">page = find_get_page(mapping,index);</span><br></pre></td></tr></table></figure>
 <p>这里mapping是指定的地址空间，index是文件中的指定位置，以页面为单位。如果搜索的页并没在高速缓存中，find_get_page()将会返回一个NULL，并且内核将分配一个新页面，然后将之前搜索的页加入到页高速缓存中。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">page</span> *<span class="title">page</span>;</span></span><br><span class="line"><span class="type">int</span> error;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*分配页*/</span></span><br><span class="line">page = page_cache_alloc_cold(mapping);</span><br><span class="line"><span class="keyword">if</span>(!page)</span><br><span class="line">    <span class="comment">//内存分配出错</span></span><br><span class="line"><span class="comment">/*然后将其加入到页面调整缓存*/</span></span><br><span class="line">error = add_to_page_cache_lru(page,mapping,index,GFP_KERNEL);</span><br><span class="line"><span class="keyword">if</span>(error)</span><br><span class="line">    <span class="comment">/*页面被加入到页面高速缓存时，出错*/</span></span><br></pre></td></tr></table></figure>
+<p>最后，需要的数据从磁盘读入，再被加入页高速缓存，然后返回给用户：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">error = mapping-&gt;a_ops-&gt;readpage(file,page);</span><br></pre></td></tr></table></figure>
+<p>写操作和读操作有少许不同。对于文件映射来说，当页被修改了，VM仅仅需要调用：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SetPageDirty(page);</span><br></pre></td></tr></table></figure>
+<p>内核会在晚些时候通过writepage()方法把页写出。对特定文件的写操作比较复杂，它的代码在文件<code>mm/filemap.c</code>中，通常写操作路径要包含以下各步：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">page = __grab_cache_page(mapping,index,&amp;cached_page,&amp;lru_pvec);</span><br><span class="line">status = a_ops-&gt;prepare_write(file,page,offset,offset+bytes);</span><br><span class="line">page_fault = filemap_copy_from_user(page,offset,buf,bytes);</span><br><span class="line">status = a_ops-&gt;commit_write(file,page,offset,offset+bytes);</span><br></pre></td></tr></table></figure>
+<p>首先，在页高速缓存中搜索需要的页。如果需要的页不在高速缓存中，那么内核在高速缓存中新分配一空闲项；下一步，内核创建一个写请求；接着数据被从用户空间拷贝到了内核缓冲；最后将数据写入磁盘。<br>因为所有的页I&#x2F;O操作都要执行上面这些步骤，这就保证了所有的页I&#x2F;O操作必然都是通过页高速缓存进行的。因此，内核也总是试图通过页高速缓存来满足所有的读请求。如果在页高速缓存中未搜索到需要的页，则内核将从磁盘读入需要的页，然后将该页加入到页高速缓存中；对于写操作，页高速缓存更像是一个存储平台，所有要被写出的页豆都要加入页高速缓存中。</p>
+<h2 id="基树"><a href="#基树" class="headerlink" title="基树"></a>基树</h2><p>因为在任何页I&#x2F;O操作前内核都要检查页是否已经在页高速缓存中了，所以这种频繁进行的检查必须迅速、高效，否则搜索和检查页高速缓存的开销可能抵消页高速缓存带来的好处（至少在缓存命中率很低的时候，搜索的开销足以抵消以内存代替磁盘进行检索数据带来的好处）。<br>正如在16.2.2节所看到的，页高速缓存通过两个参数address_space对象加上一个偏移量进行搜索。每个address_space对象都有唯一的基树（radix tree），它保存在page_tree结构体中。基树是一个二叉树，只要指定了文件偏移量，就可以在基树中迅速检索到希望的页。页高速缓存的搜索函数find_get_page()要调用函数radix_tree_lookup()，该函数会在指定基树中搜索指定页面。<br>基树核心代码的通用形式可以在文件<code>lib/radix-tree.c</code>中找到。另外，要想使用基树，需要包含头文件&lt;linux&#x2F;radix_tree.h&gt;。</p>
+<h2 id="以前的页散列表"><a href="#以前的页散列表" class="headerlink" title="以前的页散列表"></a>以前的页散列表</h2><p>在2.6版本以前，内核页高速缓存不是通过基树检索，而是通过一个维护了系统中所有页的全局散列表进行检索。对于给定的一个键值，该散列表会返回一个双向链表的入口对应于这个所给定的值。如果需要的页储存在缓存中，那么链表中的一项就会与其对应。否则，页就不在页面高速缓存中，散列函数返回NULL。<br>全局散列表主要存在四个问题：</p>
+<ol>
+<li>由于使用单个的全局锁保护散列表，所以即使在中等规模的机器中，锁的争用情况也会相当严重，造成性能受损。</li>
+<li>由于散列表需要包含所有页高速缓存中的页，可是搜索需要的只是和当前文件相关的那些页，所以散列表包含的页面相比搜索需要的页面要大得多。</li>
+<li>如果散列表搜索失败（也就是给定的页不在页高速缓存中），执行速度比希望的要慢得多，这是因为检索必须遍历指定散列键值对应的整个链表。</li>
+<li>散列表比其他方法会消耗更多内存。</li>
+</ol>
+<p>2.6版本内核中引入基于基树的页高速缓存来解决这些问题。</p>
+<h1 id="缓冲区高速缓存"><a href="#缓冲区高速缓存" class="headerlink" title="缓冲区高速缓存"></a>缓冲区高速缓存</h1><p>独立的磁盘块通过块I&#x2F;O缓冲也要被存入页高速缓存。一个缓冲是一个物理磁盘块在内存里的表示。缓冲的作用就是映射内存中的页面到磁盘块，这样一来页高速缓存在块I&#x2F;O操作时也减少了磁盘访问，因为它缓存磁盘块和减少块I&#x2F;O操作。这个缓存通常称为缓冲区高速缓存，虽然实际上它没有作为独立缓存，而是作为页高速缓存的一部分。<br>块I&#x2F;O操作一次操作一个单独的磁盘块。普遍的块I&#x2F;O操作是读写i节点。内核提供了bread()函数实现从磁盘读一个块的底层操作。通过缓存，磁盘块映射到它们相关的内存页，并缓存到页高速缓存中。<br>缓冲和页高速缓存并非天生就是统一的，2.4内核的主要工作之一就是统一它们。在更早的内核中，有两个独立的磁盘缓存：页高速缓存和缓冲区高速缓存。前者缓存页面，后者缓存缓冲区，这两个缓存并没有统一。一个磁盘块可以同时存于两个缓存中，这导致必须同步操作两个缓冲区中的数据，而且浪费了内存，去存储重复的缓存项。今天我们只有一个磁盘缓存，即页高速缓存。虽然如此，内核仍然需要在内存中使用缓冲来表示磁盘块，幸好，缓冲是用页映射块的，所以它正好在页高速缓存中。</p>
+<h1 id="flusher线程"><a href="#flusher线程" class="headerlink" title="flusher线程"></a>flusher线程</h1><p>由于页高速缓存的缓存作用，写操作实际上会被延迟。当页高速缓存中的数据比后台存储的数据更新时，该数据就称作脏数据。在内存中累积起来的脏页最终必须被写回磁盘。在以下3种情况发生时，脏页被写回磁盘：</p>
+<ol>
+<li>当空闲内存低于一个特定的阈值时，内核必须将脏页写回磁盘以便释放内存，因为只有干净（不脏的）内存才可以被回收。当内存干净后，内核就可以从缓存清理数据，然后收缩缓存，最终释放出更多的内存。</li>
+<li>当脏页在内存中驻留时间超过一个特定的阈值时，内核必须将超时的脏页写回磁盘，以确保脏页不会无限期地驻留在内存中。</li>
+<li>当用户进程调用sync()和fsync()系统调用时，内核会按要求执行回写动作。</li>
+</ol>
+<p>上面三种工作的目的完全不同。实际上，在旧内核中，这是由两个独立的内核线程分别完成的。但是在2.6内核中，由一群内核线程（flusher线程）执行这三种工作。<br>首先，flusher线程在系统中的空闲内存低于一个特定的阈值时，将脏页刷新写回磁盘。该后台回写例程的目的在于—-在可用内存过低时，释放脏页以重新获得内存。这个特定的内存阈值可以通过dirty_background_ratio sysctl系统调用设置。当空闲内存比阈值dirty_background_ratio还低时，内核便会调用函数flusher_threads()唤醒一个或多个flusher线程，随后flusher线程进一步调用函数bdi_writeback_all()开始将脏页写回磁盘。该函数需要一个参数—-试图写回的页面数目。函数连续地写出数据，知道满足以下两个条件：</p>
+<ol>
+<li>已经有指定的最小数目的页被写回到磁盘。</li>
+<li>空闲内存数已经回升，超过了阈值dirty_background_ratio。</li>
+</ol>
+<p>上述条件确保了flusher线程操作可以减轻系统中内存不足的压力。回写操作不会在达到这两个条件前停止，除非刷新者线程写回了所有的脏页，没有剩下的脏页可再被写回了。<br>为了满足第二个目标，flusher线程后台例程会被周期性唤醒（和空闲内存是否过低无关），将那些在内存中驻留时间过长的脏页写出，确保内存中不会有长期存在的脏页。<code>如果系统发生崩溃，由于内存处于混乱之中，所以那些在内存中还没来得及写回磁盘的脏页就会丢失</code>，所以周期性同步页高速缓存和磁盘非常重要。在系统启动时，内核初始化一个定时器，让它周期地唤醒flusher线程，随后使其运行函数wb_writeback()。该函数将把所有驻留时间超过dirty_expire_interval ms的脏页写回。然后定时器将再次被初始化为dirty_expire_centisecs 秒后唤醒flusheri线程。总而言之，flusher线程周期性地被唤醒并且把超过特定期限的脏页写回磁盘。<br>系统管理员可以在<code>/proc/sys/vm</code>中设置回写相关的参数，也可以通过sysctl系统调用设置它们。下表列出了于pdflush相关的所有可设置变量。<br><strong>页回写设置</strong></p>
+<table>
+<thead>
+<tr>
+<th>变量</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>dirty_background_ratio</td>
+<td>占全部内存的百分比。当内存中空闲页达到这个比例时，pdflush线程开始回写脏页。</td>
+</tr>
+<tr>
+<td>dirty_expire_interval</td>
+<td>该数值以百分之一秒为单位，它描述超时多久的数据将被周期性执行的pdflush线程写出。</td>
+</tr>
+<tr>
+<td>dirty_ratio</td>
+<td>占全部内存百分比，当一个进程产生的脏页达到这个比例时，就开始被写出。</td>
+</tr>
+<tr>
+<td>dirty_writeback_interval</td>
+<td>该数值以百分之一秒为单位，它描述pdflush线程的运行频率。</td>
+</tr>
+<tr>
+<td>laptop_mode</td>
+<td>一个布尔值，用于控制膝上型计算机模式。</td>
+</tr>
+</tbody></table>
+<p>flusher线程的实现代码在文件<code>mm/page-writeback.c</code>和<code>mm/backing-dev.c</code>中，回写机制的实现代码在文件<code>fs/fs-writeback.c</code>中。</p>
+<h2 id="膝上型计算机模式"><a href="#膝上型计算机模式" class="headerlink" title="膝上型计算机模式"></a>膝上型计算机模式</h2><p>膝上型计算机模式是一种特殊的页回写策略，该策略主要意图是将硬盘转动的机械行为最小化，允许硬盘尽可能长时间地停滞，以此延长电池供电时间。该模式可以通过<code>/proc/sys/vm/laptop_mode</code>文件进行配置。通常，上述配置文件内容为0，也就是说膝上型计算机模式关闭，如果需要启用膝上型计算机模式，则向配置文件中写入1。<br>膝上型计算机模式的页回写行为与传统方式相比只有一处变化。除了当缓存中的页面太旧时要执行回写脏页之外，flusher还会找准磁盘运转的时机，把所有其他的物理磁盘I&#x2F;O、刷新脏缓冲等通通写回到磁盘，以便保证不会专门为了写磁盘而去主动激活磁盘运行。<br>上述回写行为变化要求dirty_expire_interval和dirty_writeback_interval两阈值必须设置得更大，比如10分钟。因为磁盘运转并不很频繁，所以用这样长的回写延迟就能保证膝上型计算机模式可以等到磁盘运转机会写入数据。因为关闭磁盘驱动器是节电的重要手段，膝上模式可以延长膝上计算机依靠电池的续航能力。其坏处则是系统崩溃或者其他错误会使得数据丢失。<br>多数Linux发布版会在计算机接上电池或拔掉电池时，自动开启或禁止膝上型计算机模式以及其他需要的回写可调节开关。因此机器可在使用电池电源时自动进入膝上型计算机模式，而在插上交流电源时恢复到常规的页回写模式。</p>
+<h2 id="历史上的bdflush、kupdated和pdflush"><a href="#历史上的bdflush、kupdated和pdflush" class="headerlink" title="历史上的bdflush、kupdated和pdflush"></a>历史上的bdflush、kupdated和pdflush</h2><p>在2.6版本前，flusher线程的工作分别由bdflush和kupdated两个线程共同完成。<br>当可用内存过低时，bdflush内核线程在后台执行脏页回写操作。类似flusher，它也有一组阈值参数，当系统中空闲内存消耗到特定阈值以下时，bdflush线程就被wakeup_bdflush()函数唤醒。<br>bdflush和当前的flusher线程之间存在两个主要区别。第一个区别是系统中只有一个bdflush后台线程，而flusher线程的数目却是根据磁盘数量变化的；第二个区别是bdflush线程基于缓冲，它将脏缓冲写回磁盘，相反，flusher线程基于页面，它将整个脏页写回磁盘。当然，页面可能包含缓冲，但是实际I&#x2F;O操作对象是整页，而不是块。因为页在内存中是更普遍和普通的概念，所以管理页相比管理块要简单。<br>因为只有在内存过低和缓冲数量过大时，bdflush例程才刷新缓冲，所以kupdated例程被引入，以便周期地写回脏页。它和pdflush线程的wb_writeback()函数通过同样的服务。<br>在2.6内核中，bdflush和kupdated已让路给pdflush线程—-page dirty flush的缩写。pdflush线程的执行和今天的flush线程类似。其主要区别在于，pdflush线程数目是动态的，默认是2个到8个，具体多少取决于系统I&#x2F;O的负载。pdflush线程与任何任务都无关，它们是面向系统所有磁盘的全局任务。这样做的好处是实现简单，可带来的问题是，pdflush线程很容易在拥塞的磁盘上绊住，而现代硬件发生拥塞更是家常便饭。采用每个磁盘一个刷新线程可以使得I&#x2F;O操作同步执行，简化了拥塞逻辑，也提升了性能。flusher线程在2.6.32内核系列中取代了pdflush线程（针对每个磁盘独立执行回写操作是其和pdflush的主要区别）。</p>
+<h2 id="避免拥塞的办法：使用多线程"><a href="#避免拥塞的办法：使用多线程" class="headerlink" title="避免拥塞的办法：使用多线程"></a>避免拥塞的办法：使用多线程</h2><p>使用bdflush线程最主要的一个缺点就是，bdflush仅仅包含了一个线程，因此很有可能在页回写任务很重时，造成拥塞。这是因为单一的线程有可能堵塞在某个设备的已拥塞请求队列（正在等待将请求提交给磁盘的I&#x2F;O请求队列）上，而其他设备的请求队列却没法得到处理。如果系统有多个磁盘和较强的处理能力，内核应该能使得每个磁盘都处于忙状态。不幸的是，即使还有许多数据需要回写，单个的bdflush线程也可能会堵塞在某个队列的处理上，不能使所有磁盘都处于饱和的工作状态，原因在于磁盘的吞吐量是非常有限的。正是因为磁盘的吞吐量很有限，所以如果只有唯一线程执行页回写操作，那么这个线程很容易苦苦等待对一个磁盘上的操作。为了避免出现这种情况，内核需要多个回写线程并发执行，这样单个设备队列的拥塞就不会成为系统瓶颈了。<br>2.6内核通过使用多个flusher线程上解决上述问题。每个线程可以相互独立地将脏页刷新回磁盘，而且不同的flusher线程处理不同的设备队列。pdflush线程策略中，线程数是动态变化的。每一个线程试图尽可能忙地从每个超级块的脏页链表中回收数据，并且写回磁盘。pdflush方式避免了因为一个忙磁盘，而使得其余磁盘饥饿的状况。通常情况下这样是不错的，但是如果每个pdflush线程在同一个拥塞的队列上挂起了又该如何呢？在这种情况下，多个pdflush线程可能并不比一个线程更好，就浪费的内存而言就要多许多。为了减轻上述影响，pdflush线程采用了拥塞回避策略：它们会主动尝试从那些没有拥塞的队列回写页。从而，pdflush线程将其工作调度开来，防止了仅仅欺负某一个忙碌设备。<br>这种方式效果确实不错，但是拥塞回避并不完美。在现代操作系统中，因为I&#x2F;O总线技术和计算机其他部分相比发展要缓慢的多，所以拥塞现象时常发生—-处理器发展速度遵循摩尔定律，但是硬盘驱动器则仅仅比20年前快一点点。要知道，目前除了pdflush之外，I&#x2F;O系统中还没有其他地方使用这种拥塞回避处理。不过在很多情况下，pdflush确实可以避免向特定盘回写的时间和期望时间相比太久。当前flusher线程模型（自2.6.32内核系列以后采用）和具体块设备关联，所以每个给定线程从每个给定设备的脏页链表收集数据，并写回到对应磁盘。回写于是更趋于同步了，而且由于每个磁盘对应一个线程，所以线程也不需要采用复杂的拥塞避免策略，因为一个磁盘就一个线程操作。该方法提高了I&#x2F;O操作的公平性，而且降低了饥饿风险。<br>因为使用pdflush以及后来的flusher线程提升了页回写性能。2.6内核系列相比早期内核可让磁盘利用更饱和。在系统I&#x2F;O很重的时候，flusher线程可以在每个磁盘上都维护更高的吞吐量。</p>
+<h1 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h1><p>本章中我们看到了Linux的页高速缓存和页回写。了解了内核如何通过页缓存执行页I&#x2F;O操作以及这些页高速缓存（通过存储数据在内存中）可以利用减少磁盘I&#x2F;O，从而极大地提升系统的性能。我们讨论了通过称为“回写缓存”的进程维护在缓存中的更新页面—-具体做法是标记内存中的页面为脏，然后找时机延迟写到磁盘中。flusher内核线程将负责处理这些最终的页回写操作。<br>通过最近几章的学习，你应该已经对内存与文件系统有了深刻认识，那么接下来我们将进入模块专题，去学习Linux的驱动以及内核如何被模块化、在运行时插入和删除内核代码的动态机制。</p>
 
     </div>
 
@@ -397,13 +460,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="站点总字数">705k</span>
+    <span title="站点总字数">712k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">10:41</span>
+    <span title="站点阅读时长">10:47</span>
   </span>
 </div>
 <div class="busuanzi-count">
