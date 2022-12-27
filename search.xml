@@ -969,6 +969,225 @@ SDRAM K4S561632不支持CL&#x3D;1的情况，所以位[6:4]取值为0b010(CL &#x
       </tags>
   </entry>
   <entry>
+    <title>中断体系结构</title>
+    <url>/2022/08/19/%E4%B8%AD%E6%96%AD%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《嵌入式Linux应用完全开发手册》第2篇第9章总结归纳</p>
+<span id="more"></span>
+
+<h1 id="本章目标"><a href="#本章目标" class="headerlink" title="本章目标"></a>本章目标</h1><ol>
+<li>了解ARM系统CPU的7中工作模式</li>
+<li>了解S3C2410&#x2F;S3C2440中断体系结构</li>
+<li>掌握S3C2410&#x2F;S3C2440的中断服务程序的编写方法</li>
+</ol>
+<h1 id="S3C2410-x2F-S3C2440中断体系结构"><a href="#S3C2410-x2F-S3C2440中断体系结构" class="headerlink" title="S3C2410&#x2F;S3C2440中断体系结构"></a>S3C2410&#x2F;S3C2440中断体系结构</h1><h2 id="ARM体系CPU的7种工作模式"><a href="#ARM体系CPU的7种工作模式" class="headerlink" title="ARM体系CPU的7种工作模式"></a>ARM体系CPU的7种工作模式</h2><ol>
+<li>用户模式（usr）：ARM处理器正常的程序执行状态。</li>
+<li>快速中断模式（fiq）：用于高速数据传输或通道处理。</li>
+<li>中断模式（irq）：用于通用的中断处理。</li>
+<li>管理模式（svc）：操作系统使用的保护模式。</li>
+<li>数据访问终止模式（abt）：当数据或指令预取终止时进入该模式，可用于虚拟存储及存储保护。</li>
+<li>系统模式（sys）：运行具有特权的操作系统任务。</li>
+<li>未定义指令中止模式（und）：当未定义的指令执行时进入该模式，可用于支持硬件协处理器的软件仿真。</li>
+</ol>
+<p>可以通过软件来进行模式切换，或者发生各类中断、异常时CPU自动进入相应的模式。除用户模式外，其他6种模式都属于特权模式。大多数程序运行于用户模式，进入特权模式是为了处理中断、异常，或者访问被保护的系统资源。<br>另外，ARM体系的CPU有以下两种工作状态。<br>ARM状态：此时处理器执行32位的字对齐的ARM指令。<br>Thumb状态：此时处理器执行16位的、半字对齐的Thumb指令。<br>实际上，本书所有的程序都是在ARM状态下运行的，而CPU一上电就处于ARM状态，所以无需关心CPU的工作状态。<br>ARM920T有31个通用的32位寄存器和6个程序状态寄存器。这37个寄存器分为7组，进入某个工作模式是就使用它的那组寄存器。有些寄存器，不同的工作模式有自己的副本，当切换到另一个工作模式时，那个工作模式的寄存器副本将被使用：这些寄存器被称为备份寄存器。<br>在ARM状态下，每种工作模式都有16个通用寄存器和1个（或2个，取决于工作模式）程序状态寄存器。下图列出了ARM状态下不同工作模式所使用的寄存器：<br><img src="/2022/08/19/%E4%B8%AD%E6%96%AD%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/1.jpeg" alt="img not found"><br>图中R0-R15可以直接访问，这些寄存器除R15之外都是通用寄存器。即它们既可以保存数据也可以保存地址。另外，R13-R15稍有特殊。R13又被称为栈指针寄存器，通常用于保存栈指针。R14  又被称为程序连接寄存器或连接寄存器，当执行BL子程序调用指令时，R14中得到R15（程序计数器PC）的备份。而当发生中断或者异常时，对应的R14_svc、R14_irq、R14_fiq、R14_abt或R14_und中保存R15的返回值。R15是程序计数器。<br>快速中断模式有7个备份寄存器R8-R14（即R8_fiq-R14_fiq），这使得进入快速中断模式执行很大部分程序时（只要它们不改变R0-R7），甚至不需要保存任何寄存器。用户模式、管理模式、数据访问终止模式和未定义指令中止模式都含有两个独占的寄存器副本R13、R14，这样可以令每个模式拥有自己的栈指针寄存器和连接寄存器。<br>每种工作模式除R0-R15共有16个寄存器外，还有第17个寄存器CPSR，即“当前程序状态寄存器（Current Program Status Register）”。CPSR中一些位被用于表示各种状态，一些位被用于标识当前处于说明工作模式。<br>CPSR中各位意义如下：<br><img src="/2022/08/19/%E4%B8%AD%E6%96%AD%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/2.jpeg" alt="img not found"></p>
+<ol>
+<li>T位：置位时，CPU处于Thumb状态，否则处于ARM状态。</li>
+<li>中断禁止位：I位和F位属于中断禁止位。它们置位时，IRQ中断、FIQ中断分别被禁止。</li>
+<li>工作模式位：表明CPU当前处于什么工作模式。可以编写这些位，使CPU进入指定的工作模式。</li>
+</ol>
+<p>除CPSR外，还有快速中断模式、中断模式、管理模式、数据访问终止模式和未定义指令中止模式等5种工作模式和一个寄存器–SPSR，即“程序状态保存寄存器（Saved Process Status Registers）”。当切换进入这些工作模式时，在SPSR中保存前一个工作模式的CPSR值，这样，当返回前一个工作模式时，可以将SPSR的值恢复到CPSR中。<br>综上所述，当一个异常发生时，将切换进入相应的工作模式（下文中将称为异常模式），这是CPU核将自动完成以下事情：</p>
+<ol>
+<li>在异常工作模式的连接寄存器R14中保存前一个工作模式的下一条，即将执行的指令的地址。对于ARM状态，这个值是当前PC值加4或加8。</li>
+<li>将CPSR的值复制到异常模式的SPSR。</li>
+<li>将CPSR的工作模式位设为这个异常对应的工作模式。</li>
+<li>令PC值等于这个异常模式在异常向量表中的地址，即跳转去执行异常向量表中的相应指令。</li>
+</ol>
+<p>相反的，从异常工作模式推出到之前的工作模式时，需要通过软件完成如下事情。</p>
+<ol>
+<li>前面进入异常工作模式时，连接寄存器保存了前一工作模式的一个指令地址，将它减去一个适当的值后赋值给PC寄存器。</li>
+<li>将SPSR的值复制回CPSR。</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>异常模式</th>
+<th>退出异常模式时PC的计算方法</th>
+<th>进入异常模式时R14中保存的值（ARM状态）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>管理模式（通过SWI指令进入）</td>
+<td>MOVS PC，R14</td>
+<td>PC + 4 ①</td>
+</tr>
+<tr>
+<td>未定义指令中止模式</td>
+<td>MOVS PC，R14</td>
+<td>PC + 4  ①</td>
+</tr>
+<tr>
+<td>快速中断模式</td>
+<td>SUBS PC，R14，#4</td>
+<td>PC + 4 ②</td>
+</tr>
+<tr>
+<td>中断模式</td>
+<td>SUBS PC，R14，#4</td>
+<td>PC + 4 ②</td>
+</tr>
+<tr>
+<td>数据访问终止模式</td>
+<td>异常原因：指令预取终止 SUBS PC，R14，#4</td>
+<td>PC + 4 ①</td>
+</tr>
+<tr>
+<td>数据访问终止模式</td>
+<td>异常原因：指令访问终止 SUBS PC，R14，#8</td>
+<td>PC + 8 ③</td>
+</tr>
+</tbody></table>
+<p>注：<br>①PC值是这些指令的地址：SWI、未定义的指令、在预取时就失败的指令。<br>②PC值是这些指令的地址：进入快速中断模式、中断模式前、被打断而未执行的指令。<br>③PC值是这些指令的地址：导致数据访问终止的加载&#x2F;存储指令（LDR、STR、LDM、STM）。</p>
+<h2 id="S3C2410-x2F-S3C2440中断控制器"><a href="#S3C2410-x2F-S3C2440中断控制器" class="headerlink" title="S3C2410&#x2F;S3C2440中断控制器"></a>S3C2410&#x2F;S3C2440中断控制器</h2><p>CPU运行过程中，如何知道各类外设发生了某些不预期的事件，比如串口收到了新数据，USB接口中插入了设备，按下了某个按键等。主要有以下两种方法：</p>
+<ol>
+<li>轮询方式：程序循环的查询各个设备的状态并作出相应反应。它实现简单，常用在功能相对单一的系统中。比如在一个温控系统中可以使用查询方式不断检测温度的变化。缺点是占用CPU资源过高，不适用于多任务系统。</li>
+<li>中断方式：当某件事情发生时，硬件会设置某个寄存器；CPU在每执行完一条指令时，通过硬件查看这个寄存器，如果发现所关注的事情发生了，则中断当前程序流程，跳转到一个固定的地址处理这件事情，最后返回继续执行被中断的程序。它的实现相对复杂，但是效率很高，是常用的方法。</li>
+</ol>
+<p>参考下图，不论何种CPU，中断的处理过程是相似的：<br><img src="/2022/08/19/%E4%B8%AD%E6%96%AD%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/3.jpeg" alt="img not found"></p>
+<ol>
+<li>中断控制器汇集各类外设发出的中断信号，然后告诉CPU。</li>
+<li>CPU保存当前程序的运行环境（各个寄存器等），调用中断服务程序（ISR，Interrupt Service Routine）来处理这些中断。</li>
+<li>在ISR中通过读取中断控制器、外设的相关寄存器来识别这是哪个中断，并进行相应的处理。</li>
+<li>清除中断：通过读写中断控制器和外设的相关寄存器来实现。</li>
+<li>最后恢复被中断程序的运行环境（即上面保存的各个寄存器等），继续执行。</li>
+</ol>
+<p>对于不同的CPU而言，中断的处理只是细节的不同，S3C2410&#x2F;S3C2440的中断控制器结构如下图所示：<br><img src="/2022/08/19/%E4%B8%AD%E6%96%AD%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/4.jpeg" alt="img not found"><br>SUBSRCPND和SRCPND寄存器表明有哪个中断被触发了，正在等待处理（pending）；SUBMASK（INTSUBMSK）和MASK（INTMSK）用于屏蔽某些中断。<br>图中的“Request sources （with sub -register）”表示INT_RXD0、INT_TXD0等中断源（S3C2410中这类中断有11个，而S3C2440中有15个）。它们不同于“Request sources （without sub -register）”。</p>
+<ol>
+<li>Request sources （without sub -register）中的中断源被触发之后，SRCPND寄存器中相应位被置1，如果此中断没有被INTMSK寄存器屏蔽或者快中断（FIQ）的话，它将被进一步处理。</li>
+<li>对于Request sources （with sub -register）中的中断源被触发之后，SUBSRCPND寄存器中的相应位被置1，如果此中断没有被INTSUBMSK寄存器屏蔽的话，它在SRCPND寄存器中的相应位也被置1，之后的处理过程就和“Request sources （without sub -register）”一样了。</li>
+</ol>
+<p>在SRCPND寄存器中，被触发的中断的相应位被置1，等待处理：</p>
+<ol>
+<li>如果被触发的中断中有快速中断（FIQ）—MODE（INTMOD寄存器）中为1的位对应的中断是FIQ，则CPU进入快速中断模式（FIQ Mode）进行处理。</li>
+<li>对于一般中断IRQ，可能同时有几个中断被触发，未被INTMSK寄存器屏蔽的中断经过比较后，选出优先级最高的中断，此中断在INTPND寄存器中的相应位被置1，然后CPU进入中断模式（IRQ Mode）进行处理。中断服务程序可以通过读取INTPND寄存器或者INTOFFSET寄存器来确定中断源。</li>
+</ol>
+<p>“Priority”表示中断的优先级判选，通过PRIORITY寄存器进行设置。</p>
+<p>综上所述，使用中断的步骤如下：</p>
+<ol>
+<li>设置好中断模式和快速中断模式下的栈：当发生中断IRQ时，CPU进入中断模式，这是使用中断模式下的栈；当发生快速中断模式FIQ时，CPU进入快速中断模式，这时使用快速中断模式下的栈。</li>
+<li>准备好中断处理函数。<br>  ①异常向量：<br>  在异常向量表中设置好当进入中断模式或快速中断模式时的跳转函数，它们的异常向量地址分别为0x00000018、0x0000001C。<br>  ②中断服务程序（ISR）：<br>  IRQ、FIQ的跳转函数，最终将调用具体中断的服务函数。对于IRQ，读取INTPND寄存器或者INTOFFSET寄存器的值来确定中断源，然后分别处理。<code>对于FIQ，因为只有一个中断可以设为FIQ</code>，因此无需判断。<br>  ③清除中断：<br>  如果不清除中断，则CPU会误以为这个中断又一次发生了。<br>  可以在调用ISR之前清除中断，也可以在调用ISR之后清除中断，这取决于在ISR执行过程中，这个中断是否可能继续发生、是否能够丢弃。如果在ISR执行过程中，这个中断可能发生并不能丢弃，则在调用ISR之前就清除中断，这样在ISR过程中发生的中断能够被各寄存器再次记录并通知CPU；如果在ISR过程中，这个中断并不能发生或者可以丢弃，则在调用ISR后清除中断。<br>  清除中断时，从源头开始：首先，需要的话，操作具体外设清除中断信号；其次，清除SUBSRCPND、SRCPND寄存器的相应位（往相应位写1即可）；最后，清除INTPND寄存器的相应位（往相应位写1即可），最简单的方法就是“INTPND&#x3D;INTPND”。</li>
+<li>进入、退出中断模式或快速中断模式时，需要保存、恢复被中断程序的运行环境。<br>  ①对于IRQ：<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sub lr,lr,#4              @计算返回地址</span><br><span class="line">stmdb   sp!,&#123;r0-r12,lr&#125;   @保存使用到的寄存器</span><br><span class="line">... ...                   @处理中断</span><br><span class="line">ldmia   sp!,&#123;r0-r12,pc&#125;   @中断返回</span><br><span class="line">                          @^表示将spsr的值赋值给cpsr</span><br></pre></td></tr></table></figure>
+  ②对于FIQ<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sub lr,lr,#4              @计算返回地址</span><br><span class="line">stmdb   sp!,&#123;r0-r7,lr&#125;   @保存使用到的寄存器</span><br><span class="line">... ...                   @处理中断</span><br><span class="line">ldmia   sp!,&#123;r0-r7,pc&#125;   @中断返回</span><br><span class="line">                          @^表示将spsr的值赋值给cpsr</span><br></pre></td></tr></table></figure></li>
+<li>根据具体中断，设置相关外设。不比如对于GPIO中断，需要将相应引脚的功能设置为“外部引脚”、设置中断触发条件（低电平出发、高电平触发、下降沿触发还是上升沿触发）等。一些中断拥有自己的屏蔽寄存器，还要开启它。</li>
+<li>对于“Request sources （without sub -register）”中的中断，将INTSUBMSK寄存器中相应位设为0。</li>
+<li>确定使用此中断的方式：FIQ或IRQ。<br>  ①如果是FIQ，则在INTMOD寄存器中设置相应位为1。<br>  ②如果是IRQ，则在PRIORITY寄存器中设置优先级。</li>
+<li>如果是IRQ，将IMTMSK寄存器中相应位设为0（FIQ不受INTMSK寄存器控制）。</li>
+<li>设置CPSR寄存器中的I-bit位（IRQ）或者F-bit（对于FIQ）为0，使能IRQ或者FIQ。</li>
+</ol>
+<h2 id="中断控制器寄存器"><a href="#中断控制器寄存器" class="headerlink" title="中断控制器寄存器"></a>中断控制器寄存器</h2><p>SUBSRCPND、INTSUBMSK这两个寄存器中相同的位对应相同的中断；SRCPND、INTMSK、INTMOD、INTPND这四个寄存器中相同的位对应相同的中断。</p>
+<h3 id="SUBSRCPND寄存器（SUB-SOURCE-PENDING）"><a href="#SUBSRCPND寄存器（SUB-SOURCE-PENDING）" class="headerlink" title="SUBSRCPND寄存器（SUB SOURCE PENDING）"></a>SUBSRCPND寄存器（SUB SOURCE PENDING）</h3><p>SUBSRCPND寄存器被用来标识INT_RXD0、INT_TXD0等中断（S3C2410中这类中断有11个，而S3C2440中有15个）受否已经发生，每位对应一个中断。当这些中断发生并且没有被INTSUBSMSK寄存器屏蔽，则它们中的若干位将“汇集”出现在SRCPND寄存器的一位下。比如SUBSRCPND寄存器中的3个中断，INT_RXD0、INT_TXD0、INT_ERR0，只要有一个发生了并且它没有被屏蔽，则SRCPND寄存器中的INT_UART0位被置1。<br>要清除中断时，往SUBSRCPND寄存器中某位写入1即可令此位为0；写入0无效果，数据保持不变。</p>
+<h3 id="INTSUBMSK寄存器（INTERRUPT-SUB-MSK）"><a href="#INTSUBMSK寄存器（INTERRUPT-SUB-MSK）" class="headerlink" title="INTSUBMSK寄存器（INTERRUPT SUB MSK）"></a>INTSUBMSK寄存器（INTERRUPT SUB MSK）</h3><p>INTSUBMSK寄存器被用来屏蔽SUBSRCPND寄存器标识的中断。INTSUBMSK寄存器中某位被设为1时，对应的中断被屏蔽。</p>
+<h3 id="SRCPND寄存器（SOURCE-PENDING）"><a href="#SRCPND寄存器（SOURCE-PENDING）" class="headerlink" title="SRCPND寄存器（SOURCE PENDING）"></a>SRCPND寄存器（SOURCE PENDING）</h3><p>SRCPND中每一位被用来表示一个（或者一类）中断是否已经发生。例如：</p>
+<ol>
+<li>使用SUBSRCPND&#x2F;INTSUBMSK控制的中断。</li>
+<li>不使用SUBSRCPND&#x2F;INTSUBMSK控制的中断。<br>SRPND寄存器的操作与SUBSRCPND类似，若想清除某一位，往此位写入1。</li>
+</ol>
+<h3 id="INTMSK-寄存器（INTERRUPT-MASK）"><a href="#INTMSK-寄存器（INTERRUPT-MASK）" class="headerlink" title="INTMSK 寄存器（INTERRUPT MASK）"></a>INTMSK 寄存器（INTERRUPT MASK）</h3><p>INTMSK寄存器被用来屏蔽SRCPND寄存器所标识的中断。INTMSK寄存器中某位被设为1时，对应的中断被屏蔽。<br>INTMSK寄存器只能屏蔽被设为IRQ的中断，不能屏蔽被设为FIQ的中断。</p>
+<h3 id="INTMOD-寄存器（INTERRUPT-MODE）"><a href="#INTMOD-寄存器（INTERRUPT-MODE）" class="headerlink" title="INTMOD 寄存器（INTERRUPT MODE）"></a>INTMOD 寄存器（INTERRUPT MODE）</h3><p>当INTMOD寄存器中某位被设为1时，它对应的中断被设为FIQ，即此中断发生时，CPU将进入快速中断模式，这通常用来处理特别紧急的中断。</p>
+<h3 id="PRIORITY-寄存器"><a href="#PRIORITY-寄存器" class="headerlink" title="PRIORITY 寄存器"></a>PRIORITY 寄存器</h3><p>上面INTMOD寄存器中，将设为1的中断称为快速中断（FIQ），将其余设为0的中断称为普通中断（IRQ）。<br>当有多个普通中断发生时，中断处理器将选出优先级最高的中断，首先处理它。中断优先级的判选通过7个仲裁器来完成，包括6个以及仲裁器和1个二级仲裁器：<br><img src="/2022/08/19/%E4%B8%AD%E6%96%AD%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/5.jpeg" alt="img not found"><br>每个仲裁器含6个输入引脚REQ0-REQ5。对于每个仲裁器，PRIORITY寄存器使用三位来控制其行为：一位被用于选择仲裁器工作模式，称为ARB_MODE；两位被用于控制各输入信号的优先级，称为ARB_SEL。<br>ARB_SEL的取值和REQ0-REQ5的优先级如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>ARB_SEL</th>
+<th>优先级（从高到低）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>00b</td>
+<td>REQ0、REQ1、REQ2、REQ3、REQ4、REQ5</td>
+</tr>
+<tr>
+<td>01b</td>
+<td>REQ0、REQ2、REQ3、REQ4、REQ1、REQ5</td>
+</tr>
+<tr>
+<td>10b</td>
+<td>REQ0、REQ3、REQ1、REQ1、REQ2、REQ5</td>
+</tr>
+<tr>
+<td>11b</td>
+<td>REQ0、REQ4、REQ4、REQ2、REQ3、REQ5</td>
+</tr>
+</tbody></table>
+<p>注：REQ0的优先级永远是最高的、REQ5的优先级永远是最低的。</p>
+<p>当某个仲裁器的ARB_MODE位被设为0时，它的ARB_SEL位是不会自动变化的，此时这个仲裁器的6个输入引脚的优先级固定不变（当然，可以通过软件修改ARB_SEL来改变它们的优先级）。当ARB_MODE位被设为1时，ARB_SEL会随着“已经被服务的REQx”（x&#x3D;1~4）自动变化：</p>
+<table>
+<thead>
+<tr>
+<th>已经被服务的REQx</th>
+<th>ARB_SEL的新值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>REQ0&#x2F;REQ5</td>
+<td>维持不变</td>
+</tr>
+<tr>
+<td>REQ1</td>
+<td>01b</td>
+</tr>
+<tr>
+<td>REQ2</td>
+<td>10b</td>
+</tr>
+<tr>
+<td>REQ3</td>
+<td>11b</td>
+</tr>
+<tr>
+<td>REQ4</td>
+<td>00b</td>
+</tr>
+<tr>
+<td>结合上表可知：当ARB_MODE为1时，某个REQx（x&#x3D;1~4）被服务之后，它的优先级变为REQ0-REQ4中的最低。</td>
+<td></td>
+</tr>
+<tr>
+<td>PRIORITY寄存器中位[0:6]对应这7个仲裁器的ARB_MODE位（位[0]是ARB_MODE0，依此类推），位[7:20]位对应这7个仲裁器的ARB_SEL位（[7:8]是ARB_SEL0，依此类推）。</td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="INTPND寄存器（INTERRUPT-PENDING）"><a href="#INTPND寄存器（INTERRUPT-PENDING）" class="headerlink" title="INTPND寄存器（INTERRUPT PENDING）"></a>INTPND寄存器（INTERRUPT PENDING）</h3><p>经过中断优先级仲裁器选出的优先级最高的中断后，这个中断在INTPND寄存器中的相应位被置1，随后，CPU将进入中断模式处理它。<br>同一时间内，此寄存器只有一位被置1；在ISR中，可以根据这个位确定是哪个中断。清除中断时，往这个位写1。</p>
+<h3 id="INTOFFSET-寄存器（INTERRUPYT-OFFSET）"><a href="#INTOFFSET-寄存器（INTERRUPYT-OFFSET）" class="headerlink" title="INTOFFSET 寄存器（INTERRUPYT OFFSET）"></a>INTOFFSET 寄存器（INTERRUPYT OFFSET）</h3><p>这个寄存器被用来表示INTPND寄存器中哪位被置1了，即INTPND寄存器中位[X]为1时，INTOFFSET寄存器中的值为x（x为0~31）。<br>在清除SRCPND、INTPND寄存器时，INTOFFSET寄存器被自动清除。</p>
+<h1 id="中断控制器操作实例：外部中断"><a href="#中断控制器操作实例：外部中断" class="headerlink" title="中断控制器操作实例：外部中断"></a>中断控制器操作实例：外部中断</h1><h2 id="按键中断代码实详解"><a href="#按键中断代码实详解" class="headerlink" title="按键中断代码实详解"></a>按键中断代码实详解</h2><p>开发板上，K1-K4四个按键所接的CPU引脚可以设成外部中断功能。本程序的main函数是一个不做任何事的无限循环，程序的功能完全靠中断来驱动：当按下某个按键时，CPU调用其中断服务程序来点亮对应的LED。</p>
+<h3 id="head-S代码详解"><a href="#head-S代码详解" class="headerlink" title="head.S代码详解"></a>head.S代码详解</h3><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">@******************************************************</span><br><span class="line">@File:head.S</span><br><span class="line">@功能：初始化，设置中断模式、系统模式的栈，设置好中断处理函数</span><br><span class="line">@******************************************************</span><br><span class="line"></span><br><span class="line">.<span class="keyword">extern</span> main</span><br><span class="line">.text</span><br><span class="line">.global _start</span><br><span class="line"></span><br><span class="line">_start:</span><br><span class="line">@******************************************************</span><br><span class="line">@中断向量，本程序中，除Reset和HandleIRQ外，其他异常都没有使用</span><br><span class="line">@******************************************************</span><br><span class="line">  b Reset</span><br><span class="line"></span><br><span class="line">@<span class="number">0x04</span>：未定义指令终止模式的向量地址</span><br><span class="line">HandleUndef：</span><br><span class="line">  b HandleUndef</span><br><span class="line"></span><br><span class="line">@<span class="number">0x08</span>：管理模式的向量地址，通过SWI指令进入此模式</span><br><span class="line">HandleSWI：</span><br><span class="line">  b HandleSWI</span><br><span class="line"></span><br><span class="line">@<span class="number">0x0c</span>：指令预取终止导致的异常的向量地址</span><br><span class="line">HandlePrefetchAbort：</span><br><span class="line">  b HandlePrefetchAbort</span><br><span class="line"></span><br><span class="line">@<span class="number">0x10</span>：数据访问终止导致的异常的向量地址</span><br><span class="line">HandleDataAbort：</span><br><span class="line">  b HandleDataAbort</span><br><span class="line"></span><br><span class="line">@<span class="number">0x14</span>：保留</span><br><span class="line">HandleNotUsed:</span><br><span class="line">  b HandleNotUsed</span><br><span class="line"></span><br><span class="line">@<span class="number">0x18</span>：中断模式的向量地址</span><br><span class="line">  b HandleIRQ</span><br><span class="line"></span><br><span class="line">@<span class="number">0x1c</span>：快中断模式的向量地址</span><br><span class="line">HandleFIQ：</span><br><span class="line">  b HandleFIQ</span><br></pre></td></tr></table></figure>
+<p>上面7行指令所对应的地址为0x00、0x04、…、0x1C，这些地址上的指令称为“异常向量”。当发生各类异常时，CPU进入相应的工作模式，并跳转去执行它的异常向量。比如当复位时，CPU进入系统模式，并跳到0x00地址开始执行；发生中断时，CPU进入中断模式，并跳到地址0x18开始执行。<br>本程序中，只能使用“复位”和“中断”对应的异常向量，其他异常向量没有实际作用。<br>0x00地址处的指令为“b Reset”，在系统复位后，这条指令将跳去执行“Reset”开始的代码，它们完成一些初始化，代码如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">Reset:</span><br><span class="line">  ldr sp,=<span class="number">4096</span>            @设置栈指针，以下都是C函数，调用前需要设置好栈</span><br><span class="line">  bl disable_watch_dog    @关闭看门狗，否则CPU会不断重启</span><br><span class="line">  </span><br><span class="line">  msr cpsr_c,#<span class="number">0xd2</span>        @进入中断模式</span><br><span class="line">  ldr sp,=<span class="number">3072</span>            @设置中断模式栈指针</span><br><span class="line"></span><br><span class="line">  msr cpsr_c,#<span class="number">0xdf</span>        @进入系统模式</span><br><span class="line">  ldr sp,=<span class="number">4096</span>            @设置系统模式栈指针</span><br><span class="line">                          @其实复位之后，CPU就处于系统模式</span><br><span class="line">                          @前面的“ldr sp,=<span class="number">4096</span>”完成同样的功能，此句可省略</span><br></pre></td></tr></table></figure>
+<p>第5-6行、第8-9行代码的功能相似，前者用于设置中断模式的栈指针，后者用于设置系统模式的栈指针。注意，这是尚未设完成所有初始化，所以还不能开开中断—第5、第8行代码中，CPSR中寄存器的I、F位都被设为1。第6、第9行代码中sp寄存器并不是同一个寄存器，前者为sp_irq、后者为sp_sys。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">bl  init_led                  @初始化LED的GPIO管脚</span><br><span class="line">bl  init_irq                  @调用中断初始化函数，在init.c中</span><br><span class="line">msr cpsr_c, #<span class="number">0x5f</span>             @设置I-bit=<span class="number">0</span>, 开IRQ中断</span><br><span class="line"></span><br><span class="line">ldr lr, =halt_loop            @设置返回地址</span><br><span class="line">ldr pc, =main                 @调用main函数</span><br><span class="line"></span><br><span class="line">halt_loop:</span><br><span class="line">  b halt_loop</span><br></pre></td></tr></table></figure>
+<p>第1行调用init_led函数设置LED1-LED4这四个LED的GPIO为输出功能，第2行进行中断管脚的初始化。<br>当完成所有初始化后，第3行将CPSR寄存器中的I位设置为0，开IRQ中断。<br>标号“HandleIRQ”开始的代码用于处理中断。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">HandleIRQ:</span><br><span class="line">  sub lr, lr,#<span class="number">4</span>                         @计算返回地址</span><br><span class="line">  stmdb sp!,  &#123;r0-r12,lr&#125;               @保存使用到的寄存器</span><br><span class="line">                                        @注意，此时的sp是中断模式的sp</span><br><span class="line">                                        @初始值是上面设置的<span class="number">3072</span></span><br><span class="line">  ldr lr, =int_return                   @设置调用ISR即EINT_Handle函数后的返回地址</span><br><span class="line">  ldr pc, =EINT_Handle                  @调用中断服务函数，在interrupt.c中。</span><br><span class="line"></span><br><span class="line">int_return:</span><br><span class="line">  ldmia sp!,  &#123;r0-r12,lr&#125;^              @中断返回,^表示将spsr的值复制到cpsr</span><br></pre></td></tr></table></figure>
+<p>第2行计算处理中断处理完毕后的返回地址，lr寄存器的值等于被中断指令的地址加4，所以返回地址为lr的值减去4。<br>第3行用于保存被中断程序的运行环境，即各个寄存器。其中的sp为中断模式的栈，在上面的“ldr sp,&#x3D;3072”中初始化。这样，r0-r12,lr这14个寄存器被保存在中断模式的栈中。<br>第6行用于设置EINT_Handle函数执行完后的返回地址，这个地址为第10行指令的地址。<br>第7行调用中断服务函数EINT_Handle（代码在interrput.c中）。<br>当EINT_Handle函数处理完所发生的中断后，返回第10行的指令。它恢复前面第3行保存的各个寄存器，即恢复被中断程序的运行环境：从栈中恢复r0-r12、pc这14个寄存器的值，同时，将SPSR寄存器的值复制到CPSR（在进入中断模式时，CPU自动将原来的CPSR值保存到SPSR中），这导致CPU切换到原来的工作模式。</p>
+<h3 id="init-c中与中断相关的代码详解"><a href="#init-c中与中断相关的代码详解" class="headerlink" title="init.c中与中断相关的代码详解"></a>init.c中与中断相关的代码详解</h3><p>下面详述init_irq函数：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">初始化GPIO引脚作为外部中断</span></span><br><span class="line"><span class="comment">GPIO引脚用作外部中断时，默认为低电平触发、IRQ方式（不用设置INTMOD）</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">init_irq</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">  GPFCON = GPF0_eint | GPF2_eint;</span><br><span class="line">  GPGCON = GPG3_eint | GPG11_eint;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//对于EINT11、EINT19，需要在EINTMASK寄存器中使能它们。</span></span><br><span class="line">  EINTMASK &amp;= (~(<span class="number">1</span> &lt;&lt; <span class="number">11</span>)) &amp; (~(<span class="number">1</span> &lt;&lt; <span class="number">19</span>));</span><br><span class="line"></span><br><span class="line">  <span class="comment">/*</span></span><br><span class="line"><span class="comment">  设定优先级：</span></span><br><span class="line"><span class="comment">  ARB_SEL0 = 00b，ARB_MODE0 = 0：REQ1 &gt; REQ3,即EINT0 &gt; EINT2</span></span><br><span class="line"><span class="comment">  仲裁器1、6无需设置</span></span><br><span class="line"><span class="comment">  最终：</span></span><br><span class="line"><span class="comment">  EINT0 &gt; EINT2 &gt; ETIN11、EINT9。即K4 &gt; K3 &gt; K1、K2</span></span><br><span class="line"><span class="comment">  EINT11 和 EINT9优先级相同</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line">  PRIORITY = (PRIORITY &amp; ((~<span class="number">0x01</span>) | (<span class="number">0x3</span> &lt;&lt; <span class="number">7</span>))) &amp; (<span class="number">0x0</span> &lt;&lt; <span class="number">7</span>);</span><br><span class="line"></span><br><span class="line">  <span class="comment">//EINT0、EINT2、EINT8_23使能</span></span><br><span class="line">  INTMSK  &amp;= (~(<span class="number">1</span> &lt;&lt; <span class="number">0</span>)) &amp; (~(<span class="number">1</span> &lt;&lt; <span class="number">2</span>)) &amp; (~(<span class="number">1</span>&lt;&lt;<span class="number">5</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>第7、8行用于设置K1-K4对应的GPIO管脚为中断功能。使用GPIO的中断功能时，还需要确定它们的中断触发模式（低电平触发、高电平触发、下降沿触发、上升沿触发）。我们默认使用低电平触发，无需额外设置。<br>第11行在EINTMASK寄存器中开启EINT19、EINT11中断，它们对应的K1、K2。K3、K4对应的EINT2、EINT10不受EINTMASK寄存器控制。EINTMASK可以屏蔽的中断可以参考数据手册。<br>第21行用于设置中断优先级。本开发板中，外部中断EINT9、EINT11、EINT2和EINT0分别对应K1、K2、K3和K4四个按键。EINT0、EINT2被接到仲裁器0的REQ1、REQ3，程序中设置ARB_SEL0为0（即0b00），所以REQ1的优先级高于REQ3，即K4的优先级高于K3。程序中设置ARB_MODE0为0，所以仲裁器0中各优先级保持不变。EINT8-EINT23共用仲裁器1的REQ1，所以EINT11和EINT9的中断优先级相同。仲裁器0、1的输出接到仲裁器6的REQ0、REQ1，而仲裁器中REQ0的优先级总是高于REQ1，所以这4个按键的优先级：K4 &gt; K3 &gt; K1、K2。<br>本程序使用的GPIO的默认中断方式—IRQ，不是FIQ，所以不用设置INTMOD寄存器。<br>最后，第24行将INTMSK寄存器中EINT0、EINT2、EINT8_23这3个中断对应的位设为0，使能中断。但是仍未完全开启中断，head.S中的“msr cpsr_c, #0x5f”才打开了最后一个开关。</p>
+<h3 id="interrupt-c中的中断处理函数"><a href="#interrupt-c中的中断处理函数" class="headerlink" title="interrupt.c中的中断处理函数"></a>interrupt.c中的中断处理函数</h3><p>上面说明了中断的初始化、中断的进入与退出。真正的处理函数为EINT_Handle，它被称为中断服务程序（ISR），代码在interrupt.c中。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;s3c24xx.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">EINT_Handle</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">long</span> oft = INTOFFSET;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">long</span> val;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">switch</span>(oft)</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="comment">//K4被按下  </span></span><br><span class="line">    <span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line">    &#123;</span><br><span class="line">      GPBDAT  |= (<span class="number">0x0f</span> &lt;&lt; <span class="number">5</span>);       <span class="comment">//所有LED灯熄灭</span></span><br><span class="line">      GPBDAT  &amp;= ~(<span class="number">1</span> &lt;&lt; <span class="number">8</span>);         <span class="comment">//LED4点亮</span></span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//K3被按下  </span></span><br><span class="line">    <span class="keyword">case</span> <span class="number">3</span>:</span><br><span class="line">    &#123;</span><br><span class="line">      GPBDAT  |= (<span class="number">0x0f</span> &lt;&lt; <span class="number">5</span>);       <span class="comment">//所有LED灯熄灭</span></span><br><span class="line">      GPBDAT  &amp;= ~(<span class="number">1</span> &lt;&lt; <span class="number">7</span>);         <span class="comment">//LED3点亮</span></span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//K1或K2被被按下  </span></span><br><span class="line">    <span class="keyword">case</span> <span class="number">5</span>:</span><br><span class="line">    &#123;</span><br><span class="line">      GPBDAT  |=  (<span class="number">0x0f</span> &lt;&lt; <span class="number">5</span>);      <span class="comment">//所有LED熄灭</span></span><br><span class="line"></span><br><span class="line">      <span class="comment">//需要进一步判断是K1还是K2被按下，或者K1、K2被同时按下</span></span><br><span class="line">      val = EINTPEND;</span><br><span class="line">      <span class="keyword">if</span>(val &amp; (<span class="number">1</span> &lt;&lt; <span class="number">11</span>))</span><br><span class="line">        GPBDAT  &amp;= ~(<span class="number">1</span> &lt;&lt; <span class="number">6</span>);       <span class="comment">//K2被按下，LED2点亮</span></span><br><span class="line">      <span class="keyword">if</span>(val &amp; (<span class="number">1</span> &lt;&lt; <span class="number">19</span>))</span><br><span class="line">        GPBDAT  &amp;= ~(<span class="number">1</span> &lt;&lt; <span class="number">5</span>);       <span class="comment">//K1被按下，LED1点亮</span></span><br><span class="line">      </span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//清除中断</span></span><br><span class="line">  <span class="keyword">if</span>(oft == <span class="number">5</span>)</span><br><span class="line">    EINTPEND = (<span class="number">1</span> &lt;&lt; <span class="number">11</span>) | (<span class="number">1</span> &lt;&lt; <span class="number">19</span>);   <span class="comment">//EINT8-EINT23合用IRQ5</span></span><br><span class="line">  SRCPND = <span class="number">1</span> &lt;&lt; oft;</span><br><span class="line">  INTPND = <span class="number">1</span> &lt;&lt; oft;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>以上代码主要关注中断的识别与清除，其余代码根据所识别出来的中断（按键）点亮对应的LED。第5行用来读取INTOFFSET寄存器，它的值被用来标识INTPND寄存器中哪位被设为1。此值为0是表示INTPND寄存器的位[0]为1，即EINT0中断发生了，说明K4被按下；此值为2时表示INTPND寄存器的位[2]为1，即EINT2中断发生了，说明按键K3被按下；此值为5时表示INTPND寄存器的位[5]为1，即EINT8-EINT23中至少一个中断发生了，在本程序中这表明K1、K2中至少按下了一个，至于是哪一个，需要进一步判断。<br>第27行用来读取EINTPEND寄存器，它的位x为1时，表示EINTx已经发生了（x为4-23）。本程序就是通过读取EINTPEND寄存器的值来进一步判断EINT11还是EINT19发生了，即是K1还是K2按下了。<br>第45行用于清除EINTPEND寄存器，往某位写入1即可清除此位。<br>第46、47行用于清除SRCPND、INTPND寄存器。</p>
+<h3 id="主函数"><a href="#主函数" class="headerlink" title="主函数"></a>主函数</h3><p>程序的主函数很简单，在main.c中，只是个不做任何事情的无限循环。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">while</span>(<span class="number">1</span>);</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>下图演示了代码的运行过程，注意PC和SP寄存器的变化：<br><img src="/2022/08/19/%E4%B8%AD%E6%96%AD%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/6.jpeg" alt="img not found"></p>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>嵌入式Linux应用完全开发手册</category>
+        <category>第2篇第9章 中断体系结构</category>
+      </categories>
+      <tags>
+        <tag>嵌入式Linux</tag>
+        <tag>中断</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>NAND_Flash控制器</title>
     <url>/2022/08/18/NAND-Flash%E6%8E%A7%E5%88%B6%E5%99%A8/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《嵌入式Linux应用完全开发手册》第2篇第8章总结归纳</p>
@@ -1420,225 +1639,6 @@ SDRAM K4S561632不支持CL&#x3D;1的情况，所以位[6:4]取值为0b010(CL &#x
       <tags>
         <tag>嵌入式Linux</tag>
         <tag>Flash</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>中断体系结构</title>
-    <url>/2022/08/19/%E4%B8%AD%E6%96%AD%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/</url>
-    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《嵌入式Linux应用完全开发手册》第2篇第9章总结归纳</p>
-<span id="more"></span>
-
-<h1 id="本章目标"><a href="#本章目标" class="headerlink" title="本章目标"></a>本章目标</h1><ol>
-<li>了解ARM系统CPU的7中工作模式</li>
-<li>了解S3C2410&#x2F;S3C2440中断体系结构</li>
-<li>掌握S3C2410&#x2F;S3C2440的中断服务程序的编写方法</li>
-</ol>
-<h1 id="S3C2410-x2F-S3C2440中断体系结构"><a href="#S3C2410-x2F-S3C2440中断体系结构" class="headerlink" title="S3C2410&#x2F;S3C2440中断体系结构"></a>S3C2410&#x2F;S3C2440中断体系结构</h1><h2 id="ARM体系CPU的7种工作模式"><a href="#ARM体系CPU的7种工作模式" class="headerlink" title="ARM体系CPU的7种工作模式"></a>ARM体系CPU的7种工作模式</h2><ol>
-<li>用户模式（usr）：ARM处理器正常的程序执行状态。</li>
-<li>快速中断模式（fiq）：用于高速数据传输或通道处理。</li>
-<li>中断模式（irq）：用于通用的中断处理。</li>
-<li>管理模式（svc）：操作系统使用的保护模式。</li>
-<li>数据访问终止模式（abt）：当数据或指令预取终止时进入该模式，可用于虚拟存储及存储保护。</li>
-<li>系统模式（sys）：运行具有特权的操作系统任务。</li>
-<li>未定义指令中止模式（und）：当未定义的指令执行时进入该模式，可用于支持硬件协处理器的软件仿真。</li>
-</ol>
-<p>可以通过软件来进行模式切换，或者发生各类中断、异常时CPU自动进入相应的模式。除用户模式外，其他6种模式都属于特权模式。大多数程序运行于用户模式，进入特权模式是为了处理中断、异常，或者访问被保护的系统资源。<br>另外，ARM体系的CPU有以下两种工作状态。<br>ARM状态：此时处理器执行32位的字对齐的ARM指令。<br>Thumb状态：此时处理器执行16位的、半字对齐的Thumb指令。<br>实际上，本书所有的程序都是在ARM状态下运行的，而CPU一上电就处于ARM状态，所以无需关心CPU的工作状态。<br>ARM920T有31个通用的32位寄存器和6个程序状态寄存器。这37个寄存器分为7组，进入某个工作模式是就使用它的那组寄存器。有些寄存器，不同的工作模式有自己的副本，当切换到另一个工作模式时，那个工作模式的寄存器副本将被使用：这些寄存器被称为备份寄存器。<br>在ARM状态下，每种工作模式都有16个通用寄存器和1个（或2个，取决于工作模式）程序状态寄存器。下图列出了ARM状态下不同工作模式所使用的寄存器：<br><img src="/2022/08/19/%E4%B8%AD%E6%96%AD%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/1.jpeg" alt="img not found"><br>图中R0-R15可以直接访问，这些寄存器除R15之外都是通用寄存器。即它们既可以保存数据也可以保存地址。另外，R13-R15稍有特殊。R13又被称为栈指针寄存器，通常用于保存栈指针。R14  又被称为程序连接寄存器或连接寄存器，当执行BL子程序调用指令时，R14中得到R15（程序计数器PC）的备份。而当发生中断或者异常时，对应的R14_svc、R14_irq、R14_fiq、R14_abt或R14_und中保存R15的返回值。R15是程序计数器。<br>快速中断模式有7个备份寄存器R8-R14（即R8_fiq-R14_fiq），这使得进入快速中断模式执行很大部分程序时（只要它们不改变R0-R7），甚至不需要保存任何寄存器。用户模式、管理模式、数据访问终止模式和未定义指令中止模式都含有两个独占的寄存器副本R13、R14，这样可以令每个模式拥有自己的栈指针寄存器和连接寄存器。<br>每种工作模式除R0-R15共有16个寄存器外，还有第17个寄存器CPSR，即“当前程序状态寄存器（Current Program Status Register）”。CPSR中一些位被用于表示各种状态，一些位被用于标识当前处于说明工作模式。<br>CPSR中各位意义如下：<br><img src="/2022/08/19/%E4%B8%AD%E6%96%AD%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/2.jpeg" alt="img not found"></p>
-<ol>
-<li>T位：置位时，CPU处于Thumb状态，否则处于ARM状态。</li>
-<li>中断禁止位：I位和F位属于中断禁止位。它们置位时，IRQ中断、FIQ中断分别被禁止。</li>
-<li>工作模式位：表明CPU当前处于什么工作模式。可以编写这些位，使CPU进入指定的工作模式。</li>
-</ol>
-<p>除CPSR外，还有快速中断模式、中断模式、管理模式、数据访问终止模式和未定义指令中止模式等5种工作模式和一个寄存器–SPSR，即“程序状态保存寄存器（Saved Process Status Registers）”。当切换进入这些工作模式时，在SPSR中保存前一个工作模式的CPSR值，这样，当返回前一个工作模式时，可以将SPSR的值恢复到CPSR中。<br>综上所述，当一个异常发生时，将切换进入相应的工作模式（下文中将称为异常模式），这是CPU核将自动完成以下事情：</p>
-<ol>
-<li>在异常工作模式的连接寄存器R14中保存前一个工作模式的下一条，即将执行的指令的地址。对于ARM状态，这个值是当前PC值加4或加8。</li>
-<li>将CPSR的值复制到异常模式的SPSR。</li>
-<li>将CPSR的工作模式位设为这个异常对应的工作模式。</li>
-<li>令PC值等于这个异常模式在异常向量表中的地址，即跳转去执行异常向量表中的相应指令。</li>
-</ol>
-<p>相反的，从异常工作模式推出到之前的工作模式时，需要通过软件完成如下事情。</p>
-<ol>
-<li>前面进入异常工作模式时，连接寄存器保存了前一工作模式的一个指令地址，将它减去一个适当的值后赋值给PC寄存器。</li>
-<li>将SPSR的值复制回CPSR。</li>
-</ol>
-<table>
-<thead>
-<tr>
-<th>异常模式</th>
-<th>退出异常模式时PC的计算方法</th>
-<th>进入异常模式时R14中保存的值（ARM状态）</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>管理模式（通过SWI指令进入）</td>
-<td>MOVS PC，R14</td>
-<td>PC + 4 ①</td>
-</tr>
-<tr>
-<td>未定义指令中止模式</td>
-<td>MOVS PC，R14</td>
-<td>PC + 4  ①</td>
-</tr>
-<tr>
-<td>快速中断模式</td>
-<td>SUBS PC，R14，#4</td>
-<td>PC + 4 ②</td>
-</tr>
-<tr>
-<td>中断模式</td>
-<td>SUBS PC，R14，#4</td>
-<td>PC + 4 ②</td>
-</tr>
-<tr>
-<td>数据访问终止模式</td>
-<td>异常原因：指令预取终止 SUBS PC，R14，#4</td>
-<td>PC + 4 ①</td>
-</tr>
-<tr>
-<td>数据访问终止模式</td>
-<td>异常原因：指令访问终止 SUBS PC，R14，#8</td>
-<td>PC + 8 ③</td>
-</tr>
-</tbody></table>
-<p>注：<br>①PC值是这些指令的地址：SWI、未定义的指令、在预取时就失败的指令。<br>②PC值是这些指令的地址：进入快速中断模式、中断模式前、被打断而未执行的指令。<br>③PC值是这些指令的地址：导致数据访问终止的加载&#x2F;存储指令（LDR、STR、LDM、STM）。</p>
-<h2 id="S3C2410-x2F-S3C2440中断控制器"><a href="#S3C2410-x2F-S3C2440中断控制器" class="headerlink" title="S3C2410&#x2F;S3C2440中断控制器"></a>S3C2410&#x2F;S3C2440中断控制器</h2><p>CPU运行过程中，如何知道各类外设发生了某些不预期的事件，比如串口收到了新数据，USB接口中插入了设备，按下了某个按键等。主要有以下两种方法：</p>
-<ol>
-<li>轮询方式：程序循环的查询各个设备的状态并作出相应反应。它实现简单，常用在功能相对单一的系统中。比如在一个温控系统中可以使用查询方式不断检测温度的变化。缺点是占用CPU资源过高，不适用于多任务系统。</li>
-<li>中断方式：当某件事情发生时，硬件会设置某个寄存器；CPU在每执行完一条指令时，通过硬件查看这个寄存器，如果发现所关注的事情发生了，则中断当前程序流程，跳转到一个固定的地址处理这件事情，最后返回继续执行被中断的程序。它的实现相对复杂，但是效率很高，是常用的方法。</li>
-</ol>
-<p>参考下图，不论何种CPU，中断的处理过程是相似的：<br><img src="/2022/08/19/%E4%B8%AD%E6%96%AD%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/3.jpeg" alt="img not found"></p>
-<ol>
-<li>中断控制器汇集各类外设发出的中断信号，然后告诉CPU。</li>
-<li>CPU保存当前程序的运行环境（各个寄存器等），调用中断服务程序（ISR，Interrupt Service Routine）来处理这些中断。</li>
-<li>在ISR中通过读取中断控制器、外设的相关寄存器来识别这是哪个中断，并进行相应的处理。</li>
-<li>清除中断：通过读写中断控制器和外设的相关寄存器来实现。</li>
-<li>最后恢复被中断程序的运行环境（即上面保存的各个寄存器等），继续执行。</li>
-</ol>
-<p>对于不同的CPU而言，中断的处理只是细节的不同，S3C2410&#x2F;S3C2440的中断控制器结构如下图所示：<br><img src="/2022/08/19/%E4%B8%AD%E6%96%AD%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/4.jpeg" alt="img not found"><br>SUBSRCPND和SRCPND寄存器表明有哪个中断被触发了，正在等待处理（pending）；SUBMASK（INTSUBMSK）和MASK（INTMSK）用于屏蔽某些中断。<br>图中的“Request sources （with sub -register）”表示INT_RXD0、INT_TXD0等中断源（S3C2410中这类中断有11个，而S3C2440中有15个）。它们不同于“Request sources （without sub -register）”。</p>
-<ol>
-<li>Request sources （without sub -register）中的中断源被触发之后，SRCPND寄存器中相应位被置1，如果此中断没有被INTMSK寄存器屏蔽或者快中断（FIQ）的话，它将被进一步处理。</li>
-<li>对于Request sources （with sub -register）中的中断源被触发之后，SUBSRCPND寄存器中的相应位被置1，如果此中断没有被INTSUBMSK寄存器屏蔽的话，它在SRCPND寄存器中的相应位也被置1，之后的处理过程就和“Request sources （without sub -register）”一样了。</li>
-</ol>
-<p>在SRCPND寄存器中，被触发的中断的相应位被置1，等待处理：</p>
-<ol>
-<li>如果被触发的中断中有快速中断（FIQ）—MODE（INTMOD寄存器）中为1的位对应的中断是FIQ，则CPU进入快速中断模式（FIQ Mode）进行处理。</li>
-<li>对于一般中断IRQ，可能同时有几个中断被触发，未被INTMSK寄存器屏蔽的中断经过比较后，选出优先级最高的中断，此中断在INTPND寄存器中的相应位被置1，然后CPU进入中断模式（IRQ Mode）进行处理。中断服务程序可以通过读取INTPND寄存器或者INTOFFSET寄存器来确定中断源。</li>
-</ol>
-<p>“Priority”表示中断的优先级判选，通过PRIORITY寄存器进行设置。</p>
-<p>综上所述，使用中断的步骤如下：</p>
-<ol>
-<li>设置好中断模式和快速中断模式下的栈：当发生中断IRQ时，CPU进入中断模式，这是使用中断模式下的栈；当发生快速中断模式FIQ时，CPU进入快速中断模式，这时使用快速中断模式下的栈。</li>
-<li>准备好中断处理函数。<br>  ①异常向量：<br>  在异常向量表中设置好当进入中断模式或快速中断模式时的跳转函数，它们的异常向量地址分别为0x00000018、0x0000001C。<br>  ②中断服务程序（ISR）：<br>  IRQ、FIQ的跳转函数，最终将调用具体中断的服务函数。对于IRQ，读取INTPND寄存器或者INTOFFSET寄存器的值来确定中断源，然后分别处理。<code>对于FIQ，因为只有一个中断可以设为FIQ</code>，因此无需判断。<br>  ③清除中断：<br>  如果不清除中断，则CPU会误以为这个中断又一次发生了。<br>  可以在调用ISR之前清除中断，也可以在调用ISR之后清除中断，这取决于在ISR执行过程中，这个中断是否可能继续发生、是否能够丢弃。如果在ISR执行过程中，这个中断可能发生并不能丢弃，则在调用ISR之前就清除中断，这样在ISR过程中发生的中断能够被各寄存器再次记录并通知CPU；如果在ISR过程中，这个中断并不能发生或者可以丢弃，则在调用ISR后清除中断。<br>  清除中断时，从源头开始：首先，需要的话，操作具体外设清除中断信号；其次，清除SUBSRCPND、SRCPND寄存器的相应位（往相应位写1即可）；最后，清除INTPND寄存器的相应位（往相应位写1即可），最简单的方法就是“INTPND&#x3D;INTPND”。</li>
-<li>进入、退出中断模式或快速中断模式时，需要保存、恢复被中断程序的运行环境。<br>  ①对于IRQ：<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sub lr,lr,#4              @计算返回地址</span><br><span class="line">stmdb   sp!,&#123;r0-r12,lr&#125;   @保存使用到的寄存器</span><br><span class="line">... ...                   @处理中断</span><br><span class="line">ldmia   sp!,&#123;r0-r12,pc&#125;   @中断返回</span><br><span class="line">                          @^表示将spsr的值赋值给cpsr</span><br></pre></td></tr></table></figure>
-  ②对于FIQ<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sub lr,lr,#4              @计算返回地址</span><br><span class="line">stmdb   sp!,&#123;r0-r7,lr&#125;   @保存使用到的寄存器</span><br><span class="line">... ...                   @处理中断</span><br><span class="line">ldmia   sp!,&#123;r0-r7,pc&#125;   @中断返回</span><br><span class="line">                          @^表示将spsr的值赋值给cpsr</span><br></pre></td></tr></table></figure></li>
-<li>根据具体中断，设置相关外设。不比如对于GPIO中断，需要将相应引脚的功能设置为“外部引脚”、设置中断触发条件（低电平出发、高电平触发、下降沿触发还是上升沿触发）等。一些中断拥有自己的屏蔽寄存器，还要开启它。</li>
-<li>对于“Request sources （without sub -register）”中的中断，将INTSUBMSK寄存器中相应位设为0。</li>
-<li>确定使用此中断的方式：FIQ或IRQ。<br>  ①如果是FIQ，则在INTMOD寄存器中设置相应位为1。<br>  ②如果是IRQ，则在PRIORITY寄存器中设置优先级。</li>
-<li>如果是IRQ，将IMTMSK寄存器中相应位设为0（FIQ不受INTMSK寄存器控制）。</li>
-<li>设置CPSR寄存器中的I-bit位（IRQ）或者F-bit（对于FIQ）为0，使能IRQ或者FIQ。</li>
-</ol>
-<h2 id="中断控制器寄存器"><a href="#中断控制器寄存器" class="headerlink" title="中断控制器寄存器"></a>中断控制器寄存器</h2><p>SUBSRCPND、INTSUBMSK这两个寄存器中相同的位对应相同的中断；SRCPND、INTMSK、INTMOD、INTPND这四个寄存器中相同的位对应相同的中断。</p>
-<h3 id="SUBSRCPND寄存器（SUB-SOURCE-PENDING）"><a href="#SUBSRCPND寄存器（SUB-SOURCE-PENDING）" class="headerlink" title="SUBSRCPND寄存器（SUB SOURCE PENDING）"></a>SUBSRCPND寄存器（SUB SOURCE PENDING）</h3><p>SUBSRCPND寄存器被用来标识INT_RXD0、INT_TXD0等中断（S3C2410中这类中断有11个，而S3C2440中有15个）受否已经发生，每位对应一个中断。当这些中断发生并且没有被INTSUBSMSK寄存器屏蔽，则它们中的若干位将“汇集”出现在SRCPND寄存器的一位下。比如SUBSRCPND寄存器中的3个中断，INT_RXD0、INT_TXD0、INT_ERR0，只要有一个发生了并且它没有被屏蔽，则SRCPND寄存器中的INT_UART0位被置1。<br>要清除中断时，往SUBSRCPND寄存器中某位写入1即可令此位为0；写入0无效果，数据保持不变。</p>
-<h3 id="INTSUBMSK寄存器（INTERRUPT-SUB-MSK）"><a href="#INTSUBMSK寄存器（INTERRUPT-SUB-MSK）" class="headerlink" title="INTSUBMSK寄存器（INTERRUPT SUB MSK）"></a>INTSUBMSK寄存器（INTERRUPT SUB MSK）</h3><p>INTSUBMSK寄存器被用来屏蔽SUBSRCPND寄存器标识的中断。INTSUBMSK寄存器中某位被设为1时，对应的中断被屏蔽。</p>
-<h3 id="SRCPND寄存器（SOURCE-PENDING）"><a href="#SRCPND寄存器（SOURCE-PENDING）" class="headerlink" title="SRCPND寄存器（SOURCE PENDING）"></a>SRCPND寄存器（SOURCE PENDING）</h3><p>SRCPND中每一位被用来表示一个（或者一类）中断是否已经发生。例如：</p>
-<ol>
-<li>使用SUBSRCPND&#x2F;INTSUBMSK控制的中断。</li>
-<li>不使用SUBSRCPND&#x2F;INTSUBMSK控制的中断。<br>SRPND寄存器的操作与SUBSRCPND类似，若想清除某一位，往此位写入1。</li>
-</ol>
-<h3 id="INTMSK-寄存器（INTERRUPT-MASK）"><a href="#INTMSK-寄存器（INTERRUPT-MASK）" class="headerlink" title="INTMSK 寄存器（INTERRUPT MASK）"></a>INTMSK 寄存器（INTERRUPT MASK）</h3><p>INTMSK寄存器被用来屏蔽SRCPND寄存器所标识的中断。INTMSK寄存器中某位被设为1时，对应的中断被屏蔽。<br>INTMSK寄存器只能屏蔽被设为IRQ的中断，不能屏蔽被设为FIQ的中断。</p>
-<h3 id="INTMOD-寄存器（INTERRUPT-MODE）"><a href="#INTMOD-寄存器（INTERRUPT-MODE）" class="headerlink" title="INTMOD 寄存器（INTERRUPT MODE）"></a>INTMOD 寄存器（INTERRUPT MODE）</h3><p>当INTMOD寄存器中某位被设为1时，它对应的中断被设为FIQ，即此中断发生时，CPU将进入快速中断模式，这通常用来处理特别紧急的中断。</p>
-<h3 id="PRIORITY-寄存器"><a href="#PRIORITY-寄存器" class="headerlink" title="PRIORITY 寄存器"></a>PRIORITY 寄存器</h3><p>上面INTMOD寄存器中，将设为1的中断称为快速中断（FIQ），将其余设为0的中断称为普通中断（IRQ）。<br>当有多个普通中断发生时，中断处理器将选出优先级最高的中断，首先处理它。中断优先级的判选通过7个仲裁器来完成，包括6个以及仲裁器和1个二级仲裁器：<br><img src="/2022/08/19/%E4%B8%AD%E6%96%AD%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/5.jpeg" alt="img not found"><br>每个仲裁器含6个输入引脚REQ0-REQ5。对于每个仲裁器，PRIORITY寄存器使用三位来控制其行为：一位被用于选择仲裁器工作模式，称为ARB_MODE；两位被用于控制各输入信号的优先级，称为ARB_SEL。<br>ARB_SEL的取值和REQ0-REQ5的优先级如下表所示：</p>
-<table>
-<thead>
-<tr>
-<th>ARB_SEL</th>
-<th>优先级（从高到低）</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>00b</td>
-<td>REQ0、REQ1、REQ2、REQ3、REQ4、REQ5</td>
-</tr>
-<tr>
-<td>01b</td>
-<td>REQ0、REQ2、REQ3、REQ4、REQ1、REQ5</td>
-</tr>
-<tr>
-<td>10b</td>
-<td>REQ0、REQ3、REQ1、REQ1、REQ2、REQ5</td>
-</tr>
-<tr>
-<td>11b</td>
-<td>REQ0、REQ4、REQ4、REQ2、REQ3、REQ5</td>
-</tr>
-</tbody></table>
-<p>注：REQ0的优先级永远是最高的、REQ5的优先级永远是最低的。</p>
-<p>当某个仲裁器的ARB_MODE位被设为0时，它的ARB_SEL位是不会自动变化的，此时这个仲裁器的6个输入引脚的优先级固定不变（当然，可以通过软件修改ARB_SEL来改变它们的优先级）。当ARB_MODE位被设为1时，ARB_SEL会随着“已经被服务的REQx”（x&#x3D;1~4）自动变化：</p>
-<table>
-<thead>
-<tr>
-<th>已经被服务的REQx</th>
-<th>ARB_SEL的新值</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>REQ0&#x2F;REQ5</td>
-<td>维持不变</td>
-</tr>
-<tr>
-<td>REQ1</td>
-<td>01b</td>
-</tr>
-<tr>
-<td>REQ2</td>
-<td>10b</td>
-</tr>
-<tr>
-<td>REQ3</td>
-<td>11b</td>
-</tr>
-<tr>
-<td>REQ4</td>
-<td>00b</td>
-</tr>
-<tr>
-<td>结合上表可知：当ARB_MODE为1时，某个REQx（x&#x3D;1~4）被服务之后，它的优先级变为REQ0-REQ4中的最低。</td>
-<td></td>
-</tr>
-<tr>
-<td>PRIORITY寄存器中位[0:6]对应这7个仲裁器的ARB_MODE位（位[0]是ARB_MODE0，依此类推），位[7:20]位对应这7个仲裁器的ARB_SEL位（[7:8]是ARB_SEL0，依此类推）。</td>
-<td></td>
-</tr>
-</tbody></table>
-<h3 id="INTPND寄存器（INTERRUPT-PENDING）"><a href="#INTPND寄存器（INTERRUPT-PENDING）" class="headerlink" title="INTPND寄存器（INTERRUPT PENDING）"></a>INTPND寄存器（INTERRUPT PENDING）</h3><p>经过中断优先级仲裁器选出的优先级最高的中断后，这个中断在INTPND寄存器中的相应位被置1，随后，CPU将进入中断模式处理它。<br>同一时间内，此寄存器只有一位被置1；在ISR中，可以根据这个位确定是哪个中断。清除中断时，往这个位写1。</p>
-<h3 id="INTOFFSET-寄存器（INTERRUPYT-OFFSET）"><a href="#INTOFFSET-寄存器（INTERRUPYT-OFFSET）" class="headerlink" title="INTOFFSET 寄存器（INTERRUPYT OFFSET）"></a>INTOFFSET 寄存器（INTERRUPYT OFFSET）</h3><p>这个寄存器被用来表示INTPND寄存器中哪位被置1了，即INTPND寄存器中位[X]为1时，INTOFFSET寄存器中的值为x（x为0~31）。<br>在清除SRCPND、INTPND寄存器时，INTOFFSET寄存器被自动清除。</p>
-<h1 id="中断控制器操作实例：外部中断"><a href="#中断控制器操作实例：外部中断" class="headerlink" title="中断控制器操作实例：外部中断"></a>中断控制器操作实例：外部中断</h1><h2 id="按键中断代码实详解"><a href="#按键中断代码实详解" class="headerlink" title="按键中断代码实详解"></a>按键中断代码实详解</h2><p>开发板上，K1-K4四个按键所接的CPU引脚可以设成外部中断功能。本程序的main函数是一个不做任何事的无限循环，程序的功能完全靠中断来驱动：当按下某个按键时，CPU调用其中断服务程序来点亮对应的LED。</p>
-<h3 id="head-S代码详解"><a href="#head-S代码详解" class="headerlink" title="head.S代码详解"></a>head.S代码详解</h3><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">@******************************************************</span><br><span class="line">@File:head.S</span><br><span class="line">@功能：初始化，设置中断模式、系统模式的栈，设置好中断处理函数</span><br><span class="line">@******************************************************</span><br><span class="line"></span><br><span class="line">.<span class="keyword">extern</span> main</span><br><span class="line">.text</span><br><span class="line">.global _start</span><br><span class="line"></span><br><span class="line">_start:</span><br><span class="line">@******************************************************</span><br><span class="line">@中断向量，本程序中，除Reset和HandleIRQ外，其他异常都没有使用</span><br><span class="line">@******************************************************</span><br><span class="line">  b Reset</span><br><span class="line"></span><br><span class="line">@<span class="number">0x04</span>：未定义指令终止模式的向量地址</span><br><span class="line">HandleUndef：</span><br><span class="line">  b HandleUndef</span><br><span class="line"></span><br><span class="line">@<span class="number">0x08</span>：管理模式的向量地址，通过SWI指令进入此模式</span><br><span class="line">HandleSWI：</span><br><span class="line">  b HandleSWI</span><br><span class="line"></span><br><span class="line">@<span class="number">0x0c</span>：指令预取终止导致的异常的向量地址</span><br><span class="line">HandlePrefetchAbort：</span><br><span class="line">  b HandlePrefetchAbort</span><br><span class="line"></span><br><span class="line">@<span class="number">0x10</span>：数据访问终止导致的异常的向量地址</span><br><span class="line">HandleDataAbort：</span><br><span class="line">  b HandleDataAbort</span><br><span class="line"></span><br><span class="line">@<span class="number">0x14</span>：保留</span><br><span class="line">HandleNotUsed:</span><br><span class="line">  b HandleNotUsed</span><br><span class="line"></span><br><span class="line">@<span class="number">0x18</span>：中断模式的向量地址</span><br><span class="line">  b HandleIRQ</span><br><span class="line"></span><br><span class="line">@<span class="number">0x1c</span>：快中断模式的向量地址</span><br><span class="line">HandleFIQ：</span><br><span class="line">  b HandleFIQ</span><br></pre></td></tr></table></figure>
-<p>上面7行指令所对应的地址为0x00、0x04、…、0x1C，这些地址上的指令称为“异常向量”。当发生各类异常时，CPU进入相应的工作模式，并跳转去执行它的异常向量。比如当复位时，CPU进入系统模式，并跳到0x00地址开始执行；发生中断时，CPU进入中断模式，并跳到地址0x18开始执行。<br>本程序中，只能使用“复位”和“中断”对应的异常向量，其他异常向量没有实际作用。<br>0x00地址处的指令为“b Reset”，在系统复位后，这条指令将跳去执行“Reset”开始的代码，它们完成一些初始化，代码如下：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">Reset:</span><br><span class="line">  ldr sp,=<span class="number">4096</span>            @设置栈指针，以下都是C函数，调用前需要设置好栈</span><br><span class="line">  bl disable_watch_dog    @关闭看门狗，否则CPU会不断重启</span><br><span class="line">  </span><br><span class="line">  msr cpsr_c,#<span class="number">0xd2</span>        @进入中断模式</span><br><span class="line">  ldr sp,=<span class="number">3072</span>            @设置中断模式栈指针</span><br><span class="line"></span><br><span class="line">  msr cpsr_c,#<span class="number">0xdf</span>        @进入系统模式</span><br><span class="line">  ldr sp,=<span class="number">4096</span>            @设置系统模式栈指针</span><br><span class="line">                          @其实复位之后，CPU就处于系统模式</span><br><span class="line">                          @前面的“ldr sp,=<span class="number">4096</span>”完成同样的功能，此句可省略</span><br></pre></td></tr></table></figure>
-<p>第5-6行、第8-9行代码的功能相似，前者用于设置中断模式的栈指针，后者用于设置系统模式的栈指针。注意，这是尚未设完成所有初始化，所以还不能开开中断—第5、第8行代码中，CPSR中寄存器的I、F位都被设为1。第6、第9行代码中sp寄存器并不是同一个寄存器，前者为sp_irq、后者为sp_sys。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">bl  init_led                  @初始化LED的GPIO管脚</span><br><span class="line">bl  init_irq                  @调用中断初始化函数，在init.c中</span><br><span class="line">msr cpsr_c, #<span class="number">0x5f</span>             @设置I-bit=<span class="number">0</span>, 开IRQ中断</span><br><span class="line"></span><br><span class="line">ldr lr, =halt_loop            @设置返回地址</span><br><span class="line">ldr pc, =main                 @调用main函数</span><br><span class="line"></span><br><span class="line">halt_loop:</span><br><span class="line">  b halt_loop</span><br></pre></td></tr></table></figure>
-<p>第1行调用init_led函数设置LED1-LED4这四个LED的GPIO为输出功能，第2行进行中断管脚的初始化。<br>当完成所有初始化后，第3行将CPSR寄存器中的I位设置为0，开IRQ中断。<br>标号“HandleIRQ”开始的代码用于处理中断。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">HandleIRQ:</span><br><span class="line">  sub lr, lr,#<span class="number">4</span>                         @计算返回地址</span><br><span class="line">  stmdb sp!,  &#123;r0-r12,lr&#125;               @保存使用到的寄存器</span><br><span class="line">                                        @注意，此时的sp是中断模式的sp</span><br><span class="line">                                        @初始值是上面设置的<span class="number">3072</span></span><br><span class="line">  ldr lr, =int_return                   @设置调用ISR即EINT_Handle函数后的返回地址</span><br><span class="line">  ldr pc, =EINT_Handle                  @调用中断服务函数，在interrupt.c中。</span><br><span class="line"></span><br><span class="line">int_return:</span><br><span class="line">  ldmia sp!,  &#123;r0-r12,lr&#125;^              @中断返回,^表示将spsr的值复制到cpsr</span><br></pre></td></tr></table></figure>
-<p>第2行计算处理中断处理完毕后的返回地址，lr寄存器的值等于被中断指令的地址加4，所以返回地址为lr的值减去4。<br>第3行用于保存被中断程序的运行环境，即各个寄存器。其中的sp为中断模式的栈，在上面的“ldr sp,&#x3D;3072”中初始化。这样，r0-r12,lr这14个寄存器被保存在中断模式的栈中。<br>第6行用于设置EINT_Handle函数执行完后的返回地址，这个地址为第10行指令的地址。<br>第7行调用中断服务函数EINT_Handle（代码在interrput.c中）。<br>当EINT_Handle函数处理完所发生的中断后，返回第10行的指令。它恢复前面第3行保存的各个寄存器，即恢复被中断程序的运行环境：从栈中恢复r0-r12、pc这14个寄存器的值，同时，将SPSR寄存器的值复制到CPSR（在进入中断模式时，CPU自动将原来的CPSR值保存到SPSR中），这导致CPU切换到原来的工作模式。</p>
-<h3 id="init-c中与中断相关的代码详解"><a href="#init-c中与中断相关的代码详解" class="headerlink" title="init.c中与中断相关的代码详解"></a>init.c中与中断相关的代码详解</h3><p>下面详述init_irq函数：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">初始化GPIO引脚作为外部中断</span></span><br><span class="line"><span class="comment">GPIO引脚用作外部中断时，默认为低电平触发、IRQ方式（不用设置INTMOD）</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">init_irq</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">  GPFCON = GPF0_eint | GPF2_eint;</span><br><span class="line">  GPGCON = GPG3_eint | GPG11_eint;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//对于EINT11、EINT19，需要在EINTMASK寄存器中使能它们。</span></span><br><span class="line">  EINTMASK &amp;= (~(<span class="number">1</span> &lt;&lt; <span class="number">11</span>)) &amp; (~(<span class="number">1</span> &lt;&lt; <span class="number">19</span>));</span><br><span class="line"></span><br><span class="line">  <span class="comment">/*</span></span><br><span class="line"><span class="comment">  设定优先级：</span></span><br><span class="line"><span class="comment">  ARB_SEL0 = 00b，ARB_MODE0 = 0：REQ1 &gt; REQ3,即EINT0 &gt; EINT2</span></span><br><span class="line"><span class="comment">  仲裁器1、6无需设置</span></span><br><span class="line"><span class="comment">  最终：</span></span><br><span class="line"><span class="comment">  EINT0 &gt; EINT2 &gt; ETIN11、EINT9。即K4 &gt; K3 &gt; K1、K2</span></span><br><span class="line"><span class="comment">  EINT11 和 EINT9优先级相同</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line">  PRIORITY = (PRIORITY &amp; ((~<span class="number">0x01</span>) | (<span class="number">0x3</span> &lt;&lt; <span class="number">7</span>))) &amp; (<span class="number">0x0</span> &lt;&lt; <span class="number">7</span>);</span><br><span class="line"></span><br><span class="line">  <span class="comment">//EINT0、EINT2、EINT8_23使能</span></span><br><span class="line">  INTMSK  &amp;= (~(<span class="number">1</span> &lt;&lt; <span class="number">0</span>)) &amp; (~(<span class="number">1</span> &lt;&lt; <span class="number">2</span>)) &amp; (~(<span class="number">1</span>&lt;&lt;<span class="number">5</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>第7、8行用于设置K1-K4对应的GPIO管脚为中断功能。使用GPIO的中断功能时，还需要确定它们的中断触发模式（低电平触发、高电平触发、下降沿触发、上升沿触发）。我们默认使用低电平触发，无需额外设置。<br>第11行在EINTMASK寄存器中开启EINT19、EINT11中断，它们对应的K1、K2。K3、K4对应的EINT2、EINT10不受EINTMASK寄存器控制。EINTMASK可以屏蔽的中断可以参考数据手册。<br>第21行用于设置中断优先级。本开发板中，外部中断EINT9、EINT11、EINT2和EINT0分别对应K1、K2、K3和K4四个按键。EINT0、EINT2被接到仲裁器0的REQ1、REQ3，程序中设置ARB_SEL0为0（即0b00），所以REQ1的优先级高于REQ3，即K4的优先级高于K3。程序中设置ARB_MODE0为0，所以仲裁器0中各优先级保持不变。EINT8-EINT23共用仲裁器1的REQ1，所以EINT11和EINT9的中断优先级相同。仲裁器0、1的输出接到仲裁器6的REQ0、REQ1，而仲裁器中REQ0的优先级总是高于REQ1，所以这4个按键的优先级：K4 &gt; K3 &gt; K1、K2。<br>本程序使用的GPIO的默认中断方式—IRQ，不是FIQ，所以不用设置INTMOD寄存器。<br>最后，第24行将INTMSK寄存器中EINT0、EINT2、EINT8_23这3个中断对应的位设为0，使能中断。但是仍未完全开启中断，head.S中的“msr cpsr_c, #0x5f”才打开了最后一个开关。</p>
-<h3 id="interrupt-c中的中断处理函数"><a href="#interrupt-c中的中断处理函数" class="headerlink" title="interrupt.c中的中断处理函数"></a>interrupt.c中的中断处理函数</h3><p>上面说明了中断的初始化、中断的进入与退出。真正的处理函数为EINT_Handle，它被称为中断服务程序（ISR），代码在interrupt.c中。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;s3c24xx.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">EINT_Handle</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">long</span> oft = INTOFFSET;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">long</span> val;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">switch</span>(oft)</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="comment">//K4被按下  </span></span><br><span class="line">    <span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line">    &#123;</span><br><span class="line">      GPBDAT  |= (<span class="number">0x0f</span> &lt;&lt; <span class="number">5</span>);       <span class="comment">//所有LED灯熄灭</span></span><br><span class="line">      GPBDAT  &amp;= ~(<span class="number">1</span> &lt;&lt; <span class="number">8</span>);         <span class="comment">//LED4点亮</span></span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//K3被按下  </span></span><br><span class="line">    <span class="keyword">case</span> <span class="number">3</span>:</span><br><span class="line">    &#123;</span><br><span class="line">      GPBDAT  |= (<span class="number">0x0f</span> &lt;&lt; <span class="number">5</span>);       <span class="comment">//所有LED灯熄灭</span></span><br><span class="line">      GPBDAT  &amp;= ~(<span class="number">1</span> &lt;&lt; <span class="number">7</span>);         <span class="comment">//LED3点亮</span></span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//K1或K2被被按下  </span></span><br><span class="line">    <span class="keyword">case</span> <span class="number">5</span>:</span><br><span class="line">    &#123;</span><br><span class="line">      GPBDAT  |=  (<span class="number">0x0f</span> &lt;&lt; <span class="number">5</span>);      <span class="comment">//所有LED熄灭</span></span><br><span class="line"></span><br><span class="line">      <span class="comment">//需要进一步判断是K1还是K2被按下，或者K1、K2被同时按下</span></span><br><span class="line">      val = EINTPEND;</span><br><span class="line">      <span class="keyword">if</span>(val &amp; (<span class="number">1</span> &lt;&lt; <span class="number">11</span>))</span><br><span class="line">        GPBDAT  &amp;= ~(<span class="number">1</span> &lt;&lt; <span class="number">6</span>);       <span class="comment">//K2被按下，LED2点亮</span></span><br><span class="line">      <span class="keyword">if</span>(val &amp; (<span class="number">1</span> &lt;&lt; <span class="number">19</span>))</span><br><span class="line">        GPBDAT  &amp;= ~(<span class="number">1</span> &lt;&lt; <span class="number">5</span>);       <span class="comment">//K1被按下，LED1点亮</span></span><br><span class="line">      </span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//清除中断</span></span><br><span class="line">  <span class="keyword">if</span>(oft == <span class="number">5</span>)</span><br><span class="line">    EINTPEND = (<span class="number">1</span> &lt;&lt; <span class="number">11</span>) | (<span class="number">1</span> &lt;&lt; <span class="number">19</span>);   <span class="comment">//EINT8-EINT23合用IRQ5</span></span><br><span class="line">  SRCPND = <span class="number">1</span> &lt;&lt; oft;</span><br><span class="line">  INTPND = <span class="number">1</span> &lt;&lt; oft;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>以上代码主要关注中断的识别与清除，其余代码根据所识别出来的中断（按键）点亮对应的LED。第5行用来读取INTOFFSET寄存器，它的值被用来标识INTPND寄存器中哪位被设为1。此值为0是表示INTPND寄存器的位[0]为1，即EINT0中断发生了，说明K4被按下；此值为2时表示INTPND寄存器的位[2]为1，即EINT2中断发生了，说明按键K3被按下；此值为5时表示INTPND寄存器的位[5]为1，即EINT8-EINT23中至少一个中断发生了，在本程序中这表明K1、K2中至少按下了一个，至于是哪一个，需要进一步判断。<br>第27行用来读取EINTPEND寄存器，它的位x为1时，表示EINTx已经发生了（x为4-23）。本程序就是通过读取EINTPEND寄存器的值来进一步判断EINT11还是EINT19发生了，即是K1还是K2按下了。<br>第45行用于清除EINTPEND寄存器，往某位写入1即可清除此位。<br>第46、47行用于清除SRCPND、INTPND寄存器。</p>
-<h3 id="主函数"><a href="#主函数" class="headerlink" title="主函数"></a>主函数</h3><p>程序的主函数很简单，在main.c中，只是个不做任何事情的无限循环。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">while</span>(<span class="number">1</span>);</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>下图演示了代码的运行过程，注意PC和SP寄存器的变化：<br><img src="/2022/08/19/%E4%B8%AD%E6%96%AD%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/6.jpeg" alt="img not found"></p>
-]]></content>
-      <categories>
-        <category>学习</category>
-        <category>书籍</category>
-        <category>嵌入式Linux应用完全开发手册</category>
-        <category>第2篇第9章 中断体系结构</category>
-      </categories>
-      <tags>
-        <tag>嵌入式Linux</tag>
-        <tag>中断</tag>
       </tags>
   </entry>
   <entry>
@@ -7027,6 +7027,143 @@ s3cmci.c中的函数会将GPG8引脚设置为外部中断EINT16，设置双边�
         <category>书籍</category>
         <category>Linux内核设计与实现</category>
         <category>第15章 进程地址空间</category>
+      </categories>
+      <tags>
+        <tag>Linux Kernel</tag>
+        <tag>操作系统</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>调试</title>
+    <url>/2022/12/21/%E8%B0%83%E8%AF%95/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>调试工作艰难是内核级开发区别于用户级开发的一个显著特点。相比于用户级开发，内核调试的难度确实姚坚苦得多。更可怕的是，它带来的风险比用户级别更高，内核的一个错误往往立刻就能让系统崩溃。<br>驾驭内核调试的能力（当然，最终是为了能够成功地开发内核）很大程度上取决于经验和对整个操作系统的把握。调试内核的关键在于你对内核的深刻理解。然而我们必须找到可以开始着手的地方，所以，在这一章里我们从调试内核的一种可能步骤开始。</p>
+<span id="more"></span>
+
+<h1 id="准备开始"><a href="#准备开始" class="headerlink" title="准备开始"></a>准备开始</h1><p>内核调试往往是一个令人挠头不已的漫长过程。不少bug已经让整个开发社区几个月都食不甘味了。幸运的是，在这些费劲的问题中也有不少比较简单，而且容易消灭的小bug。运气好时，你可能面对的是些简单的小bug。开始做一些调查之前，不会清楚到底面对的是什么。现在，需要的只是：</p>
+<ol>
+<li>一个bug。听起来可笑，但确实需要一个确定的bug。如果错误总是能够重现的话，那对我们会有很大的帮助（有一部分错误确实如此）。然而不幸的是，大部分bug通常都不是行为可靠而且定义明确的。</li>
+<li>一个藏匿bug的内核版本。如果你知道这个bug最早出现在哪个内核版本中那就再理想不过了。如果你还不知道的话，别着急，本章会教你一个快速找出这个bug首先出现在哪个内核版本中的方法。</li>
+<li>相关内核代码的知识和运气。调试内核其实是一个棘手的问题。不过对周围的代码理解得越多，调试起来就越轻松。</li>
+</ol>
+<p>本章中的大多数方法都假定能够让bug重现。因此，想要成功地进行调试，就取决于是否能够让这些错误重现。如果不能，消灭bug就只能通过抽象出问题，再从代码中搜索蛛丝马迹来进行了。虽然有时也得这么做，但如果你能够让错误重现，成功的机会就会大许多。<br>有一些bug存在而且有人没办法让它重现。这听起来可能感觉挺奇怪。在用户级的程序里，bug常常表现得很直截了当。比如，执行foo就会让程序立即产生核心信息转储（dump core）。<code>但是内核中得bug表现却不是那么清晰。内核、用户程序和硬件之间的交互常常会很微妙。一个竞争条件可能在几百万次的算法迭代中才露出一次狰狞的面孔。</code>设计不佳的（甚至是包含错误的）代码在某些系统上可能还让人可以忍受，而在其他的一些系统中却表现得相当糟糕。在一些特定的配置、一些特定的机器上，通常都需要付出额外的努力来触发某个bug，不然的话，根本看不到它。在跟踪bug的时候，掌握的信息越多越好。<code>许多时候，当可以精确地重现一个bug的时候，就已经成功了一大半了。</code></p>
+<h1 id="内核中的bug"><a href="#内核中的bug" class="headerlink" title="内核中的bug"></a>内核中的bug</h1><p>内核中的bug多种多样。它们的产生可以有无数的原因，同时它们的表象也变化多端。从明白无误的错误代码（比如，没有把正确的值存放在恰当的位置）到同步时发生的错误（比如，共享变量锁定不当），再到错误的管理硬件（比如，给错误的寄存器发送错误的指令）；从降低所有程序的运行性能到毁坏数据再到使得系统处于死锁状态，都可能是bug发作时的症状。<br>从隐藏在源代码中的错误到展现在目击者面前的bug，往往是经历一系列连锁反应的事件才可能触发的。举个例子，一个被共享的结构体，如果它没有引用计数，那么它就有可能会引发竞争条件。因为没有引用计数的话，一个进程可以在另外一个进程仍然需要使用该结构体的时候释放掉它。继而，第二个进程就有可能试图通过无效的指针去使用一个不存在的数据结构。这样做可能导致引用一个空指针，也可能导致读出一些垃圾数据，还可能并不产生什么恶果（该数据并没有被其他什么覆盖的话）。引用空指针会导致产生一个oops，而垃圾数据可能会导致系统崩溃（这种情况比oops还坏）。用户报告了oops或系统的错误现象之后，开发者回过头来观察错误情形，发现在释放数据之后还会对它进行读写，存在着一个竞争条件，于是就会进行修正，给这个共享的结构加上适当的引用计数。<br>内核调试听起来很难，但是事实上Linux内核和其他大型的软件项目也没有什么太大的不同。内核确实有一些独特的问题需要考虑，像定时限制和竞争条件等等，它们都是允许多个线程在内核中同时运行产生的结果。</p>
+<h1 id="通过打印来调试"><a href="#通过打印来调试" class="headerlink" title="通过打印来调试"></a>通过打印来调试</h1><p>内核提供的打印函数printk()和C库提供的printf()函数功能几乎相同。实际上，在本书中我们都没有用到这两个函数的不同部分。从它实现的大部分意图来说，这个名字很不错，printk()就是内核的格式化打印函数。但是，printk()确实还有一些自身特殊的功能。</p>
+<h2 id="健壮性"><a href="#健壮性" class="headerlink" title="健壮性"></a>健壮性</h2><p>健壮性是printk()函数最容易让人们接受的一个特质。任何时候，任何地方都能调用它，内核中的printk()比比皆是。可以在中断上下文和进程上下文中被调用；可以在任何持有锁时被调用；可以在多处理器上同时被调用，而且调用者连锁都不必使用。<br>它是一个弹性极佳的函数。这一点相当重要，printk()之所以这么有用，就在于它随时都能被调用。<br>printk()函数的健壮躯壳也难免会有漏洞。在系统启动过程中，终端还没有初始化之前，在某些地方不能使用它。不过说实在的，如果终端没有初始化，你又能输出到什么地方去呢？<br>这一般不是一个什么问题，除非你要调试的是启动过程中最开始的那些步骤（比如说在负责执行硬件体系结构相关的初始化动作的setup_arch()函数中）。着手进行这样的调试挑战性很强—-没有任何打印函数能用，确实让问题更加棘手。<br>不过还是有一些可以指望的。核心硬件部分的黑客依靠此时能够工作的硬件设备与外界通信。绝大部分人对此都不会感兴趣。解决的办法是提供一个printk()的变体函数—-early_printk()，这个函数在启动过程的初期就具有在终端上打印的能力。它的功能与printk()完全相同，区别仅仅在于名字和能够更早的工作。不过，由于该函数在一些内核支持的硬件体系结构上无法实现。所以这种办法缺少可移植性。但是，如果所使用的硬件体系结构可以实现这个函数，它就是最好的指望。<br>除非在启动过程的初期就要在终端上输出，否则可以认为printk()在什么情况下都能工作。</p>
+<h2 id="日志等级"><a href="#日志等级" class="headerlink" title="日志等级"></a>日志等级</h2><p>printk()和printf()在使用上最主要的区别就是前者可以指定一个日志级别。内核根据这个级别来判断是否在终端上打印消息。内核把级别比某个特定值低的所有消息显示在终端上。<br>可以通过下面这种方式指定一个记录级别：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">printk(KERN_WARNING<span class="string">&quot;This is a warning!\n&quot;</span>);</span><br><span class="line">printk(KERN_DEBUG<span class="string">&quot;This is a debug notice!\n&quot;</span>);</span><br><span class="line">printk(<span class="string">&quot;i did not specify a loglevel!\n&quot;</span>);</span><br></pre></td></tr></table></figure>
+<p>KERN_WARNING和KERN_DEBUG都是&lt;linux&#x2F;kernel.h&gt;中的简单宏定义。他它们扩展开是像“&lt;4&gt;”或“&lt;7&gt;”这样的字符串，加进printk()函数要打印的消息的开头。内核用这个指定的记录等级和当前终端的记录等级console_loglevel来决定是不是向终端上打印。下表列举了所有可供使用的记录等级。<br><strong>可供使用的记录等级</strong></p>
+<table>
+<thead>
+<tr>
+<th>记录等级</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>KERN_EMERG</td>
+<td>一个紧急情况</td>
+</tr>
+<tr>
+<td>KERN_ALERT</td>
+<td>一个需要立即被注意到的错误</td>
+</tr>
+<tr>
+<td>KERN_CRIT</td>
+<td>一个临界情况</td>
+</tr>
+<tr>
+<td>KERN_ERR</td>
+<td>一个错误</td>
+</tr>
+<tr>
+<td>KERN_WARNING</td>
+<td>一个警告</td>
+</tr>
+<tr>
+<td>KERN_NOTICE</td>
+<td>一个普通的，不过也有可能需要注意的情况</td>
+</tr>
+<tr>
+<td>KERN_INFO</td>
+<td>一条非正式的信息</td>
+</tr>
+<tr>
+<td>KERN_DEBUG</td>
+<td>一条调试信息—-一般是冗余信息</td>
+</tr>
+</tbody></table>
+<p>如果你没有特别指定一个记录等级，函数会选用默认的DEFAULT_MESSAGE_LOGLEVEL，现在默认等级是KERN_WARNING。由于这个默认值将来存在变化的可能性，所以还是应该给自己的消息指定一个记录等级。<br>内核将最重要的记录等级KERN_EMERG定为“&lt;0&gt;”，将无关紧要的记录等级“KERN_DEBUG”定为“&lt;7&gt;”。举例来说，当编译预处理完成之后，前例中的代码实际上被编译成如下格式：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">printk(<span class="string">&quot;&lt;4&gt; This is a warning!\n&quot;</span>);</span><br><span class="line">printk(<span class="string">&quot;&lt;7&gt; This is a debug notice!\n&quot;</span>);</span><br><span class="line">printk(<span class="string">&quot;&lt;4&gt; i did not specify a loglevel!\n&quot;</span>);</span><br></pre></td></tr></table></figure>
+<p>怎样给调用的printk()赋记录等级完全取决于自己。那些正式的、需要你保持的消息应该有合适的记录等级。但是那些当你试图解决一个问题时加得到处都是的调试信息，可以按照你的想法赋予记录等级。一种选择是保持终端的默认记录等级不变，给所有调试信息KERN_CRIT或更低的等级。相反，也可以给所有调试信息KERN_DEBUG等级，而调整终端的默认记录等级。</p>
+<h2 id="记录缓冲区"><a href="#记录缓冲区" class="headerlink" title="记录缓冲区"></a>记录缓冲区</h2><p>内核消息都被保存在一个LOG_BUG_LEN大小的环形队列中。该缓冲区大小可在编译时通过设置CONFIG_LOG_BUF_SHIFT进行调整。在单处理器的系统上其默认值是16KB。换句话说，就是内核在同一时间只能保存16KB的内核消息。如果消息队列已经达到了最大值，那么如果再有printk()调用时，新消息将覆盖队列中的老消息。这个记录缓冲区之所以称为环形，是因为它的读写都是按照环形队列方式进行操作的。<br>使用环形队列有许多好处。由于同时读写环形缓冲区时，其同步问题很容易解决，所以即使在中断上下文中也可以方便地使用printk()。此外，它使记录维护起来也很容易。如果有大量的消息同时产生，新消息只需覆盖掉旧消息即可。在某个问题引发大量消息的时候，记录只会覆盖掉它本身，而不会因为失控而消耗掉大量内存。而环形缓冲区的唯一缺点—-可能会丢失消息，但是与简单性和健壮性的好处相比，这点代价是值得的。</p>
+<h2 id="syslogd和klogd"><a href="#syslogd和klogd" class="headerlink" title="syslogd和klogd"></a>syslogd和klogd</h2><p>在标准的Linux系统上，用户空间的守护进程klogd从记录缓冲区中获取内核消息，再通过syslogd守护进程将它们保存在系统日志文件中。klogd程序既可以从<code>/proc/kmsg</code>文件中，也可以通过syslogd()系统调用读取这些消息。默认情况下，它选择读取<code>/proc</code>方式实现。不管是哪种方法，klogd都会阻塞，知道有新的内核消息可供读出。再被唤醒之后，它会读出新的内核消息并进行处理。默认情况下，它就是把消息传给syslogd守护进程。<br>syslogd守护进程把它接收到的所有消息都添加进一个文件中，该文件默认是<code>/var/log/messages</code>。也可以通过<code>/etc/syslog.conf</code>配置文件重新指定。<br>在启动klogd的时候，可以通过指定-c标志来改变终端的记录等级。</p>
+<h2 id="从printf-到printk-的转换"><a href="#从printf-到printk-的转换" class="headerlink" title="从printf()到printk()的转换"></a>从printf()到printk()的转换</h2><p>当刚开始开发内核代码的时候，往往会把printk()输入成printf()。这很正常，你无法抗拒多年来在用户级程序中使用printf()的习惯。幸而这种错误不会持续很长时间，反复出现的链接错误很快就会让你在心烦意乱中开始培养新的习惯。<br>在编写用户级程序的时候，你输入printf()的时候不小心输入了printk()。那么你成为一个真正的内核黑客的时刻终于到来了。</p>
+<h1 id="Oops"><a href="#Oops" class="headerlink" title="Oops"></a>Oops</h1><p>oops是内核告知用户有不幸发生的最常用的方式。由于内核是整个系统的管理者，所以它不能采取像在用户空间出现运行错误时使用的那些简单手段，因为它很难自行修复，它也不能将自己杀死。内核只能发布oops。这个过程包括终端上输出错误消息，输出寄存器中保存的信息并输出可供跟踪的回溯线索。内核中出现的故障很难处理，所以内核往往要经历严峻的考验才能送出oops和靠它自己完成的一些清理工作。通常，发送完oops之后，内核会处于一种不稳定状态。举例来说，oops发生的时候内核可能正在处理非常重要的数据。它可能持有一把锁或正在和硬件设备交互。内核必须适当地从当前的上下文环境中退出并尝试恢复对系统的控制。多数时候，这种尝试都会失败。因为如果oops在中断上下文时发生，内核根本无法继续，它会陷入混乱。混乱的结果就是系统死机。如果oops在idle进程（pid为0）或init进程（pid为1）时发生，结果同样是系统陷入混乱，因为内核缺了这两个重要的进程根本就无法工作。不过，要是oops在其他进程运行时发生，内核就会杀死该进程并尝试着继续执行。<br>oops的产生有很多可能原因，其中包括内存访问越界或者非法的指令等。作为一个内核开发者，你将会经常处理oops。<br>紧接着的是一个oops的实例，它是在一台PPC机器上的tulip网卡的定时器处理函数运行时发生的：<br><img src="/2022/12/23/%E8%B0%83%E8%AF%95/1.jpeg" alt="img not found"><br>使用PC的读者可能对这么多的寄存器感到惊奇（居然有32个之多）。你可能对x86-32系统更熟悉一些，在这种系统上，oops会简单一点。但是，oops包含的重要信息对于所有体系结构都是完全相同的：寄存器上下文和回溯线索。<br>回溯线索显示了导致错误发生的函数调用链。这样我们就可以观察究竟发生了什么：机器处于空闲状态，正在执行idle循环，由cpu_idle()循环调用default_idle()。此时定时器中断产生了，它引起了对定时器的处理。tulip_timer()这个定时器处理函数被调用，而就是它引起了空指针。甚至可以通过偏移量（像0x128&#x2F;0x1c4这些出现在函数左侧的数字）找出导致问题的语句。<br>寄存器上下文信息可能同样有用，尽管使用起来不那么方便。如果你由函数的汇编代码，这些寄存器数据可以帮助你重建问题的现场。在寄存器中发现一个本不应该出现的数值可能会在黑暗中给你带来第一丝光明。在上面的例子中，我们可以查看是哪个寄存器包含了NULL（一个所有位都为零的数值），进而找出是函数的哪个变量的值不正常。一般在这种情况下问题往往是竞争引起的，在本例中，是指定时器和这块网卡驱动的其他部分之间的竞争。调试一个竞争条件往往很有挑战性。</p>
+<h2 id="ksymoops"><a href="#ksymoops" class="headerlink" title="ksymoops"></a>ksymoops</h2><p>前面列举的oops可以说是一个经过解码的oops，因为内存地址都已经转换成了它们对应的函数。下面是其未解码版本：<br><img src="/2022/12/23/%E8%B0%83%E8%AF%95/2.jpeg" alt="img not found"><br>回溯线索中的地址需要转化成有意义的符号名称才方便使用。这需要调用ksymoops命令，而且还必须提供编译内核时产生的System.map。如果使用的是模块，还需要一些模块信息。ksymoops通常会自行解析这些信息，所以一般可以这样调用它：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">ksymoops saved_oops.txt</span><br></pre></td></tr></table></figure>
+<p>然后改程序就会吐出解码版的oops。如果ksymoops无法找到默认位置上的信息，或者想提供不同的信息，该程序可以接受许多参数。ksymoops的使用手册上提供了许多说明信息，使用之前最好先行查阅。ksymoops一般会随Linux发行版本提供。</p>
+<h2 id="kallsyms"><a href="#kallsyms" class="headerlink" title="kallsyms"></a>kallsyms</h2><p>谢天谢地，现在已经无须使用ksymoops根工具了，这是一个了不起的工作。因为尽管开发者使用它的时候一般很少出现问题，但是最终用户常常会错误地匹配System.map文件或错误地对oops进行解码。<br>开发版的2.5版内核引入了kallsyms特性，它可以通过定义CONFIG_KALLSYMS配置选项启用。该选项存放着内核镜像中相应函数地址的符号名称，所以内核可以打印解码好的跟踪线索。相应地，解码oops也不再需要System.map或者ksymoops工具。但是，这样做会使内核变得更大一些，因为从函数的地址到符号名称的映射必须永久地驻留在内核所映射的内存地址上。然而，不管是在开发的过程中还是在部署的过程中，占用这些内存都是值得的。配置选项CONFIG_KALLSYMS_ALL表示不仅存放函数名称，还存放所有的符号名称。但一般只有那些特殊的调试器才会有此需要。CONFIG_KALLSYMS_EXTRA_PASS选项会引起内核构建过程中再次忽略内核的目标代码。这个选项只有在调试kallsyms本身时才会有用。</p>
+<h1 id="内核调试配置选项"><a href="#内核调试配置选项" class="headerlink" title="内核调试配置选项"></a>内核调试配置选项</h1><p>在编译的时候，为了方便调试和测试内核代码，内核提供了许多配置选项，这些选项都在内核配置编辑器的内核开发菜单项中，它们都依赖于CONFIG_DEBUG_KERNEL。当内核开发的时候，作为一种练习，不妨打开所有这些选项。<br>有些选项确实有用，应该启用slab layer debugging（slab层调试选项）、high-memory debugging（高端内存调试选项）、I&#x2F;O mapping debugging（I&#x2F;O映射调试选项）、spin-lock debugging（自旋锁调试选项）和stack-overflow checking（栈溢出检查选项）。其中最有用的一个是sleep-inside-spinlock checking（自旋锁内睡眠选项），那些选项确实能完成不少调试工作。<br>从2.5版本开始，为了检查由各类原子操作引发的问题，内核提供了极佳的工具。原子锁是指那些不分隔执行的东西；在执行时不能中断，否则就是完不成的代码。正在使用一个自旋锁或禁止抢占的代码进行的就是原子操作。在进行此类操作的时候，代码不能睡眠—-使用锁时睡眠是引发死锁的元凶。<br>托内核抢占的福，内核提供了一个原子操作计数器。它可以被配置成一旦在原子操作过程中进程进入睡眠或者做了一些可能引起睡眠的操作，就打印警告信息并提供追踪线索。所以，包括正在使用锁的时候调用schedule()，在使用锁的时以阻塞方式请求分配内存和在引用单CPU数据时睡眠在内，各种潜在的bug都能被探测到。这种调试方法捕获了大量bug，它也受到了大家极力推荐使用。<br>下面这些选项可以最大限度地利用该特性：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">CONFIG_PREEMPT=y</span><br><span class="line">CONFIG_DEBUG_KERNEL=y</span><br><span class="line">CONFIG_KALLSYMS=y</span><br><span class="line">CONFIG_DEBUG_SPINLOCK_SLEEP=y</span><br></pre></td></tr></table></figure>
+
+<h1 id="引发BUG并打印信息"><a href="#引发BUG并打印信息" class="headerlink" title="引发BUG并打印信息"></a>引发BUG并打印信息</h1><p>一些内核调用可以用来方便标记bug，提供断言并输出信息。最常用的两个是BUG()和BUG_ON()。当被调用的时候，它们会引发oops，导致栈的回溯和错误信息的打印。这些声明会导致oops跟硬件的体系结构是相关的。大部分体系结构把BUG()和BUG_ON()定义成某种非法操作，这样自然会产生需要的oops。可以把这些调用当作断言使用，想要断言某种情况不该发生：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span>(bad_thing)</span><br><span class="line">  BUG();</span><br></pre></td></tr></table></figure>
+<p>或者更好的形式：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">BUG_ON(bad_thing);</span><br></pre></td></tr></table></figure>
+<p>多数内核开发者相信BUG_ON()比BUG()更清晰、更可读，而且BUG_ON()会将其声明作为一个语句放入unlikely()中。请注意，有些开发者在讨论是否能用一个编译选项将BUG_ON()声明在编译时剔除，以便能在嵌入内核中节约空间。这就意味着你可以放心地使用BUG_ON()，而不用担心BUG_ON()内的声明可能带来的任何“不良反应”。BUILD_BUG_ON()与BUG_ON()作用相同，尽在编译时调用。如果在编译阶段已提供的声明为真，那么编译将会因为一个错误而中止。<br>可以用panic()引发更严重的错误。调用panic()不但会打印错误消息，而且还会挂起整个系统。显然，只应该在最糟糕的情况下使用它：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span>(terrible_thing)</span><br><span class="line">  panic(<span class="string">&quot;terrible thing is %ld\n&quot;</span>,terrible_thing);</span><br></pre></td></tr></table></figure>
+<p>有些时候，只是需要在终端上打印一下栈的回溯信息来帮助调试。这个时候，dump_stack()就很有用了。它只在终端上打印寄存器上下文和函数的跟踪线索：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span>(!debug_check) &#123;</span><br><span class="line">  printk(KERN_DEBUG<span class="string">&quot;provide some information...\n&quot;</span>);</span><br><span class="line">  dump_stack();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="神奇的系统请求键"><a href="#神奇的系统请求键" class="headerlink" title="神奇的系统请求键"></a>神奇的系统请求键</h1><p>神奇的系统请求键是另外一根救命稻草，该功能可以通过定义CONFIG_MAGIC_SYSRQ配置选项来启用。SysRq（系统请求）键在大多数键盘上都是标准键。当该功能被启用的时候，无论内核处于什么状态，都可以通过特殊的组合键跟内核进行通信。这种功能可以让你在面对一台奄奄一息的系统时能完成一些有用的工作。<br>除了配置选项之外，还要通过一个sysctl用来标记该特性的开或关。需要启用它时使用如下命令：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">echo <span class="number">1</span> &gt; /proc/sys/kernel/sysrq</span><br></pre></td></tr></table></figure>
+<p>从终端上，你可以输入Sysrq-h获取一份可用的选项列表。Sysrq-s将“脏”缓冲区跟硬盘交换分区同步，Sysrq-u卸载所有的文件系统，Sysrq-b重启设备。在一行内发送这三个键的组合可以启动濒临死亡的系统，这比直接按下机器的reset键要安全一些。<br>如果机器已经完全锁死了，它也可能不会再响应神奇系统请求键，或者无法完成给定的命令。不过运气稍好的话，这些选项或许可以保存数据或者进行调试。下表列举了所有支持的系统请求命令：<br><img src="/2022/12/23/%E8%B0%83%E8%AF%95/3.jpeg" alt="img not found"><br>内核代码中的<code>Documentation/sysrq.txt</code>对此有更详细的说明。实际的实现在<code>drivers/char/sysrq.c</code>中。神奇系统请求键是调试和挽救垂危系统所必须的一种工具。由于该功能对终端上的任何用户都提供服务，所以在重要的机器上启用它需要三思而行。可是对于自己用于开发的机器，启用它确实帮助很大。</p>
+<h1 id="内核调试器的传奇"><a href="#内核调试器的传奇" class="headerlink" title="内核调试器的传奇"></a>内核调试器的传奇</h1><p>许多内核开发者一直以来都希望能拥有一个用于内核的调试器。不幸的是，Linus不愿意在它的内核源代码树中加入一个调试器。他认为调试器会误导开发者，从而导致引入不良的修正。没有人能对他的逻辑提出异议—-从真正理解代码出发，确实更能保证修正的正确性。然而，许多内核开发者们还是希望有一个官方发布的、用于内核的调试器。因为这个要求看起来不会马上被满足，所以许多补丁应运而生了，它们为标准内核附加上了内核调试的支持。虽然这都是一些不被官方认可的附加补丁，但它们确实功能完善，十分强大。在我们深入了解这些解决方案之前，先看看标准的Linux调试器gdb能够给我们一些什么帮助是一个不错的选择。</p>
+<h2 id="gdb"><a href="#gdb" class="headerlink" title="gdb"></a>gdb</h2><p>可以使用标准的GNU调试器对正在进行的内核进行查看。针对内核启动调试器的方法与针对进程的方法大致相同：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">gdb vmlinux /proc/kcore</span><br></pre></td></tr></table></figure>
+<p>其中vmlinux文件是未经压缩的内核映像，不是压缩过的zImage或bzImage，它存放在源代码树的根目录上。<br><code>/proc/kcore</code>作为一个参数选项，是作为core文件来用的，通过它能够访问到内核驻留的高端内存。只有超级用户才能读取此文件的数据。<br>可以使用gdb的所有命令来获取信息。举个例子，为了打印一个变量的值，你可以用下面的命令：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">p global_variable</span><br></pre></td></tr></table></figure>
+<p>反汇编一个函数：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">disassemble function</span><br></pre></td></tr></table></figure>
+<p>如果编译内核的时候用了-g参数（在内核的Makefile文件的CFLAGS变量中加入-g），gdb还可以提供更多的信息。比如，你可以打印出结构体中存放的信息或是跟踪指针。当然，编译出的内核会大很多，所以不要把编译带调试信息的内核当作一种习惯。<br>接下来，就要说不幸的那一面了，gdb还是有很多局限性的。它没有任何办法修改内核数据。它也不能单步执行内核代码，不能加断点。不能修改内核数据是个非常大的缺陷。尽管在必要时反汇编函数无疑是个非常有用的功能，但是能够修改数据的却更为有用。</p>
+<h2 id="kgdb"><a href="#kgdb" class="headerlink" title="kgdb"></a>kgdb</h2><p>kgdb是一个补丁，它可以让我们在远端主机上通过串口利用gdb的所有功能对内核进行调试。这需要两台计算机：第一台运行带有kgdb补丁的内核，第二台通过串行线（不通过modem，直接连接两台机器的电缆）使用gdb对第一台进行调试。通过kgdb、gdb的所有功能都能使用：读取或修改变量值，设置断点，设置关注变量，单步执行等。某些版本的gdb甚至允许执行函数。<br>设置kgdb和连接串行线比较麻烦，但是一旦做完了，调试就变得简单了。该补丁会在<code>Documentation/</code>目录下安装很多说明文件，可以把它们挑出来研究一下。<br>不同体系结构、不同内核版本使用的kgdb由不同的人员维护，为了给需要调试的内核找到合适的补丁，还是在网上搜索一下比较好。</p>
+<h1 id="探测系统"><a href="#探测系统" class="headerlink" title="探测系统"></a>探测系统</h1><p>如果对内核调试有丰富的经验的话，那么你会掌握一些诀窍来帮助你更进一步地探测系统从而找到像想要的答案。内核调试很有挑战性，即使是一点小的暗示或者技巧都能给你很大的帮助。我们最好把它们练习起来。</p>
+<h2 id="用UID作为选择条件"><a href="#用UID作为选择条件" class="headerlink" title="用UID作为选择条件"></a>用UID作为选择条件</h2><p>如果你开发的是进程相关的部分，有些时候，你可以在提供替代物的同时不打破原有代码的可执行性。这在你重要系统调用的时候，或者在你希望进行调试时系统功能依旧健全的情况下非常有用。<br>举个例子，假设为了加入一个激动人心的新特性，你重写了fork()系统调用。除非第一次的尝试就完美无缺，否则系统调试就是一场噩梦。如果fork()系统调用不正常的话，压根就不指望整个系统还能正常工作。当然，和任何时候一样，希望总是存在的。<br>一般情况下，只要保留原有的算法而把你的新算法加入到其他位置上，基本就能保证安全。可以利用把用户id（UID）作为选择条件来实现这种功能，通过这种选择条件，可以安排到底执行哪种算法：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span>(current-&gt;uid != <span class="number">7777</span>) &#123;</span><br><span class="line">  <span class="comment">//老算法</span></span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">  <span class="comment">//新算法</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>除了UID为7777以外，其他所有的用户都用的是老算法。可以创建一个UID为7777的用户，专门来测试新算法。对于要求很严格的进程相关部分的代码来说，这种方法使得测试变得容易了许多。</p>
+<h2 id="使用条件变量"><a href="#使用条件变量" class="headerlink" title="使用条件变量"></a>使用条件变量</h2><p>如果代码与进程无关，或者希望有一个针对所有情况都能使用的机制来控制某个特性，可以使用条件变量。这比使用UID还来得简单，只需要创建一个全局变量作为一个条件选择开关。如果该变量为0，就使用一个分支上的代码。如果它不为零，就选择另外一个分支。可以通过某种接口提供对这个变量的控制，也可以直接通过调试器进行操控。</p>
+<h2 id="使用统计量"><a href="#使用统计量" class="headerlink" title="使用统计量"></a>使用统计量</h2><p>有些时候你需要掌握某个特定事件的发生规律。有些时候需要比较多个事件并从中得出规律。通过创建统计量并通过某种机制访问其统计结果，很容易就能满足这种需求。<br>举个例子，假设我们希望得到foo和bar的发生频率，那么在某个文件中，当然最好是在定义该事件的那个文件里，定义两个全局变量：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> foo_stat = <span class="number">0</span>;</span><br><span class="line"><span class="type">unsigned</span> <span class="type">long</span> bar_stat = <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+<p>每当事件发生的时候，就让相应的变量加1。然后在觉得合适的地方输出它。比如，可以在<code>/proc</code>目录中创建一个文件，还可以新创建一个系统调用。最简单的方法当然还是通过调试器直接访问它们。<br>注意，这种实现并非是SMP安全的。理想的办法是通过原子操作实现。但是仅仅对于一个简单的每次加1的调试统计量，一般无须搞得这么麻烦。</p>
+<h2 id="重复频率限制"><a href="#重复频率限制" class="headerlink" title="重复频率限制"></a>重复频率限制</h2><p>为了发现一个错误，开发者们往往在代码的某个部分加入很多错误检查语句（多数对应的都是一些打印语句）。在内核中，有些函数每秒都要被调用很多次。如果你在这样的函数中加入了printk()，那么系统马上就会被显示调试信息这一任务压得喘不过气，很快就什么也干不成了。<br>有两种相关的技巧可以用来防止此类问题的发生。第一种是重复频率限制，如果某种事件发生的非常频繁，而又需要观察它的整体进展情况，就可以让这种技巧施展身手了。为了避免调试信息发生井喷，可以每隔几秒执行一次打印（或者是其他任何你想完成的操作）。举个例子：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">unsigned</span> <span class="type">long</span> prev_jiffy = jiffies;<span class="comment">//频率限制</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>(time_after(jiffies,prev_jiffy + <span class="number">2</span>*HZ)) &#123;</span><br><span class="line">  prev_jifffy = jiffies;</span><br><span class="line">  printk(KERN_ERR<span class="string">&quot;info&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>此例中，调试信息最多两秒打印一次。这可以让你的终端不至于被汹涌而至的调试信息洪流冲塞，也保证你的系统依旧能用。完全可以根据自己的需要，或高或低地调整这种重复频率。<br>如果只使用printk()，可以用一个特殊的函数去限制printk()的调用频率:</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span>(error &amp;&amp; printk_ratelimit())</span><br><span class="line">  printk(KERN_DEBUG<span class="string">&quot;error = %d\n&quot;</span>,error);</span><br></pre></td></tr></table></figure>
+<p>如果频率限制失效，那么printk_ratelimit()返回0；否则，返回非0。默认情况下，此函数限制每5秒产生一条信息，但是在施加这一条件之前，可以让其实频率为10条信息。可以通过printk_ratelimit()和printk_ratelimit_burst sysctl来调整这些参数。<br>另一个棘手的问题是你如何确认在特定情况下某段代码确实被执行了。与前面的例子不同，你想观察的不是一个实时通知。如果这种通知在被触发一次之后依旧不停地到来，那就比较麻烦了。下面这种技巧针对的就不再是如何限制重复频率了，它要实现的是发生次数限制。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">unsigned</span> <span class="type">long</span> limit = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>(limit &lt; <span class="number">5</span>) &#123;</span><br><span class="line">  limit ++;</span><br><span class="line">  printk(KERN_ERR<span class="string">&quot;info&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在此例中，调试信息输出5次就封顶了。5次之后，打印条件总是不能成立。<br>不管是上面提到的哪个实例，用到的变量都应该是静态的（static），并且应该限制在函数的局部范围以内，这样才能保证变量的值在经历多次函数调用后仍然能够保留下来。<br>这些例子的代码都不是SMP或抢占安全的，不过，只需要用原子操作改造一下就没问题了。不过，对于一个临时的调试检测来说，没必要搞得那么复杂。</p>
+<h1 id="用二分查找法找出引发罪恶的变更"><a href="#用二分查找法找出引发罪恶的变更" class="headerlink" title="用二分查找法找出引发罪恶的变更"></a>用二分查找法找出引发罪恶的变更</h1><p>知道bug是什么时候引入内核源代码的通常都是很有用的。如果你知道2.6.33版中出现了一个bug，而能肯定2.4.29中没有，那么就能够很容易地引发这个bug的代码变更进行定位。消灭bug变得唾手可得—-要么取消这个变更，要么对其进行修正。<br>可是，很多时候并不知道到底哪个内核版本引入了bug。你知道当前版本里bug是确确实实存在的，不过，它好像就是存在于当前版本中。只需要花一点点力气，就能找出引发问题的代码变更了。元凶在手，消灭bug就指日可待了。<br>一开始，需要一个可靠的可复制的错误，最好系统一启动就能查证的bug。接下来，需要一个能确保没问题的内核。举个例子，你知道几个月前的内核没有这种错误，那么就从那时使用的内核中选取一个。如果发现问题，说明那时就存在了，那就找更早的。找到不含该bug的内核应该不太难。<br>接下来需要一个肯定有问题的内核。为了简单起见，应该从已知最早出现该问题的内核开始。<br>现在，你就可以在问题内核和良好的内核之间使用二分法了。举个例子，假定确保没有问题的内核版本是2.6.11，有问题的内核版本是2.6.20。从二者的正中选取一个内核版本，比如说2.6.15。检查2.6.15是否包含此bug。如果2.6.15没有问题，那么就知道错误是发生在此版本之后了。所以，再从2.6.15开始，在它和2.6.20正中选取下一个版本，比如说对2.6.17进行检查。如果2.6.15有问题，那么错误就可能发生在此版本之前了，那么就该选2.6.13作为下一个待查目标了。就这样重复筛选。<br>最终你肯定能把问题局限在两个相继发行的版本之间—-一个包含错误而另外一个不包含。你就能够很容易地对引发这个bug的代码变更进行定位。<br>这种方式比依次对每个版本的内核进行核查要好得多。</p>
+<h1 id="使用Git进行二分搜索"><a href="#使用Git进行二分搜索" class="headerlink" title="使用Git进行二分搜索"></a>使用Git进行二分搜索</h1><p>Git源码管理工具提供了一个有用的二分搜索机制。如果你使用Git来控制Linux源码树的副本，那么Git将自动运行二分搜索进程。此外，Git会在修订版本中进行二分搜索，这样可以找到具体哪次提交的代码引发了bug。很多Git相关的任务比较繁琐，但使用Git进行二分搜索并不那么困难。一开始，你得告诉Git你要进行二分搜索：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">git bisect start</span><br></pre></td></tr></table></figure>
+<p>然后再为Git提供一个出现问题的最早内核版本：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">git bisect bad &lt;version&gt;</span><br></pre></td></tr></table></figure>
+<p>然后还得为Git提供一个最新的可正常运行的内核版本：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">git bisect good v2<span class="number">.6</span><span class="number">.28</span></span><br></pre></td></tr></table></figure>
+<p>接下来，Git将会利用二分搜索法在Linux源码树中，自动检测正常的内核版本和有bug的内核版本之间哪个版本有隐患。接着再编译、运行以及测试正被检测的版本。如果这个版本一切正常，可以运行下面的命令：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">git bisect good</span><br></pre></td></tr></table></figure>
+<p>如果这个版本运行有异常—-也就是说，如果证明这个给定的内核版本有bug，可以运行：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">git bisect bad</span><br></pre></td></tr></table></figure>
+<p>对于每一条命令，Git将在每一个版本的基础上反复二分搜索源码树，并且返回所查的下一个内核版本。这个过程需要反复执行直到不能再进行二分搜索为止。Git最终会打印出有问题的版本号。<br>这本应该是一个漫长的过程，但是Git使得这一过程变得容易起来。如果你已经知道引发bug的源，你可以指定git仅仅在与错误相关的目录列表中去二份搜索提交的补丁。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">git bisect start - arch/x86</span><br></pre></td></tr></table></figure>
+
+<h1 id="当所有的努力都失败时：社区"><a href="#当所有的努力都失败时：社区" class="headerlink" title="当所有的努力都失败时：社区"></a>当所有的努力都失败时：社区</h1><p>或许你已经做完了所有你能想到的尝试。你在键盘上呕心沥血几个小时—-实际上，可能是无数日子，答案依旧没有眷顾你。此时，如果bug是在Linux内核的主流部分中，你可以在内核开发社区中寻求其他开发者的帮助。<br>你应该向内核邮件列表发送一份电子邮件，对bug进行完整而又简洁地描述，你的发现可能会对找到最终的答案起到帮助。毕竟，没人希望bug存在。<br>重点推荐社区和它最重要的论坛—-Linux内核邮件列表（LKML）。</p>
+<h1 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h1><p>本章讨论了内核的调试—-调试过程其实是一种寻求实现与目标偏差的行为。我们考察了几种技术：从内核内置的调试架构到调试程序，从记录日志到用git二分法查找。因为调试Linux内核困难重重，非调试用户程序能比，因此，本章的资料对于试图在内核代码中牛刀小试的任何人都至关重要。</p>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>Linux内核设计与实现</category>
+        <category>第18章 调试</category>
       </categories>
       <tags>
         <tag>Linux Kernel</tag>

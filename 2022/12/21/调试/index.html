@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":false,"version":"8.12.2","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"mac"},"bookmark":{"enable":true,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="调试工作艰难是内核级开发区别于用户级开发的一个显著特点。相比于用户级开发，内核调试的难度确实姚坚苦得多。更可怕的是，它带来的风险比用户级别更高，内核的一个错误往往立刻就能让系统崩溃。驾驭内核调试的能力（当然，最终是为了能够成功地开发内核）很大程度上取决于经验和对整个操作系统的把握。调试内核的关键在于你对内核的深刻理解。然而我们必须找到可以开始着手的地方，所以，在这一章里我们从调试内核的一种可能步骤">
+<meta property="og:type" content="article">
+<meta property="og:title" content="调试">
+<meta property="og:url" content="http://example.com/2022/12/21/%E8%B0%83%E8%AF%95/index.html">
+<meta property="og:site_name" content="Laugh Tale">
+<meta property="og:description" content="调试工作艰难是内核级开发区别于用户级开发的一个显著特点。相比于用户级开发，内核调试的难度确实姚坚苦得多。更可怕的是，它带来的风险比用户级别更高，内核的一个错误往往立刻就能让系统崩溃。驾驭内核调试的能力（当然，最终是为了能够成功地开发内核）很大程度上取决于经验和对整个操作系统的把握。调试内核的关键在于你对内核的深刻理解。然而我们必须找到可以开始着手的地方，所以，在这一章里我们从调试内核的一种可能步骤">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2022/12/23/%E8%B0%83%E8%AF%95/1.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/23/%E8%B0%83%E8%AF%95/2.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/23/%E8%B0%83%E8%AF%95/3.jpeg">
+<meta property="article:published_time" content="2022-12-21T01:13:59.000Z">
+<meta property="article:modified_time" content="2022-12-21T01:13:59.000Z">
+<meta property="article:author" content="Nibil">
+<meta property="article:tag" content="Linux Kernel">
+<meta property="article:tag" content="操作系统">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2022/12/23/%E8%B0%83%E8%AF%95/1.jpeg">
+
+
+<link rel="canonical" href="http://example.com/2022/12/21/%E8%B0%83%E8%AF%95/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":"","permalink":"http://example.com/2022/12/21/%E8%B0%83%E8%AF%95/","path":"2022/12/21/调试/","title":"调试"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>调试 | Laugh Tale</title>
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+  <!--pjax：防止跳转页面音乐暂停-->
+  <script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.js"></script>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Laugh Tale</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">A Nibil's Sharing Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E5%BC%80%E5%A7%8B"><span class="nav-number">1.</span> <span class="nav-text">准备开始</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E4%B8%AD%E7%9A%84bug"><span class="nav-number">2.</span> <span class="nav-text">内核中的bug</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%80%9A%E8%BF%87%E6%89%93%E5%8D%B0%E6%9D%A5%E8%B0%83%E8%AF%95"><span class="nav-number">3.</span> <span class="nav-text">通过打印来调试</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%81%A5%E5%A3%AE%E6%80%A7"><span class="nav-number">3.1.</span> <span class="nav-text">健壮性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%A5%E5%BF%97%E7%AD%89%E7%BA%A7"><span class="nav-number">3.2.</span> <span class="nav-text">日志等级</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%B0%E5%BD%95%E7%BC%93%E5%86%B2%E5%8C%BA"><span class="nav-number">3.3.</span> <span class="nav-text">记录缓冲区</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#syslogd%E5%92%8Cklogd"><span class="nav-number">3.4.</span> <span class="nav-text">syslogd和klogd</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8Eprintf-%E5%88%B0printk-%E7%9A%84%E8%BD%AC%E6%8D%A2"><span class="nav-number">3.5.</span> <span class="nav-text">从printf()到printk()的转换</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Oops"><span class="nav-number">4.</span> <span class="nav-text">Oops</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#ksymoops"><span class="nav-number">4.1.</span> <span class="nav-text">ksymoops</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kallsyms"><span class="nav-number">4.2.</span> <span class="nav-text">kallsyms</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E8%B0%83%E8%AF%95%E9%85%8D%E7%BD%AE%E9%80%89%E9%A1%B9"><span class="nav-number">5.</span> <span class="nav-text">内核调试配置选项</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BC%95%E5%8F%91BUG%E5%B9%B6%E6%89%93%E5%8D%B0%E4%BF%A1%E6%81%AF"><span class="nav-number">6.</span> <span class="nav-text">引发BUG并打印信息</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%A5%9E%E5%A5%87%E7%9A%84%E7%B3%BB%E7%BB%9F%E8%AF%B7%E6%B1%82%E9%94%AE"><span class="nav-number">7.</span> <span class="nav-text">神奇的系统请求键</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E8%B0%83%E8%AF%95%E5%99%A8%E7%9A%84%E4%BC%A0%E5%A5%87"><span class="nav-number">8.</span> <span class="nav-text">内核调试器的传奇</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#gdb"><span class="nav-number">8.1.</span> <span class="nav-text">gdb</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kgdb"><span class="nav-number">8.2.</span> <span class="nav-text">kgdb</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8E%A2%E6%B5%8B%E7%B3%BB%E7%BB%9F"><span class="nav-number">9.</span> <span class="nav-text">探测系统</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%A8UID%E4%BD%9C%E4%B8%BA%E9%80%89%E6%8B%A9%E6%9D%A1%E4%BB%B6"><span class="nav-number">9.1.</span> <span class="nav-text">用UID作为选择条件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E6%9D%A1%E4%BB%B6%E5%8F%98%E9%87%8F"><span class="nav-number">9.2.</span> <span class="nav-text">使用条件变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E7%BB%9F%E8%AE%A1%E9%87%8F"><span class="nav-number">9.3.</span> <span class="nav-text">使用统计量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%87%8D%E5%A4%8D%E9%A2%91%E7%8E%87%E9%99%90%E5%88%B6"><span class="nav-number">9.4.</span> <span class="nav-text">重复频率限制</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%94%A8%E4%BA%8C%E5%88%86%E6%9F%A5%E6%89%BE%E6%B3%95%E6%89%BE%E5%87%BA%E5%BC%95%E5%8F%91%E7%BD%AA%E6%81%B6%E7%9A%84%E5%8F%98%E6%9B%B4"><span class="nav-number">10.</span> <span class="nav-text">用二分查找法找出引发罪恶的变更</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8Git%E8%BF%9B%E8%A1%8C%E4%BA%8C%E5%88%86%E6%90%9C%E7%B4%A2"><span class="nav-number">11.</span> <span class="nav-text">使用Git进行二分搜索</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BD%93%E6%89%80%E6%9C%89%E7%9A%84%E5%8A%AA%E5%8A%9B%E9%83%BD%E5%A4%B1%E8%B4%A5%E6%97%B6%EF%BC%9A%E7%A4%BE%E5%8C%BA"><span class="nav-number">12.</span> <span class="nav-text">当所有的努力都失败时：社区</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">13.</span> <span class="nav-text">小结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Nibil</p>
+  <div class="site-description" itemprop="description">A Nibil's Sharing Blog</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">55</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/NibilCN" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;NibilCN" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-inner">
+      <!-- require APlayer -->
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css">
+      <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
+      <!-- require MetingJS -->
+      <script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+      <!--网易云-->   
+      <meting-js
+        server="netease"
+        id="7593069088"
+        type="playlist" 
+        mini="false"
+        fixed="false"
+        list-folded="true"
+        autoplay="true"
+        volume="0.4"
+        theme="#FADFA3"
+        order="random"
+        loop="all"
+        preload="auto"
+        mutex="true">
+      </meting-js>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/NibilCN" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/12/21/%E8%B0%83%E8%AF%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Nibil">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Laugh Tale">
+      <meta itemprop="description" content="A Nibil's Sharing Blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="调试 | Laugh Tale">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          调试
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-12-21 09:13:59" itemprop="dateCreated datePublished" datetime="2022-12-21T09:13:59+08:00">2022-12-21</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">学习</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/" itemprop="url" rel="index"><span itemprop="name">书籍</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/Linux%E5%86%85%E6%A0%B8%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/" itemprop="url" rel="index"><span itemprop="name">Linux内核设计与实现</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/Linux%E5%86%85%E6%A0%B8%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/%E7%AC%AC18%E7%AB%A0-%E8%B0%83%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">第18章 调试</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>14k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>12 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>调试工作艰难是内核级开发区别于用户级开发的一个显著特点。相比于用户级开发，内核调试的难度确实姚坚苦得多。更可怕的是，它带来的风险比用户级别更高，内核的一个错误往往立刻就能让系统崩溃。<br>驾驭内核调试的能力（当然，最终是为了能够成功地开发内核）很大程度上取决于经验和对整个操作系统的把握。调试内核的关键在于你对内核的深刻理解。然而我们必须找到可以开始着手的地方，所以，在这一章里我们从调试内核的一种可能步骤开始。</p>
+<span id="more"></span>
+
+<h1 id="准备开始"><a href="#准备开始" class="headerlink" title="准备开始"></a>准备开始</h1><p>内核调试往往是一个令人挠头不已的漫长过程。不少bug已经让整个开发社区几个月都食不甘味了。幸运的是，在这些费劲的问题中也有不少比较简单，而且容易消灭的小bug。运气好时，你可能面对的是些简单的小bug。开始做一些调查之前，不会清楚到底面对的是什么。现在，需要的只是：</p>
+<ol>
+<li>一个bug。听起来可笑，但确实需要一个确定的bug。如果错误总是能够重现的话，那对我们会有很大的帮助（有一部分错误确实如此）。然而不幸的是，大部分bug通常都不是行为可靠而且定义明确的。</li>
+<li>一个藏匿bug的内核版本。如果你知道这个bug最早出现在哪个内核版本中那就再理想不过了。如果你还不知道的话，别着急，本章会教你一个快速找出这个bug首先出现在哪个内核版本中的方法。</li>
+<li>相关内核代码的知识和运气。调试内核其实是一个棘手的问题。不过对周围的代码理解得越多，调试起来就越轻松。</li>
+</ol>
+<p>本章中的大多数方法都假定能够让bug重现。因此，想要成功地进行调试，就取决于是否能够让这些错误重现。如果不能，消灭bug就只能通过抽象出问题，再从代码中搜索蛛丝马迹来进行了。虽然有时也得这么做，但如果你能够让错误重现，成功的机会就会大许多。<br>有一些bug存在而且有人没办法让它重现。这听起来可能感觉挺奇怪。在用户级的程序里，bug常常表现得很直截了当。比如，执行foo就会让程序立即产生核心信息转储（dump core）。<code>但是内核中得bug表现却不是那么清晰。内核、用户程序和硬件之间的交互常常会很微妙。一个竞争条件可能在几百万次的算法迭代中才露出一次狰狞的面孔。</code>设计不佳的（甚至是包含错误的）代码在某些系统上可能还让人可以忍受，而在其他的一些系统中却表现得相当糟糕。在一些特定的配置、一些特定的机器上，通常都需要付出额外的努力来触发某个bug，不然的话，根本看不到它。在跟踪bug的时候，掌握的信息越多越好。<code>许多时候，当可以精确地重现一个bug的时候，就已经成功了一大半了。</code></p>
+<h1 id="内核中的bug"><a href="#内核中的bug" class="headerlink" title="内核中的bug"></a>内核中的bug</h1><p>内核中的bug多种多样。它们的产生可以有无数的原因，同时它们的表象也变化多端。从明白无误的错误代码（比如，没有把正确的值存放在恰当的位置）到同步时发生的错误（比如，共享变量锁定不当），再到错误的管理硬件（比如，给错误的寄存器发送错误的指令）；从降低所有程序的运行性能到毁坏数据再到使得系统处于死锁状态，都可能是bug发作时的症状。<br>从隐藏在源代码中的错误到展现在目击者面前的bug，往往是经历一系列连锁反应的事件才可能触发的。举个例子，一个被共享的结构体，如果它没有引用计数，那么它就有可能会引发竞争条件。因为没有引用计数的话，一个进程可以在另外一个进程仍然需要使用该结构体的时候释放掉它。继而，第二个进程就有可能试图通过无效的指针去使用一个不存在的数据结构。这样做可能导致引用一个空指针，也可能导致读出一些垃圾数据，还可能并不产生什么恶果（该数据并没有被其他什么覆盖的话）。引用空指针会导致产生一个oops，而垃圾数据可能会导致系统崩溃（这种情况比oops还坏）。用户报告了oops或系统的错误现象之后，开发者回过头来观察错误情形，发现在释放数据之后还会对它进行读写，存在着一个竞争条件，于是就会进行修正，给这个共享的结构加上适当的引用计数。<br>内核调试听起来很难，但是事实上Linux内核和其他大型的软件项目也没有什么太大的不同。内核确实有一些独特的问题需要考虑，像定时限制和竞争条件等等，它们都是允许多个线程在内核中同时运行产生的结果。</p>
+<h1 id="通过打印来调试"><a href="#通过打印来调试" class="headerlink" title="通过打印来调试"></a>通过打印来调试</h1><p>内核提供的打印函数printk()和C库提供的printf()函数功能几乎相同。实际上，在本书中我们都没有用到这两个函数的不同部分。从它实现的大部分意图来说，这个名字很不错，printk()就是内核的格式化打印函数。但是，printk()确实还有一些自身特殊的功能。</p>
+<h2 id="健壮性"><a href="#健壮性" class="headerlink" title="健壮性"></a>健壮性</h2><p>健壮性是printk()函数最容易让人们接受的一个特质。任何时候，任何地方都能调用它，内核中的printk()比比皆是。可以在中断上下文和进程上下文中被调用；可以在任何持有锁时被调用；可以在多处理器上同时被调用，而且调用者连锁都不必使用。<br>它是一个弹性极佳的函数。这一点相当重要，printk()之所以这么有用，就在于它随时都能被调用。<br>printk()函数的健壮躯壳也难免会有漏洞。在系统启动过程中，终端还没有初始化之前，在某些地方不能使用它。不过说实在的，如果终端没有初始化，你又能输出到什么地方去呢？<br>这一般不是一个什么问题，除非你要调试的是启动过程中最开始的那些步骤（比如说在负责执行硬件体系结构相关的初始化动作的setup_arch()函数中）。着手进行这样的调试挑战性很强—-没有任何打印函数能用，确实让问题更加棘手。<br>不过还是有一些可以指望的。核心硬件部分的黑客依靠此时能够工作的硬件设备与外界通信。绝大部分人对此都不会感兴趣。解决的办法是提供一个printk()的变体函数—-early_printk()，这个函数在启动过程的初期就具有在终端上打印的能力。它的功能与printk()完全相同，区别仅仅在于名字和能够更早的工作。不过，由于该函数在一些内核支持的硬件体系结构上无法实现。所以这种办法缺少可移植性。但是，如果所使用的硬件体系结构可以实现这个函数，它就是最好的指望。<br>除非在启动过程的初期就要在终端上输出，否则可以认为printk()在什么情况下都能工作。</p>
+<h2 id="日志等级"><a href="#日志等级" class="headerlink" title="日志等级"></a>日志等级</h2><p>printk()和printf()在使用上最主要的区别就是前者可以指定一个日志级别。内核根据这个级别来判断是否在终端上打印消息。内核把级别比某个特定值低的所有消息显示在终端上。<br>可以通过下面这种方式指定一个记录级别：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">printk(KERN_WARNING<span class="string">&quot;This is a warning!\n&quot;</span>);</span><br><span class="line">printk(KERN_DEBUG<span class="string">&quot;This is a debug notice!\n&quot;</span>);</span><br><span class="line">printk(<span class="string">&quot;i did not specify a loglevel!\n&quot;</span>);</span><br></pre></td></tr></table></figure>
+<p>KERN_WARNING和KERN_DEBUG都是&lt;linux&#x2F;kernel.h&gt;中的简单宏定义。他它们扩展开是像“&lt;4&gt;”或“&lt;7&gt;”这样的字符串，加进printk()函数要打印的消息的开头。内核用这个指定的记录等级和当前终端的记录等级console_loglevel来决定是不是向终端上打印。下表列举了所有可供使用的记录等级。<br><strong>可供使用的记录等级</strong></p>
+<table>
+<thead>
+<tr>
+<th>记录等级</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>KERN_EMERG</td>
+<td>一个紧急情况</td>
+</tr>
+<tr>
+<td>KERN_ALERT</td>
+<td>一个需要立即被注意到的错误</td>
+</tr>
+<tr>
+<td>KERN_CRIT</td>
+<td>一个临界情况</td>
+</tr>
+<tr>
+<td>KERN_ERR</td>
+<td>一个错误</td>
+</tr>
+<tr>
+<td>KERN_WARNING</td>
+<td>一个警告</td>
+</tr>
+<tr>
+<td>KERN_NOTICE</td>
+<td>一个普通的，不过也有可能需要注意的情况</td>
+</tr>
+<tr>
+<td>KERN_INFO</td>
+<td>一条非正式的信息</td>
+</tr>
+<tr>
+<td>KERN_DEBUG</td>
+<td>一条调试信息—-一般是冗余信息</td>
+</tr>
+</tbody></table>
+<p>如果你没有特别指定一个记录等级，函数会选用默认的DEFAULT_MESSAGE_LOGLEVEL，现在默认等级是KERN_WARNING。由于这个默认值将来存在变化的可能性，所以还是应该给自己的消息指定一个记录等级。<br>内核将最重要的记录等级KERN_EMERG定为“&lt;0&gt;”，将无关紧要的记录等级“KERN_DEBUG”定为“&lt;7&gt;”。举例来说，当编译预处理完成之后，前例中的代码实际上被编译成如下格式：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">printk(<span class="string">&quot;&lt;4&gt; This is a warning!\n&quot;</span>);</span><br><span class="line">printk(<span class="string">&quot;&lt;7&gt; This is a debug notice!\n&quot;</span>);</span><br><span class="line">printk(<span class="string">&quot;&lt;4&gt; i did not specify a loglevel!\n&quot;</span>);</span><br></pre></td></tr></table></figure>
+<p>怎样给调用的printk()赋记录等级完全取决于自己。那些正式的、需要你保持的消息应该有合适的记录等级。但是那些当你试图解决一个问题时加得到处都是的调试信息，可以按照你的想法赋予记录等级。一种选择是保持终端的默认记录等级不变，给所有调试信息KERN_CRIT或更低的等级。相反，也可以给所有调试信息KERN_DEBUG等级，而调整终端的默认记录等级。</p>
+<h2 id="记录缓冲区"><a href="#记录缓冲区" class="headerlink" title="记录缓冲区"></a>记录缓冲区</h2><p>内核消息都被保存在一个LOG_BUG_LEN大小的环形队列中。该缓冲区大小可在编译时通过设置CONFIG_LOG_BUF_SHIFT进行调整。在单处理器的系统上其默认值是16KB。换句话说，就是内核在同一时间只能保存16KB的内核消息。如果消息队列已经达到了最大值，那么如果再有printk()调用时，新消息将覆盖队列中的老消息。这个记录缓冲区之所以称为环形，是因为它的读写都是按照环形队列方式进行操作的。<br>使用环形队列有许多好处。由于同时读写环形缓冲区时，其同步问题很容易解决，所以即使在中断上下文中也可以方便地使用printk()。此外，它使记录维护起来也很容易。如果有大量的消息同时产生，新消息只需覆盖掉旧消息即可。在某个问题引发大量消息的时候，记录只会覆盖掉它本身，而不会因为失控而消耗掉大量内存。而环形缓冲区的唯一缺点—-可能会丢失消息，但是与简单性和健壮性的好处相比，这点代价是值得的。</p>
+<h2 id="syslogd和klogd"><a href="#syslogd和klogd" class="headerlink" title="syslogd和klogd"></a>syslogd和klogd</h2><p>在标准的Linux系统上，用户空间的守护进程klogd从记录缓冲区中获取内核消息，再通过syslogd守护进程将它们保存在系统日志文件中。klogd程序既可以从<code>/proc/kmsg</code>文件中，也可以通过syslogd()系统调用读取这些消息。默认情况下，它选择读取<code>/proc</code>方式实现。不管是哪种方法，klogd都会阻塞，知道有新的内核消息可供读出。再被唤醒之后，它会读出新的内核消息并进行处理。默认情况下，它就是把消息传给syslogd守护进程。<br>syslogd守护进程把它接收到的所有消息都添加进一个文件中，该文件默认是<code>/var/log/messages</code>。也可以通过<code>/etc/syslog.conf</code>配置文件重新指定。<br>在启动klogd的时候，可以通过指定-c标志来改变终端的记录等级。</p>
+<h2 id="从printf-到printk-的转换"><a href="#从printf-到printk-的转换" class="headerlink" title="从printf()到printk()的转换"></a>从printf()到printk()的转换</h2><p>当刚开始开发内核代码的时候，往往会把printk()输入成printf()。这很正常，你无法抗拒多年来在用户级程序中使用printf()的习惯。幸而这种错误不会持续很长时间，反复出现的链接错误很快就会让你在心烦意乱中开始培养新的习惯。<br>在编写用户级程序的时候，你输入printf()的时候不小心输入了printk()。那么你成为一个真正的内核黑客的时刻终于到来了。</p>
+<h1 id="Oops"><a href="#Oops" class="headerlink" title="Oops"></a>Oops</h1><p>oops是内核告知用户有不幸发生的最常用的方式。由于内核是整个系统的管理者，所以它不能采取像在用户空间出现运行错误时使用的那些简单手段，因为它很难自行修复，它也不能将自己杀死。内核只能发布oops。这个过程包括终端上输出错误消息，输出寄存器中保存的信息并输出可供跟踪的回溯线索。内核中出现的故障很难处理，所以内核往往要经历严峻的考验才能送出oops和靠它自己完成的一些清理工作。通常，发送完oops之后，内核会处于一种不稳定状态。举例来说，oops发生的时候内核可能正在处理非常重要的数据。它可能持有一把锁或正在和硬件设备交互。内核必须适当地从当前的上下文环境中退出并尝试恢复对系统的控制。多数时候，这种尝试都会失败。因为如果oops在中断上下文时发生，内核根本无法继续，它会陷入混乱。混乱的结果就是系统死机。如果oops在idle进程（pid为0）或init进程（pid为1）时发生，结果同样是系统陷入混乱，因为内核缺了这两个重要的进程根本就无法工作。不过，要是oops在其他进程运行时发生，内核就会杀死该进程并尝试着继续执行。<br>oops的产生有很多可能原因，其中包括内存访问越界或者非法的指令等。作为一个内核开发者，你将会经常处理oops。<br>紧接着的是一个oops的实例，它是在一台PPC机器上的tulip网卡的定时器处理函数运行时发生的：<br><img src="/2022/12/23/%E8%B0%83%E8%AF%95/1.jpeg" alt="img not found"><br>使用PC的读者可能对这么多的寄存器感到惊奇（居然有32个之多）。你可能对x86-32系统更熟悉一些，在这种系统上，oops会简单一点。但是，oops包含的重要信息对于所有体系结构都是完全相同的：寄存器上下文和回溯线索。<br>回溯线索显示了导致错误发生的函数调用链。这样我们就可以观察究竟发生了什么：机器处于空闲状态，正在执行idle循环，由cpu_idle()循环调用default_idle()。此时定时器中断产生了，它引起了对定时器的处理。tulip_timer()这个定时器处理函数被调用，而就是它引起了空指针。甚至可以通过偏移量（像0x128&#x2F;0x1c4这些出现在函数左侧的数字）找出导致问题的语句。<br>寄存器上下文信息可能同样有用，尽管使用起来不那么方便。如果你由函数的汇编代码，这些寄存器数据可以帮助你重建问题的现场。在寄存器中发现一个本不应该出现的数值可能会在黑暗中给你带来第一丝光明。在上面的例子中，我们可以查看是哪个寄存器包含了NULL（一个所有位都为零的数值），进而找出是函数的哪个变量的值不正常。一般在这种情况下问题往往是竞争引起的，在本例中，是指定时器和这块网卡驱动的其他部分之间的竞争。调试一个竞争条件往往很有挑战性。</p>
+<h2 id="ksymoops"><a href="#ksymoops" class="headerlink" title="ksymoops"></a>ksymoops</h2><p>前面列举的oops可以说是一个经过解码的oops，因为内存地址都已经转换成了它们对应的函数。下面是其未解码版本：<br><img src="/2022/12/23/%E8%B0%83%E8%AF%95/2.jpeg" alt="img not found"><br>回溯线索中的地址需要转化成有意义的符号名称才方便使用。这需要调用ksymoops命令，而且还必须提供编译内核时产生的System.map。如果使用的是模块，还需要一些模块信息。ksymoops通常会自行解析这些信息，所以一般可以这样调用它：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ksymoops saved_oops.txt</span><br></pre></td></tr></table></figure>
+<p>然后改程序就会吐出解码版的oops。如果ksymoops无法找到默认位置上的信息，或者想提供不同的信息，该程序可以接受许多参数。ksymoops的使用手册上提供了许多说明信息，使用之前最好先行查阅。ksymoops一般会随Linux发行版本提供。</p>
+<h2 id="kallsyms"><a href="#kallsyms" class="headerlink" title="kallsyms"></a>kallsyms</h2><p>谢天谢地，现在已经无须使用ksymoops根工具了，这是一个了不起的工作。因为尽管开发者使用它的时候一般很少出现问题，但是最终用户常常会错误地匹配System.map文件或错误地对oops进行解码。<br>开发版的2.5版内核引入了kallsyms特性，它可以通过定义CONFIG_KALLSYMS配置选项启用。该选项存放着内核镜像中相应函数地址的符号名称，所以内核可以打印解码好的跟踪线索。相应地，解码oops也不再需要System.map或者ksymoops工具。但是，这样做会使内核变得更大一些，因为从函数的地址到符号名称的映射必须永久地驻留在内核所映射的内存地址上。然而，不管是在开发的过程中还是在部署的过程中，占用这些内存都是值得的。配置选项CONFIG_KALLSYMS_ALL表示不仅存放函数名称，还存放所有的符号名称。但一般只有那些特殊的调试器才会有此需要。CONFIG_KALLSYMS_EXTRA_PASS选项会引起内核构建过程中再次忽略内核的目标代码。这个选项只有在调试kallsyms本身时才会有用。</p>
+<h1 id="内核调试配置选项"><a href="#内核调试配置选项" class="headerlink" title="内核调试配置选项"></a>内核调试配置选项</h1><p>在编译的时候，为了方便调试和测试内核代码，内核提供了许多配置选项，这些选项都在内核配置编辑器的内核开发菜单项中，它们都依赖于CONFIG_DEBUG_KERNEL。当内核开发的时候，作为一种练习，不妨打开所有这些选项。<br>有些选项确实有用，应该启用slab layer debugging（slab层调试选项）、high-memory debugging（高端内存调试选项）、I&#x2F;O mapping debugging（I&#x2F;O映射调试选项）、spin-lock debugging（自旋锁调试选项）和stack-overflow checking（栈溢出检查选项）。其中最有用的一个是sleep-inside-spinlock checking（自旋锁内睡眠选项），那些选项确实能完成不少调试工作。<br>从2.5版本开始，为了检查由各类原子操作引发的问题，内核提供了极佳的工具。原子锁是指那些不分隔执行的东西；在执行时不能中断，否则就是完不成的代码。正在使用一个自旋锁或禁止抢占的代码进行的就是原子操作。在进行此类操作的时候，代码不能睡眠—-使用锁时睡眠是引发死锁的元凶。<br>托内核抢占的福，内核提供了一个原子操作计数器。它可以被配置成一旦在原子操作过程中进程进入睡眠或者做了一些可能引起睡眠的操作，就打印警告信息并提供追踪线索。所以，包括正在使用锁的时候调用schedule()，在使用锁的时以阻塞方式请求分配内存和在引用单CPU数据时睡眠在内，各种潜在的bug都能被探测到。这种调试方法捕获了大量bug，它也受到了大家极力推荐使用。<br>下面这些选项可以最大限度地利用该特性：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">CONFIG_PREEMPT=y</span><br><span class="line">CONFIG_DEBUG_KERNEL=y</span><br><span class="line">CONFIG_KALLSYMS=y</span><br><span class="line">CONFIG_DEBUG_SPINLOCK_SLEEP=y</span><br></pre></td></tr></table></figure>
+
+<h1 id="引发BUG并打印信息"><a href="#引发BUG并打印信息" class="headerlink" title="引发BUG并打印信息"></a>引发BUG并打印信息</h1><p>一些内核调用可以用来方便标记bug，提供断言并输出信息。最常用的两个是BUG()和BUG_ON()。当被调用的时候，它们会引发oops，导致栈的回溯和错误信息的打印。这些声明会导致oops跟硬件的体系结构是相关的。大部分体系结构把BUG()和BUG_ON()定义成某种非法操作，这样自然会产生需要的oops。可以把这些调用当作断言使用，想要断言某种情况不该发生：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(bad_thing)</span><br><span class="line">  BUG();</span><br></pre></td></tr></table></figure>
+<p>或者更好的形式：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">BUG_ON(bad_thing);</span><br></pre></td></tr></table></figure>
+<p>多数内核开发者相信BUG_ON()比BUG()更清晰、更可读，而且BUG_ON()会将其声明作为一个语句放入unlikely()中。请注意，有些开发者在讨论是否能用一个编译选项将BUG_ON()声明在编译时剔除，以便能在嵌入内核中节约空间。这就意味着你可以放心地使用BUG_ON()，而不用担心BUG_ON()内的声明可能带来的任何“不良反应”。BUILD_BUG_ON()与BUG_ON()作用相同，尽在编译时调用。如果在编译阶段已提供的声明为真，那么编译将会因为一个错误而中止。<br>可以用panic()引发更严重的错误。调用panic()不但会打印错误消息，而且还会挂起整个系统。显然，只应该在最糟糕的情况下使用它：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(terrible_thing)</span><br><span class="line">  panic(<span class="string">&quot;terrible thing is %ld\n&quot;</span>,terrible_thing);</span><br></pre></td></tr></table></figure>
+<p>有些时候，只是需要在终端上打印一下栈的回溯信息来帮助调试。这个时候，dump_stack()就很有用了。它只在终端上打印寄存器上下文和函数的跟踪线索：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(!debug_check) &#123;</span><br><span class="line">  printk(KERN_DEBUG<span class="string">&quot;provide some information...\n&quot;</span>);</span><br><span class="line">  dump_stack();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="神奇的系统请求键"><a href="#神奇的系统请求键" class="headerlink" title="神奇的系统请求键"></a>神奇的系统请求键</h1><p>神奇的系统请求键是另外一根救命稻草，该功能可以通过定义CONFIG_MAGIC_SYSRQ配置选项来启用。SysRq（系统请求）键在大多数键盘上都是标准键。当该功能被启用的时候，无论内核处于什么状态，都可以通过特殊的组合键跟内核进行通信。这种功能可以让你在面对一台奄奄一息的系统时能完成一些有用的工作。<br>除了配置选项之外，还要通过一个sysctl用来标记该特性的开或关。需要启用它时使用如下命令：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo <span class="number">1</span> &gt; /proc/sys/kernel/sysrq</span><br></pre></td></tr></table></figure>
+<p>从终端上，你可以输入Sysrq-h获取一份可用的选项列表。Sysrq-s将“脏”缓冲区跟硬盘交换分区同步，Sysrq-u卸载所有的文件系统，Sysrq-b重启设备。在一行内发送这三个键的组合可以启动濒临死亡的系统，这比直接按下机器的reset键要安全一些。<br>如果机器已经完全锁死了，它也可能不会再响应神奇系统请求键，或者无法完成给定的命令。不过运气稍好的话，这些选项或许可以保存数据或者进行调试。下表列举了所有支持的系统请求命令：<br><img src="/2022/12/23/%E8%B0%83%E8%AF%95/3.jpeg" alt="img not found"><br>内核代码中的<code>Documentation/sysrq.txt</code>对此有更详细的说明。实际的实现在<code>drivers/char/sysrq.c</code>中。神奇系统请求键是调试和挽救垂危系统所必须的一种工具。由于该功能对终端上的任何用户都提供服务，所以在重要的机器上启用它需要三思而行。可是对于自己用于开发的机器，启用它确实帮助很大。</p>
+<h1 id="内核调试器的传奇"><a href="#内核调试器的传奇" class="headerlink" title="内核调试器的传奇"></a>内核调试器的传奇</h1><p>许多内核开发者一直以来都希望能拥有一个用于内核的调试器。不幸的是，Linus不愿意在它的内核源代码树中加入一个调试器。他认为调试器会误导开发者，从而导致引入不良的修正。没有人能对他的逻辑提出异议—-从真正理解代码出发，确实更能保证修正的正确性。然而，许多内核开发者们还是希望有一个官方发布的、用于内核的调试器。因为这个要求看起来不会马上被满足，所以许多补丁应运而生了，它们为标准内核附加上了内核调试的支持。虽然这都是一些不被官方认可的附加补丁，但它们确实功能完善，十分强大。在我们深入了解这些解决方案之前，先看看标准的Linux调试器gdb能够给我们一些什么帮助是一个不错的选择。</p>
+<h2 id="gdb"><a href="#gdb" class="headerlink" title="gdb"></a>gdb</h2><p>可以使用标准的GNU调试器对正在进行的内核进行查看。针对内核启动调试器的方法与针对进程的方法大致相同：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gdb vmlinux /proc/kcore</span><br></pre></td></tr></table></figure>
+<p>其中vmlinux文件是未经压缩的内核映像，不是压缩过的zImage或bzImage，它存放在源代码树的根目录上。<br><code>/proc/kcore</code>作为一个参数选项，是作为core文件来用的，通过它能够访问到内核驻留的高端内存。只有超级用户才能读取此文件的数据。<br>可以使用gdb的所有命令来获取信息。举个例子，为了打印一个变量的值，你可以用下面的命令：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">p global_variable</span><br></pre></td></tr></table></figure>
+<p>反汇编一个函数：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">disassemble function</span><br></pre></td></tr></table></figure>
+<p>如果编译内核的时候用了-g参数（在内核的Makefile文件的CFLAGS变量中加入-g），gdb还可以提供更多的信息。比如，你可以打印出结构体中存放的信息或是跟踪指针。当然，编译出的内核会大很多，所以不要把编译带调试信息的内核当作一种习惯。<br>接下来，就要说不幸的那一面了，gdb还是有很多局限性的。它没有任何办法修改内核数据。它也不能单步执行内核代码，不能加断点。不能修改内核数据是个非常大的缺陷。尽管在必要时反汇编函数无疑是个非常有用的功能，但是能够修改数据的却更为有用。</p>
+<h2 id="kgdb"><a href="#kgdb" class="headerlink" title="kgdb"></a>kgdb</h2><p>kgdb是一个补丁，它可以让我们在远端主机上通过串口利用gdb的所有功能对内核进行调试。这需要两台计算机：第一台运行带有kgdb补丁的内核，第二台通过串行线（不通过modem，直接连接两台机器的电缆）使用gdb对第一台进行调试。通过kgdb、gdb的所有功能都能使用：读取或修改变量值，设置断点，设置关注变量，单步执行等。某些版本的gdb甚至允许执行函数。<br>设置kgdb和连接串行线比较麻烦，但是一旦做完了，调试就变得简单了。该补丁会在<code>Documentation/</code>目录下安装很多说明文件，可以把它们挑出来研究一下。<br>不同体系结构、不同内核版本使用的kgdb由不同的人员维护，为了给需要调试的内核找到合适的补丁，还是在网上搜索一下比较好。</p>
+<h1 id="探测系统"><a href="#探测系统" class="headerlink" title="探测系统"></a>探测系统</h1><p>如果对内核调试有丰富的经验的话，那么你会掌握一些诀窍来帮助你更进一步地探测系统从而找到像想要的答案。内核调试很有挑战性，即使是一点小的暗示或者技巧都能给你很大的帮助。我们最好把它们练习起来。</p>
+<h2 id="用UID作为选择条件"><a href="#用UID作为选择条件" class="headerlink" title="用UID作为选择条件"></a>用UID作为选择条件</h2><p>如果你开发的是进程相关的部分，有些时候，你可以在提供替代物的同时不打破原有代码的可执行性。这在你重要系统调用的时候，或者在你希望进行调试时系统功能依旧健全的情况下非常有用。<br>举个例子，假设为了加入一个激动人心的新特性，你重写了fork()系统调用。除非第一次的尝试就完美无缺，否则系统调试就是一场噩梦。如果fork()系统调用不正常的话，压根就不指望整个系统还能正常工作。当然，和任何时候一样，希望总是存在的。<br>一般情况下，只要保留原有的算法而把你的新算法加入到其他位置上，基本就能保证安全。可以利用把用户id（UID）作为选择条件来实现这种功能，通过这种选择条件，可以安排到底执行哪种算法：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(current-&gt;uid != <span class="number">7777</span>) &#123;</span><br><span class="line">  <span class="comment">//老算法</span></span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">  <span class="comment">//新算法</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>除了UID为7777以外，其他所有的用户都用的是老算法。可以创建一个UID为7777的用户，专门来测试新算法。对于要求很严格的进程相关部分的代码来说，这种方法使得测试变得容易了许多。</p>
+<h2 id="使用条件变量"><a href="#使用条件变量" class="headerlink" title="使用条件变量"></a>使用条件变量</h2><p>如果代码与进程无关，或者希望有一个针对所有情况都能使用的机制来控制某个特性，可以使用条件变量。这比使用UID还来得简单，只需要创建一个全局变量作为一个条件选择开关。如果该变量为0，就使用一个分支上的代码。如果它不为零，就选择另外一个分支。可以通过某种接口提供对这个变量的控制，也可以直接通过调试器进行操控。</p>
+<h2 id="使用统计量"><a href="#使用统计量" class="headerlink" title="使用统计量"></a>使用统计量</h2><p>有些时候你需要掌握某个特定事件的发生规律。有些时候需要比较多个事件并从中得出规律。通过创建统计量并通过某种机制访问其统计结果，很容易就能满足这种需求。<br>举个例子，假设我们希望得到foo和bar的发生频率，那么在某个文件中，当然最好是在定义该事件的那个文件里，定义两个全局变量：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> foo_stat = <span class="number">0</span>;</span><br><span class="line"><span class="type">unsigned</span> <span class="type">long</span> bar_stat = <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+<p>每当事件发生的时候，就让相应的变量加1。然后在觉得合适的地方输出它。比如，可以在<code>/proc</code>目录中创建一个文件，还可以新创建一个系统调用。最简单的方法当然还是通过调试器直接访问它们。<br>注意，这种实现并非是SMP安全的。理想的办法是通过原子操作实现。但是仅仅对于一个简单的每次加1的调试统计量，一般无须搞得这么麻烦。</p>
+<h2 id="重复频率限制"><a href="#重复频率限制" class="headerlink" title="重复频率限制"></a>重复频率限制</h2><p>为了发现一个错误，开发者们往往在代码的某个部分加入很多错误检查语句（多数对应的都是一些打印语句）。在内核中，有些函数每秒都要被调用很多次。如果你在这样的函数中加入了printk()，那么系统马上就会被显示调试信息这一任务压得喘不过气，很快就什么也干不成了。<br>有两种相关的技巧可以用来防止此类问题的发生。第一种是重复频率限制，如果某种事件发生的非常频繁，而又需要观察它的整体进展情况，就可以让这种技巧施展身手了。为了避免调试信息发生井喷，可以每隔几秒执行一次打印（或者是其他任何你想完成的操作）。举个例子：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">unsigned</span> <span class="type">long</span> prev_jiffy = jiffies;<span class="comment">//频率限制</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>(time_after(jiffies,prev_jiffy + <span class="number">2</span>*HZ)) &#123;</span><br><span class="line">  prev_jifffy = jiffies;</span><br><span class="line">  printk(KERN_ERR<span class="string">&quot;info&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>此例中，调试信息最多两秒打印一次。这可以让你的终端不至于被汹涌而至的调试信息洪流冲塞，也保证你的系统依旧能用。完全可以根据自己的需要，或高或低地调整这种重复频率。<br>如果只使用printk()，可以用一个特殊的函数去限制printk()的调用频率:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(error &amp;&amp; printk_ratelimit())</span><br><span class="line">  printk(KERN_DEBUG<span class="string">&quot;error = %d\n&quot;</span>,error);</span><br></pre></td></tr></table></figure>
+<p>如果频率限制失效，那么printk_ratelimit()返回0；否则，返回非0。默认情况下，此函数限制每5秒产生一条信息，但是在施加这一条件之前，可以让其实频率为10条信息。可以通过printk_ratelimit()和printk_ratelimit_burst sysctl来调整这些参数。<br>另一个棘手的问题是你如何确认在特定情况下某段代码确实被执行了。与前面的例子不同，你想观察的不是一个实时通知。如果这种通知在被触发一次之后依旧不停地到来，那就比较麻烦了。下面这种技巧针对的就不再是如何限制重复频率了，它要实现的是发生次数限制。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">unsigned</span> <span class="type">long</span> limit = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>(limit &lt; <span class="number">5</span>) &#123;</span><br><span class="line">  limit ++;</span><br><span class="line">  printk(KERN_ERR<span class="string">&quot;info&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在此例中，调试信息输出5次就封顶了。5次之后，打印条件总是不能成立。<br>不管是上面提到的哪个实例，用到的变量都应该是静态的（static），并且应该限制在函数的局部范围以内，这样才能保证变量的值在经历多次函数调用后仍然能够保留下来。<br>这些例子的代码都不是SMP或抢占安全的，不过，只需要用原子操作改造一下就没问题了。不过，对于一个临时的调试检测来说，没必要搞得那么复杂。</p>
+<h1 id="用二分查找法找出引发罪恶的变更"><a href="#用二分查找法找出引发罪恶的变更" class="headerlink" title="用二分查找法找出引发罪恶的变更"></a>用二分查找法找出引发罪恶的变更</h1><p>知道bug是什么时候引入内核源代码的通常都是很有用的。如果你知道2.6.33版中出现了一个bug，而能肯定2.4.29中没有，那么就能够很容易地引发这个bug的代码变更进行定位。消灭bug变得唾手可得—-要么取消这个变更，要么对其进行修正。<br>可是，很多时候并不知道到底哪个内核版本引入了bug。你知道当前版本里bug是确确实实存在的，不过，它好像就是存在于当前版本中。只需要花一点点力气，就能找出引发问题的代码变更了。元凶在手，消灭bug就指日可待了。<br>一开始，需要一个可靠的可复制的错误，最好系统一启动就能查证的bug。接下来，需要一个能确保没问题的内核。举个例子，你知道几个月前的内核没有这种错误，那么就从那时使用的内核中选取一个。如果发现问题，说明那时就存在了，那就找更早的。找到不含该bug的内核应该不太难。<br>接下来需要一个肯定有问题的内核。为了简单起见，应该从已知最早出现该问题的内核开始。<br>现在，你就可以在问题内核和良好的内核之间使用二分法了。举个例子，假定确保没有问题的内核版本是2.6.11，有问题的内核版本是2.6.20。从二者的正中选取一个内核版本，比如说2.6.15。检查2.6.15是否包含此bug。如果2.6.15没有问题，那么就知道错误是发生在此版本之后了。所以，再从2.6.15开始，在它和2.6.20正中选取下一个版本，比如说对2.6.17进行检查。如果2.6.15有问题，那么错误就可能发生在此版本之前了，那么就该选2.6.13作为下一个待查目标了。就这样重复筛选。<br>最终你肯定能把问题局限在两个相继发行的版本之间—-一个包含错误而另外一个不包含。你就能够很容易地对引发这个bug的代码变更进行定位。<br>这种方式比依次对每个版本的内核进行核查要好得多。</p>
+<h1 id="使用Git进行二分搜索"><a href="#使用Git进行二分搜索" class="headerlink" title="使用Git进行二分搜索"></a>使用Git进行二分搜索</h1><p>Git源码管理工具提供了一个有用的二分搜索机制。如果你使用Git来控制Linux源码树的副本，那么Git将自动运行二分搜索进程。此外，Git会在修订版本中进行二分搜索，这样可以找到具体哪次提交的代码引发了bug。很多Git相关的任务比较繁琐，但使用Git进行二分搜索并不那么困难。一开始，你得告诉Git你要进行二分搜索：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git bisect start</span><br></pre></td></tr></table></figure>
+<p>然后再为Git提供一个出现问题的最早内核版本：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git bisect bad &lt;version&gt;</span><br></pre></td></tr></table></figure>
+<p>然后还得为Git提供一个最新的可正常运行的内核版本：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git bisect good v2<span class="number">.6</span><span class="number">.28</span></span><br></pre></td></tr></table></figure>
+<p>接下来，Git将会利用二分搜索法在Linux源码树中，自动检测正常的内核版本和有bug的内核版本之间哪个版本有隐患。接着再编译、运行以及测试正被检测的版本。如果这个版本一切正常，可以运行下面的命令：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git bisect good</span><br></pre></td></tr></table></figure>
+<p>如果这个版本运行有异常—-也就是说，如果证明这个给定的内核版本有bug，可以运行：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git bisect bad</span><br></pre></td></tr></table></figure>
+<p>对于每一条命令，Git将在每一个版本的基础上反复二分搜索源码树，并且返回所查的下一个内核版本。这个过程需要反复执行直到不能再进行二分搜索为止。Git最终会打印出有问题的版本号。<br>这本应该是一个漫长的过程，但是Git使得这一过程变得容易起来。如果你已经知道引发bug的源，你可以指定git仅仅在与错误相关的目录列表中去二份搜索提交的补丁。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git bisect start - arch/x86</span><br></pre></td></tr></table></figure>
+
+<h1 id="当所有的努力都失败时：社区"><a href="#当所有的努力都失败时：社区" class="headerlink" title="当所有的努力都失败时：社区"></a>当所有的努力都失败时：社区</h1><p>或许你已经做完了所有你能想到的尝试。你在键盘上呕心沥血几个小时—-实际上，可能是无数日子，答案依旧没有眷顾你。此时，如果bug是在Linux内核的主流部分中，你可以在内核开发社区中寻求其他开发者的帮助。<br>你应该向内核邮件列表发送一份电子邮件，对bug进行完整而又简洁地描述，你的发现可能会对找到最终的答案起到帮助。毕竟，没人希望bug存在。<br>重点推荐社区和它最重要的论坛—-Linux内核邮件列表（LKML）。</p>
+<h1 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h1><p>本章讨论了内核的调试—-调试过程其实是一种寻求实现与目标偏差的行为。我们考察了几种技术：从内核内置的调试架构到调试程序，从记录日志到用git二分法查找。因为调试Linux内核困难重重，非调试用户程序能比，因此，本章的资料对于试图在内核代码中牛刀小试的任何人都至关重要。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux-Kernel/" rel="tag"># Linux Kernel</a>
+              <a href="/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" rel="tag"># 操作系统</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/12/16/%E9%A1%B5%E9%AB%98%E9%80%9F%E7%BC%93%E5%AD%98Cache%E5%92%8C%E9%A1%B5%E5%9B%9E%E5%86%99/" rel="prev" title="页高速缓存Cache和页回写">
+                  <i class="fa fa-chevron-left"></i> 页高速缓存Cache和页回写
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Nibil</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">726k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">11:01</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.0/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+</body>
+</html>
