@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":false,"version":"8.12.2","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"mac"},"bookmark":{"enable":true,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="本章讲解底层驱动工程师必备的硬件基础，给出了嵌入式系统硬件原理及分析方法的全景视图。2.1节讲解微控制器、微处理器、数字信号处理器以及应用于特定领域的处理器各自的特点。2.2节对嵌入式系统中所使用的各类存储器与CPU的接口、应用领域及特点进行了详细讲解。2.3节讲解常见的外设接口与总线的工作方式，包括串口、I2C、USB、以太网接口、ISA、PCI和cPCI等。嵌入式系统硬件电路中经常会使用CPL">
+<meta property="og:type" content="article">
+<meta property="og:title" content="驱动设计的硬件基础">
+<meta property="og:url" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/index.html">
+<meta property="og:site_name" content="Laugh Tale">
+<meta property="og:description" content="本章讲解底层驱动工程师必备的硬件基础，给出了嵌入式系统硬件原理及分析方法的全景视图。2.1节讲解微控制器、微处理器、数字信号处理器以及应用于特定领域的处理器各自的特点。2.2节对嵌入式系统中所使用的各类存储器与CPU的接口、应用领域及特点进行了详细讲解。2.3节讲解常见的外设接口与总线的工作方式，包括串口、I2C、USB、以太网接口、ISA、PCI和cPCI等。嵌入式系统硬件电路中经常会使用CPL">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/1.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/2.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/3.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/4.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/5.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/6.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/7.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/8.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/9.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/10.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/11.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/12.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/13.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/14.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/15.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/16.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/17.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/18.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/19.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/20.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/21.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/22.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/23.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/24.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/25.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/26.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/27.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/28.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/29.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/30.jpeg">
+<meta property="og:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/31.jpeg">
+<meta property="article:published_time" content="2022-12-30T01:38:51.000Z">
+<meta property="article:modified_time" content="2022-12-30T01:38:51.000Z">
+<meta property="article:author" content="Nibil">
+<meta property="article:tag" content="Linux Kernel">
+<meta property="article:tag" content="Linux 设备驱动">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/1.jpeg">
+
+
+<link rel="canonical" href="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":"","permalink":"http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/","path":"2022/12/30/驱动设计的硬件基础/","title":"驱动设计的硬件基础"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>驱动设计的硬件基础 | Laugh Tale</title>
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+  <!--pjax：防止跳转页面音乐暂停-->
+  <script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.js"></script>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Laugh Tale</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">A Nibil's Sharing Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#2-1-%E5%A4%84%E7%90%86%E5%99%A8"><span class="nav-number">1.</span> <span class="nav-text">2.1 处理器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-1-%E9%80%9A%E7%94%A8%E5%A4%84%E7%90%86%E5%99%A8"><span class="nav-number">1.1.</span> <span class="nav-text">2.1.1 通用处理器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-Advanced-RISC-Machines-%E5%85%AC%E5%8F%B8%E7%9A%84ARM"><span class="nav-number">1.1.1.</span> <span class="nav-text">1. Advanced RISC Machines 公司的ARM</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Silicon-Graphics-%E5%85%AC%E5%8F%B8%E7%9A%84MIPS"><span class="nav-number">1.1.2.</span> <span class="nav-text">2. Silicon Graphics 公司的MIPS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-IBM-%E5%92%8C-Motorola-%E7%9A%84PowerPC"><span class="nav-number">1.1.3.</span> <span class="nav-text">3. IBM 和 Motorola 的PowerPC</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-Motorola-%E5%85%AC%E5%8F%B8%E7%8B%AC%E6%9C%89%E7%9A%84%E5%86%85%E6%A0%B868K-x2F-COLDFIRE"><span class="nav-number">1.1.4.</span> <span class="nav-text">4. Motorola 公司独有的内核68K&#x2F;COLDFIRE</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-2-%E6%95%B0%E5%AD%97%E4%BF%A1%E5%8F%B7%E5%A4%84%E7%90%86%E5%99%A8"><span class="nav-number">1.2.</span> <span class="nav-text">2.1.2 数字信号处理器</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-2-%E5%AD%98%E5%82%A8%E5%99%A8"><span class="nav-number">2.</span> <span class="nav-text">2.2 存储器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-NVRAM%EF%BC%88%E9%9D%9E%E6%98%93%E5%A4%B1%E6%80%A7RAM%EF%BC%89"><span class="nav-number">2.1.</span> <span class="nav-text">1.NVRAM（非易失性RAM）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-DPRAM%EF%BC%88%E5%8F%8C%E7%AB%AF%E5%8F%A3RAM%EF%BC%89"><span class="nav-number">2.2.</span> <span class="nav-text">2. DPRAM（双端口RAM）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-CAM%EF%BC%88%E5%86%85%E5%AE%B9%E5%AF%BB%E5%9D%80RAM%EF%BC%89"><span class="nav-number">2.3.</span> <span class="nav-text">3. CAM（内容寻址RAM）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-FIFO%EF%BC%88%E5%85%88%E8%BF%9B%E5%85%88%E5%87%BA%E9%98%9F%E5%88%97%EF%BC%89"><span class="nav-number">2.4.</span> <span class="nav-text">4. FIFO（先进先出队列）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-3-%E6%8E%A5%E5%8F%A3%E4%B8%8E%E6%80%BB%E7%BA%BF"><span class="nav-number">3.</span> <span class="nav-text">2.3 接口与总线</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-1-%E4%B8%B2%E5%8F%A3"><span class="nav-number">3.1.</span> <span class="nav-text">2.3.1 串口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-2-I%C2%B2C%E6%80%BB%E7%BA%BF"><span class="nav-number">3.2.</span> <span class="nav-text">2.3.2 I²C总线</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-3-USB"><span class="nav-number">3.3.</span> <span class="nav-text">2.3.3 USB</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-4-%E4%BB%A5%E5%A4%AA%E7%BD%91%E6%8E%A5%E5%8F%A3"><span class="nav-number">3.4.</span> <span class="nav-text">2.3.4 以太网接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-5-ISA%E6%80%BB%E7%BA%BF"><span class="nav-number">3.5.</span> <span class="nav-text">2.3.5 ISA总线</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-6-PCI%E5%92%8CcPCI"><span class="nav-number">3.6.</span> <span class="nav-text">2.3.6 PCI和cPCI</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-4-CPLD%E5%92%8CFPGA"><span class="nav-number">4.</span> <span class="nav-text">2.4 CPLD和FPGA</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-5-%E5%8E%9F%E7%90%86%E5%9B%BE%E5%88%86%E6%9E%90"><span class="nav-number">5.</span> <span class="nav-text">2.5 原理图分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-5-1-%E5%8E%9F%E7%90%86%E5%9B%BE%E5%88%86%E6%9E%90%E7%9A%84%E5%86%85%E5%AE%B9"><span class="nav-number">5.1.</span> <span class="nav-text">2.5.1 原理图分析的内容</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-5-2-%E5%8E%9F%E7%90%86%E5%9B%BE%E7%9A%84%E5%88%86%E6%9E%90%E6%96%B9%E6%B3%95"><span class="nav-number">5.2.</span> <span class="nav-text">2.5.2 原理图的分析方法</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-6-%E7%A1%AC%E4%BB%B6%E6%97%B6%E5%BA%8F%E5%88%86%E6%9E%90"><span class="nav-number">6.</span> <span class="nav-text">2.6 硬件时序分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-6-1-%E6%97%B6%E5%BA%8F%E5%88%86%E6%9E%90%E7%9A%84%E6%A6%82%E5%BF%B5"><span class="nav-number">6.1.</span> <span class="nav-text">2.6.1 时序分析的概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-6-2-%E5%85%B8%E5%9E%8B%E7%A1%AC%E4%BB%B6%E6%97%B6%E5%BA%8F"><span class="nav-number">6.2.</span> <span class="nav-text">2.6.2 典型硬件时序</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-7-%E4%BB%AA%E5%99%A8%E4%BB%AA%E8%A1%A8%E4%BD%BF%E7%94%A8"><span class="nav-number">7.</span> <span class="nav-text">2.7 仪器仪表使用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-7-1-%E4%B8%87%E7%94%A8%E8%A1%A8"><span class="nav-number">7.1.</span> <span class="nav-text">2.7.1 万用表</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-7-2-%E7%A4%BA%E6%B3%A2%E5%99%A8"><span class="nav-number">8.</span> <span class="nav-text">2.7.2 示波器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-7-3-%E9%80%BB%E8%BE%91%E5%88%86%E6%9E%90%E4%BB%AA"><span class="nav-number">8.1.</span> <span class="nav-text">2.7.3 逻辑分析仪</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-8-%E6%80%BB%E7%BB%93"><span class="nav-number">9.</span> <span class="nav-text">2.8 总结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Nibil</p>
+  <div class="site-description" itemprop="description">A Nibil's Sharing Blog</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">50</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">59</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/NibilCN" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;NibilCN" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-inner">
+      <!-- require APlayer -->
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css">
+      <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
+      <!-- require MetingJS -->
+      <script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+      <!--网易云-->   
+      <meting-js
+        server="netease"
+        id="7593069088"
+        type="playlist" 
+        mini="false"
+        fixed="false"
+        list-folded="true"
+        autoplay="true"
+        volume="0.4"
+        theme="#FADFA3"
+        order="random"
+        loop="all"
+        preload="auto"
+        mutex="true">
+      </meting-js>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/NibilCN" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Nibil">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Laugh Tale">
+      <meta itemprop="description" content="A Nibil's Sharing Blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="驱动设计的硬件基础 | Laugh Tale">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          驱动设计的硬件基础
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-12-30 09:38:51" itemprop="dateCreated datePublished" datetime="2022-12-30T09:38:51+08:00">2022-12-30</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">学习</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/" itemprop="url" rel="index"><span itemprop="name">书籍</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/LINUX%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E8%AF%A6%E8%A7%A3/" itemprop="url" rel="index"><span itemprop="name">LINUX设备驱动开发详解</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/LINUX%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E8%AF%A6%E8%A7%A3/%E7%AC%AC2%E7%AB%A0-%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">第2章 驱动设计的硬件基础</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>17k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>15 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>本章讲解底层驱动工程师必备的硬件基础，给出了嵌入式系统硬件原理及分析方法的全景视图。<br>2.1节讲解<code>微控制器、微处理器、数字信号处理器</code>以及<code>应用于特定领域的处理器</code>各自的特点。<br>2.2节对嵌入式系统中所使用的各类存储器与CPU的接口、应用领域及特点进行了详细讲解。<br>2.3节讲解常见的外设接口与总线的工作方式，包括串口、I2C、USB、以太网接口、ISA、PCI和cPCI等。<br>嵌入式系统硬件电路中经常会使用CPLD和FPGA，2.4节讲解了CPLD和FPGA在电路中的作用。<br>2.5-2.7节讲解实际项目开发过程中硬件分析的方法，包括如何进行原理图分析、时序分析以及如何快速地从芯片手册获取有效信息。<br>2.8节讲解了调试过程中常用仪器、仪表的使用方法，涉及万用表、示波器和逻辑分析仪。</p>
+<span id="more"></span>
+
+<h1 id="2-1-处理器"><a href="#2-1-处理器" class="headerlink" title="2.1 处理器"></a>2.1 处理器</h1><h2 id="2-1-1-通用处理器"><a href="#2-1-1-通用处理器" class="headerlink" title="2.1.1 通用处理器"></a>2.1.1 通用处理器</h2><p>通用处理器（GPP）并不针对特定的应用领域进行体系结构和指令集的优化，它们具有一般化的通用体系结构和指令集，以支持复杂的运算并易于新功能的添加。一般而言，在嵌入式微控制器（MCU）和微处理器（MPU）中包含一个通用处理器核。<br>MPU通常代表一个CPU，而MCU则强调把中央处理器、存储器和外围电路集成在一个芯片中。早期，微控制器被称为单片机，意思是把计算机集成在一个芯片内。嵌入式微控制器也常被称作片上系统（SoC），含义是在一个芯片上设计了整个系统。芯片厂商在推出MCU时，往往会有明确的市场定位，如定位于PDA、MP3、ADSL等。定位不同的产品可能包含共同的CPU核，但是集成的扩展电路则不一样。下图所示为一个典型的集成了外围电路的MCU的结构。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/1.jpeg" alt="img not found"><br>举个例子，Intel的80386属于微处理器，而内部集成了80386处理器、片选单元、中断控制、定时器、看门狗、定时器、串行I&#x2F;O、DMA、总线仲裁、DRMA控制器等的386EX则是80386微处理器的微控制器版本。<br>嵌入式微控制器一般由一个CPU核和多个外围电路集成，目前主流的CPU核如下。</p>
+<h3 id="1-Advanced-RISC-Machines-公司的ARM"><a href="#1-Advanced-RISC-Machines-公司的ARM" class="headerlink" title="1. Advanced RISC Machines 公司的ARM"></a>1. Advanced RISC Machines 公司的ARM</h3><p>ARM内核的设计技术被授权给数百家半导体厂商，做成不同的SoC芯片。ARM的功耗很低，在当今做活跃的无线局域网、3G、手机终端、手持设备、有线网络通信设备等中应用非常广泛。</p>
+<h3 id="2-Silicon-Graphics-公司的MIPS"><a href="#2-Silicon-Graphics-公司的MIPS" class="headerlink" title="2. Silicon Graphics 公司的MIPS"></a>2. Silicon Graphics 公司的MIPS</h3><p>两个最重要的MIPS芯片厂商为PMC和IDT。PMC-Sierra公司的MIPS处理器被CISCO公司大量采用在高端路由器上。IDT公司在MIPS核上集成了PCI接口，广泛用于以太网交换，另外也尝试增加了HDLC、Ethernet、串口、SDRAM控制器、片选、DMA控制器等外设接口，以用于低端通信产品。</p>
+<h3 id="3-IBM-和-Motorola-的PowerPC"><a href="#3-IBM-和-Motorola-的PowerPC" class="headerlink" title="3. IBM 和 Motorola 的PowerPC"></a>3. IBM 和 Motorola 的PowerPC</h3><p>PowerPC处理器是通信和工控领域应用最广泛的处理器，国产包括华为、中兴在内的通信公司都大量使用PowerPC，MPC860和MPC8260是其最经典的两款。</p>
+<h3 id="4-Motorola-公司独有的内核68K-x2F-COLDFIRE"><a href="#4-Motorola-公司独有的内核68K-x2F-COLDFIRE" class="headerlink" title="4. Motorola 公司独有的内核68K&#x2F;COLDFIRE"></a>4. Motorola 公司独有的内核68K&#x2F;COLDFIRE</h3><p>68K内核是最早在嵌入式领域广泛应用的内核，其最著名的代表芯片是68360。Coldfire则继承了68K的特点并对其保持了兼容。Coldfire内核被用于DSP模块、CAN总线模块以及一般嵌入式处理器所集成的外设模块，在工业控制、机器人研究、家电控制等领域被广泛采用。</p>
+<p><code>中央处理器的体系架构可以分为两类，一类为冯诺依曼结构，一类为哈佛结构。</code><br><code>冯诺依曼结构也称普林斯顿结构，是一种将程序指令存储器和数据存储器合并在一起的存储器结构。程序指令存储地址和数据存储地址指向同一个存储器的不同物理位置，因此程序指令和数据的宽度相同。而哈佛结构将程序指令和数据分开存储，指令和数据可以有不同的数据宽度。此外，哈佛结构还采用了独立的程序总线和数据总线，分别作为CPU与每个存储器之间的专用通信路径，具有较高的执行效率。</code>下图显示了冯诺依曼结构和哈佛结构的区别。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/2.jpeg" alt="img not found"><br>从指令集的角度来讲，中央处理器也可以分为两类，即RISC（精简指令集计算机）和CISC（复杂指令集计算机）。CISC强调增强指令的能力、减少目标代码的数量，但是指令复杂，指令周期长；而RISC强调尽可能减少指令集、指令单周期执行，但是目标代码会更大。ARM、MIPS、PowerPC等CPU内核都采用了RISC指令集。目前，RISC和CISC的融合非常明显。</p>
+<h2 id="2-1-2-数字信号处理器"><a href="#2-1-2-数字信号处理器" class="headerlink" title="2.1.2 数字信号处理器"></a>2.1.2 数字信号处理器</h2><p>数字信号处理器（DSP）针对通信、图像、语音和视频处理等领域的算法而设计。它包含独立的硬件乘法器。DSP的乘法指令一般在单周期内完成，且优化了卷积、数字滤波、FFT（快速傅立叶变换）、相关、矩阵运算等算法中的大量重复乘法。<br>DSP一般采用如下图所示的改进的哈佛架构，它具有独立的地址总线和数据总线，两条总线由程序存储器和数据存储器分时共用。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/3.jpeg" alt="img not found"><br><code>DSP分为两类，一类是定点DSP，一类是浮点DSP。浮点DSP的浮点运算用硬件来实现，可以在单周期内完成，因而其浮点运算处理速度高于定点DSP。而定点DSP只能用定点运算模拟浮点运算。</code><br>德州仪器（TI）、美国模拟器件公司（ADI）是全球DSP的两大主要厂商。<br>TI的TMS320™ DSP平台包含了功能不同的多个系列：2000系列、3000系列、4000系列、5000系列、6000系列，工程师也习惯称其为2X、3X、4X、5X、6X。除了2000与5000系列是定点DSP外，其余的均为浮点DSP。<br>ADI主要有16位定点的21xx系列、32位浮点的SHARC系列、从SHARC系列发展而来的TigerSHARC系列以及高性能16位DSP信号处理能力与通用微控制器方便性相结合的blackfin系列等。<br>通用处理器和数字信号处理器也有相互融合以取长补短的趋势，如数字信号控制器（DSC）即为MCU+DSP，blackfin系列属于DSC。目前，芯片厂商推出了许多ARM+DSP的双核处理器。<br>除了上述的通用微控制器和数字信号处理器外，还有一些针对特定领域而设计的专用处理器（ASP），它们都是针对一些特定应用而设计的，如用于HDTV、ADSL、Cable Modem等的专用处理器。<br>网络处理器是一种可编程器件，它应用于电信领域的各种任务，如包处理、协议分析、路由查找、声音&#x2F;数据的汇聚、防火墙、QoS等。网络处理器器件内部通常由若干微码处理器和若干硬件协处理器组成，多个微码处理器在网络处理器内部并行处理，通过预先编制的微码来控制处理流程。而对于一些复杂的标准操作（如内存操作、路由表查找算法、QoS的拥塞控制算法、流量调度算法等）则采用硬件协处理器来进一步提高处理性能，从而实现了业务灵活性和高性能的有机结合。<br>对于某些应用场合，使用ASIC（专用集成电路）往往是低成本且高性能的方案。ASIC专门针对特定应用而设计，不具备也不需要灵活的编程能力。使用ASIC完成同样地功能往往比直接使用CPU资源或CPLD（复杂可编程逻辑器件）&#x2F;FPGA（现场可编程门阵列）更廉价、高效。<br>在实际项目的硬件方案中，往往会根据应用的需求选择通用处理器、数字信号处理器、特定领域处理器、CPLD&#x2F;FPGA或ASIC之一的解决方案，在复杂的系统中，这些芯片可能会同时存在，协同合作，各自发挥自己的长处。如在一款智能手机中，可使用MCU处理图形用户界面和用户的按键输入并运行多任务操作系统，使用DSP进行音视频编解码，而在射频方面则采用ASIC。<br>综合2.1节的内容，我们可得出如下图所示的处理器分类。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/4.jpeg" alt="img not found"></p>
+<h1 id="2-2-存储器"><a href="#2-2-存储器" class="headerlink" title="2.2 存储器"></a>2.2 存储器</h1><p><code>存储器可以分为只读存储器（ROM）、闪存（Flash）、随机存取存储器（RAM）、光介质存储器和磁介质存储器。</code><br>ROM还可以再细分为不可编程ROM、可编程ROM（PROM）、可擦除可编程ROM（EPROM）和电可擦除可编程ROM（E²PROM），E²PROM完全可以用软件来擦写，已经非常方便了。<br>目前ROM有被Flash替代的趋势，NOR（或非）和NAND（与非）是市场上两种主要的Flash的闪存技术。Intel公司于1988年首先开发出NOR Flash，彻底改变了原先由EPROM和E²PROM一统天下的局面。紧接着，1989年，东芝公司开发出NAND Flash，每比特的成本被大大降低。<br>NOR Flash和CPU的接口属于典型的类SRAM接口，如下图所示。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/5.jpeg" alt="img not found"><br>不需要增加额外的控制电路。NOR Flash的特点是可芯片内执行（XIP），程序可以直接在NOR内运行。而NAND Flash和CPU的接口必须由相应的控制电路进行转换，当然也可以通过地址线或GPIO产生NAND Flash接口的信号。NAND Flash以块方进行访问，不支持芯片内执行。<br>公共闪存接口（Common Flash Interface，CFI）是一个公开的、标准的从NOR Flash器件中读取数据的接口。它可以使系统软件查询已安装的Flash器件的各种参数，包括器件阵列结构参数、电气和时间参数以及器件支持的功能等。利用CFI，在不修改系统软件的情况下，就可以用新型的和改进的产品代替旧版本的产品。<br>一个NAND Flash的接口主要包含如下信号。</p>
+<ol>
+<li>I&#x2F;O总线：地址、指令和数据通过这组总线传输，一般为8位或16位。</li>
+<li>芯片启动（Chip Enable，CE#）：如果没有检测到CE#信号，那么，NAND 器件就保持待机模式，不对任何控制信号做出响应。</li>
+<li>写使能（Write Enable，WE#）：WE#负责将数据、地址或指令写入NAND之中。</li>
+<li>读使能（Read Enable，RE#）：RE#允许数据读出。</li>
+<li>指令锁存使能（Command Latch Enable，CLE）：当CLE为高时，在WE#信号的上升沿，指令将被锁存到NAND指令寄存器中。</li>
+<li>地址锁存使能（Address Latch Enable，ALE）：当ALE为高时，在WE#信号的上升沿，地址将被锁存到NAND地址寄存器中。</li>
+<li>就绪&#x2F;忙（Ready&#x2F;Busy，R&#x2F;B#）：如果NAND器件忙，R&#x2F;B#信号将变低。该信号是漏极开路，需要采取上拉电阻。</li>
+</ol>
+<p><code>NAND Flash与NOR Flash相比容量大、价格低；NAND Flash中每个快的最大擦写次数是100万次，而NOR的擦写次数是10万次；NAND Flash的擦除、编程速度远超过NOR Flash。</code><br>由于Flash固有的电器特性，在读写数据过程中偶然会产生1位或几位数据错误，即位反转，NAND Flash发生位反转的几率要远大于NOR Flash。位反转无法避免，因此，使用NAND Flash的同时，应采用错误探测&#x2F;错误更正（EDC&#x2F;ECC）算法。<br>Flash的编程原理都是只将1写为0，而不能将0写为1。所以在Flash编程之前，必须将对应的块擦除，而擦除的过程就是把所有位都写为1的过程，块内的所有字节变为0xFF。<br>许多嵌入式系统都提供了IDE（Integrated Drive Electronics）接口，以供连接硬盘控制器或光驱。IDE接口的信号与SRAM类似。人们通常也把IDE接口称为ATA（Advanced Technology Attachment）接口，从技术角度而言并不准确。其实，ATA接口发展至今，已经经历了ATA-1、ATA-2、ATA-3、Ultra ATA、Ultra ATA&#x2F;33、Ultra ATA&#x2F;66、Ultra ATA&#x2F;100及Serial ATA的发展过程。<br>以上所述的各种ROM、Flash和磁介质存储器都属于非易失性存储器（NVM），掉电信息不会丢失，而RAM则与此相反。<br><code>RAM也可再分为静态RAM（SRAM）和动态RAM（DRAM）</code>。DRAM以电荷形式进行存储，数据存储在电容器中。由于电容器会由于漏电而导致电荷丢失，因而DRAM器件需要定期被刷新。SRAM是静态的，只要供电它就会保持一个值，SRAM没有刷新周期。每个SRAM存储单元由6个晶体管组成，而DRAM存储单元由1个晶体管和1个电容器组成。<br>通常所说的SDRAM、DDR RAM皆属于DRAM的范畴，它们采用与CPU外存控制器同步的时钟工作（注意，不是CPU的工作频率）。与SDRAM相比，DDR RAM同时利用了时钟脉冲的上升沿和下降沿传输数据，因此在时钟频率不变的情况下，数据传输频率加倍。此外，还存在使用RSL（Rambus发信电平）技术的RDRAM（Rambus DRAM）和Direct RDRAM。<br>针对许多特定场合的应用，嵌入式系统中往往还使用了一些特定类型的RAM。</p>
+<h2 id="1-NVRAM（非易失性RAM）"><a href="#1-NVRAM（非易失性RAM）" class="headerlink" title="1.NVRAM（非易失性RAM）"></a>1.NVRAM（非易失性RAM）</h2><p>既然是RAM，就是易失性的，为什么会有一类非易失性的RAM呢？<br>实际上，NVRAM借助带有备用电源的SRAM或借助NVM（如E²PROM）存储SRAM的信息并恢复来实现非易失性。NVRAM的特点是完全像SRAM一样读写，而且写入的信息掉电不丢失，不需要E²PROM和Flash的特定擦除和编程操作。NVRAM多用于存放系统中的参数信息。</p>
+<h2 id="2-DPRAM（双端口RAM）"><a href="#2-DPRAM（双端口RAM）" class="headerlink" title="2. DPRAM（双端口RAM）"></a>2. DPRAM（双端口RAM）</h2><p>DPRAM的特点是可以通过两个端口同时访问，具有两套完全独立的数据总线、地址总线和读写控制线，通常用于两个处理器之间交互数据，如下图所示。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/6.jpeg" alt="img not found"><br>当一端被写入数据之后，另一端可以通过轮询或中断获知，并读取其写入的数据。由于双CPU同时访问DPRAM时的仲裁逻辑电路集成在DPRAM内部，因而硬件工程师设计电路的原理比较简单。<br><code>DPRAM的优点是通信速度快，实时性强、接口简单，而且两边CPU都可主动进行数据传输。</code>除了双端口RAM以外，目前IDT等芯片厂商还推出了多端口RAM，可以供3个以上CPU互通数据。</p>
+<h2 id="3-CAM（内容寻址RAM）"><a href="#3-CAM（内容寻址RAM）" class="headerlink" title="3. CAM（内容寻址RAM）"></a>3. CAM（内容寻址RAM）</h2><p>CAM是按内容进行寻址的存储器，是一种特殊的存储阵列RAM，它的主要工作机制是将一个输入数据项与存储在CAM中的所有数据项目自动同时进行比较，判别该输入数据项与CAM中存储的数据项是否相匹配。并输出该数据项对应的匹配信息。<br>如下图所示，在CAM中，输入的是所要查询的数据，输出的是数据地址和匹配标志。若匹配（即搜寻到数据），则输出数据地址。CAM用于数据检索的优势是软件无法比拟的，可以极大地提高系统性能。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/7.jpeg" alt="img not found"></p>
+<h2 id="4-FIFO（先进先出队列）"><a href="#4-FIFO（先进先出队列）" class="headerlink" title="4. FIFO（先进先出队列）"></a>4. FIFO（先进先出队列）</h2><p>FIFO存储器的特点是先进先出，进出有序，FIFO多用于数据缓冲。FIFO和DPRAM类似，具有两个访问端口，但是FIFO两边的端口并不对等，某一时刻只能被设置为一边作为输入，一边作为输出。<br>如果FIFO的区域共有n个字节，我们只能通过循环n次读取同一个地址才能将该片区域读出，不能指定偏移地址。对于有n个数据的FIFO，当循环读取m次，下一次会自动读取到第m+1个数据，还是由FIFO本身的特性决定的。</p>
+<p>总结2.2节的内容，我们可得出如下图所示的存储器分类。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/8.jpeg" alt="img not found"></p>
+<h1 id="2-3-接口与总线"><a href="#2-3-接口与总线" class="headerlink" title="2.3 接口与总线"></a>2.3 接口与总线</h1><h2 id="2-3-1-串口"><a href="#2-3-1-串口" class="headerlink" title="2.3.1 串口"></a>2.3.1 串口</h2><p>RS-232、RS-422与RS-485都是串行数据接口标准，最初都是由电子工业协会（EIA）指定并发布的。<br>RS-232在1962年发布，命名为EIA-232-E。之后发布的RS-422定义了一种平衡通信接口，它是一种单机发送、多机接收的单向、平衡传输规范，被命名为TIA&#x2F;EIA-422-A标准。RS-422改进了RS-232通信距离短、速率低的缺点。为进一步扩展应用范围，EIA又于1983年在RS-422的基础上制定了RS-485标准，增加了多点、双向通信能力，即允许多个发送器连接到同一条总线上，同时增加了发送器的驱动能力和冲突保护特性，并扩展了总线共模范围，被命名为TIA&#x2F;EIA-485-A标准。<br>1969年发布的RS-232修改版RS-232C是嵌入式系统应用最广泛的串行接口，它为连接<code>DTE（数据终端设备）</code>与<code>DCE（数据通信设备）</code>而制定。RS-232C标准接口有25条线（4条数据线、11条控制线、3条定时线、7条备用和未定义线），常用的只有9根，它们是RTS&#x2F;CTS（请求发送&#x2F;清除发送流控制）、RxD&#x2F;TxD（数据收发）、DSR&#x2F;DTR（数据终端就绪&#x2F;数据设置就绪流控制）、DCD（数据载波检测，也称RLSD）、Ringing-RI（振铃指示）、SG（信号地）信号。RTS&#x2F;CTS、TxD&#x2F;RxD、DRS&#x2F;DTR等信号的定义如下。</p>
+<ol>
+<li>RTS：用来表示DTE请求DCE发送数据，当终端要发送数据时，使该信号有效。</li>
+<li>CTS：用来表示DCE准备好接收DTE发来的数据，是对RTS的响应信号。</li>
+<li>TxD：DTE通过TxD将串行数据发送到DCE。</li>
+<li>RxD：DTE通过RxD接收从DCE发来的串行数据。</li>
+<li>DSR：有效（ON状态）则表明DCE可以使用。</li>
+<li>DTR：有效（ON状态）则表明DTE可以使用。</li>
+<li>DCD：当本地DCE设备收到对方DCE设备送来的载波信号时，使DCD有效，通知DTE准备接收，并且由DCE将接收到的载波信号解调为数字信号，经RxD线送给DTE。</li>
+<li>Ringing-RI：当调制解调器收到交换台送来的振铃呼叫信号时，使该信号有效（ON状态），通知终端，已被呼叫。</li>
+</ol>
+<p>在嵌入式系统中，并不太注重DTE和DCE的概念，而RS-232C也很少用来连接调制解调器，多使用RS-232C进行对等通信，如Windows超级终端、Linux minicom用来连接电路板控制台等。最简单的RS-232C串口只需要在连接RxD、TxD、SG这3个信号，使用XON&#x2F;XOFF软件流控。<br>组成一个RS-232C串口的硬件原理如下图所示。从CPU到连接器依次为CPU、UART（通用异步接收器发送器，作用是完成串并转换）、CMOS&#x2F;TTL电平与RS-232电平转换器、DB9&#x2F;DB25或自定义的连接器。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/9.jpeg" alt="img not found"></p>
+<h2 id="2-3-2-I²C总线"><a href="#2-3-2-I²C总线" class="headerlink" title="2.3.2 I²C总线"></a>2.3.2 I²C总线</h2><p>I²C（内置集成电路）总线是由Philips公司开发的两线式串行总线，产生于20世纪80年代，用于连接微控制器及其外围设备。I²C总线简单而有效，占用很少的PCB空间，芯片管脚数量少，设计成本低。<code>I²C总线支持多主控模式，任何能够进行发送和接收的设备都可以成为主设备。</code>主控能够控制数据的传输和时钟频率，在任意时刻只能有一个主控。<br>组成I²C总线的两个信号为数据线SDA和时钟线SCL。为了避免总线信号的混乱，要求各设备连接到总线的输出端必须是开漏输出或集电极开路输出的结构。总线空闲时，上拉电阻使SDA和SCL线都保持高电平。根据开漏输出或集电极开路输出信号的“线与”逻辑，I²C总线上任意器件输出低电平都会使相应总线上的信号线变低。<br>I²C设备上的串行数据线SDA接口电路是双向的，输出电路用于向总线发送数据，输入电路用于接收总线上的数据。同样地，串行时钟线SCL也是双向的，作为控制总线数据传送的主机要通过SCL输出电路发送时钟信号，并检测总线上SCL上的电平以决定什么时候发下一个时钟脉冲电平；作为接收主机命令的从设备需按总线上的SCL的信号发送或接受SDA上的信号，它也可以向SCL线发出低电平信号以延长总线时钟信号周期。<br><code>当SCL稳定在高电平时，SDA由高到低的变化将产生一个开始位，而由低到高的变化则产生一个停止位</code>，如下图所示。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/10.jpeg" alt="img not found"><br>开始位和停止位都由I²C主设备产生。在选择从设备时，如果从设备采用7位地址，则主设备在发起传输过程前，需先发送1字节的地址信息，前7位为设备地址，最后一位为读写标志。之后，每次传输的数据也是1个字节，从MSB位开始传输。每个字节传完后，在SCL的第9个上升沿到来之前，接收方应该发出1个ACK位。SCL上的时钟脉冲由I²C主控方发出，在第8个时钟周期之后，主控方应该释放SDA，I²C总线的时序图如下图所示。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/11.jpeg" alt="img not found"></p>
+<h2 id="2-3-3-USB"><a href="#2-3-3-USB" class="headerlink" title="2.3.3 USB"></a>2.3.3 USB</h2><p>USB（通用串行总线）是Intel、Microsoft等厂商为解决计算机外设种类的日益增加与有限的主板插槽和端口之间的矛盾而于1995年提出的，它具有数据传输率高、易扩展、支持即插即用和热插拔的优点，目前已得到广泛的应用。<br>USB1.1包含全速和低速两种模式，低俗方式的速率为1.5Mbit&#x2F;s，支持一些不需要很大数据吞吐量和很高实时性的设备，如鼠标等。全速模式为12Mbit&#x2F;s，可以外接速率更高的外设。在USB2.0中，增加了一种高速方式，数据传输率达到480Mbit&#x2F;s，可以满足更高速外设的需求。<br>USB的物理拓扑结构如下图所示。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/12.jpeg" alt="img not found"><br>在USB2.0中，高速方式Hub使全速和低速方式的信令环境独立出来，下图所示为高速方式下Hub的作用。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/13.jpeg" alt="img not found"><br><code>在嵌入式系统中，电路板若需要挂接USB设备（device），则需提供USB主机（host）控制器和连接器；若电路板需要作为USB设备，则需提供USB设备适配器和连接器。有的MCU集成了USB主机控制器和设备适配器。</code><br>USB总线的机械连接非常简单，采用4芯的屏蔽线，一对差分（D+，D-）传送信号，另一对（VBUS，GND）传送+5V的直流电。一个USB主控制器最多可以连接127个器件，各器件之间的距离不超过5米。<br>USB提供了4种传输方式以适应各种设备的需要，说明如下。</p>
+<ol>
+<li>控制（control）传输方式<br>控制传输是双向传输，数据量通常较小，主要用来进行查询、配置和给USB设备发送通用的命令。</li>
+<li>同步（Synchronization）传输方式<br>同步传输提供了确定的带宽和间隔时间，它被用于时间严格并具有较强容错性的流数据传输，或者用于要求恒定的数据传输率的即时应用。例如进行语音业务传输时，使用同步传输方式是很好的选择。</li>
+<li>中断（Interrupt）传输方式<br>中断方式传送时单向的，对于USB主机而言，只有输入。中断传输方式主要用于定时查询设备是否有中断数据要传送，该传输方式应用在少量的、分散的、不可预测的输出传输场合，键盘、游戏杆和鼠标属于这一类型。</li>
+<li>批量（Bulk）传输方式<br>批量传输主要应用在没有带宽和时间间隔要求的大量数据的传送和接收，它进行有保证的传输。打印机和扫描仪均采用这种传输类型。</li>
+</ol>
+<h2 id="2-3-4-以太网接口"><a href="#2-3-4-以太网接口" class="headerlink" title="2.3.4 以太网接口"></a>2.3.4 以太网接口</h2><p><code>以太网接口有MAC（以太网媒体接入控制器）和PHY（物理接口收发器）组成。</code>以太网MAC由IEEE-802.3以太网标准定义，实现了数据链路层。常用的MAC支持10Mbit&#x2F;s或100Mbit&#x2F;s两种速率。PHY则实现物理层功能，IEEE-802.3标准定义了以太网PHY，它符合IEEE-802.3k中用于10BaseT和100BaseTX的规范。100BaseT和100BaseTX PHY两种实现的帧格式是一样的，但信令机制不同，而且10BaseT采用曼彻斯特编码，100BaseTX采用4B&#x2F;5B编码。<br>MAC和PHY之间采用MII（媒体独立接口）连接，它是IEEE-802.3定义的以太网行业标准，包括一个数据接口和一个MAC和PHY之间的管理接口。数据接口包括分别用于发送和接收的两条独立信道，每条信道都有自己的数据、时钟和控制信号，MII数据接口总共需要16个信号。MII管理接口包含两个信号，一个是时钟信号，另一个是数据信号。通过管理接口，上层能监视和控制PHY。<br>以太网接口电路原理图如下图所示。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/14.jpeg" alt="img not found"><br><code>从CPU到最终接口依次为CPU、MAC、PHY、以太网隔离变压器、RJ45插座。</code>以太网隔离变压器是以太网收发芯片与连接器之间的磁性组件，在其两者之间起着信号传输、阻抗匹配、波形修复、信号杂波抑制和高电压隔离作用。<br><code>许多处理器内部集成了MAC或同时集成了MAC和PHY，另有许多以太网控制芯片也集成了MAC和PHY。</code></p>
+<h2 id="2-3-5-ISA总线"><a href="#2-3-5-ISA总线" class="headerlink" title="2.3.5 ISA总线"></a>2.3.5 ISA总线</h2><p>ISA（工业标准结构总线）总线起源于1981年IBM公司生产的以Intel 8088为CPU的IBM-PC微计算机，开始时总线宽度为8位。1984年推出的IBM-PC&#x2F;AT系统将ISA总线扩充为16位数据总线宽度，同时地址总线宽度也由20位扩充到了24位。其后推出的EISA（扩展的ISA）采用32位地址线，数据总线也扩展为32位，但仍保持了与ISA的兼容。<br>下图所示为ISA总线的信号，这些信号可分为3组。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/15.jpeg" alt="img not found"></p>
+<ol>
+<li>总线基本信号：ISA总线工作所需要的最基本信号，含复位、时钟、电源、地等。</li>
+<li>总线访问信号：用于访问ISA总线设备的地址线、数据线以及相应的应答信号。</li>
+<li>总线控制信号：中断和DMA请求。</li>
+</ol>
+<p>各信号的详细定义如下。</p>
+<ol>
+<li>RESET、BCLK：复位及总线基本时钟，BCLK为8MHz。</li>
+<li>SA19-SA0：存储器及I&#x2F;O空间20位地址，带锁存。</li>
+<li>LA23-LA17：存储器及I&#x2F;O空间20位地址，不带锁存。</li>
+<li>BALE：总线地址锁存，外部锁存器的选通。</li>
+<li>AEN：地址允许，表明CPU让出总线，DMA开始。</li>
+<li>SMEMR#、SMEMW#：8位ISA存储器读写控制。</li>
+<li>MEMR#、MEMW#：16位ISA存储器读写控制。</li>
+<li>SD15-SD0：数据总线，访问8位ISA卡时高8位自动传送到SD7-SD0。</li>
+<li>SBHE#：高字节允许，打开SD15-SD8数据通路。</li>
+<li>MEMCS16#、IOCS16#：ISA卡发出此信号确认可以进行16位传送。</li>
+<li>I&#x2F;OCHRDY：ISA卡准备信号，可控制插入等待周期。</li>
+<li>NOWS#：有效则暗示不用插入等待周期。</li>
+<li>I&#x2F;OCHCk#：ISA卡奇偶检验错。</li>
+<li>IRQ15、IRQ14、IRQ12-IRQ9、IRQ7-IRQ3：中断请求。</li>
+<li>DRQ7-DRQ5、DRQ3-DRQ0：ISA卡DMA请求信号。</li>
+<li>DACK7#-DACK5#、DACK3#-DACK0#：DMA请求响应信号。</li>
+<li>MASTER#：ISA主模块确立信号，ISA发出此信号，与主机内DMAC（DMA控制器）配合使ISA卡成为主模块。</li>
+</ol>
+<h2 id="2-3-6-PCI和cPCI"><a href="#2-3-6-PCI和cPCI" class="headerlink" title="2.3.6 PCI和cPCI"></a>2.3.6 PCI和cPCI</h2><p>PCI（外围部件互连）是Intel公司于1991年推出的一种局部总线，作为一种通用的总线接口标准，它在目前的计算机系统中得到了非常广泛的应用。PCI提供了一组完整的总线接口规范，其目的是描述如何将计算机系统中的外围设备以一种结构化和可控化的方式连接在一起，给出了外围设备在连接时的电气特性和行为规约，并且详细定义了计算机系统中的各个不同部件之间应该如何正确地进行交互。PCI总线具有如下特点。</p>
+<ol>
+<li>数据总线32位，可扩充到64位。</li>
+<li>可进行突发（burst）模式传输。</li>
+<li>总线时钟频率为33MHz或66MHz，最高传输率可达528MB&#x2F;s。</li>
+<li>采用中央集中式总线仲裁。</li>
+<li>支持全自动配置、资源分配，PCI卡内有设备信息寄存器组为系统提供卡的信息，可实现即插即用。</li>
+<li>PCI总线规范独立于微处理器，通用性好。</li>
+<li>PCI设备可以完全作为主控设备控制总线</li>
+</ol>
+<p>下图所示为一个典型的基于PCI总线的计算机系统逻辑示意图，系统的各个部分通过PCI总线和PCI-PCI桥连接到一起。CPU和RAM通过PCI桥连接到PCI总线0（即主PCI总线），而具有PCI接口的显卡则可以直接连接到主PCI总线上。PCI-PCI桥是一个特殊的PCI设备，它负责将PCI总线0和PCI总线1（从PCI总线）连接到一起，通常PCI总线1称为PCI-PCI桥的下游，而PCI总线0则称为PCI-PCI桥的下游。为了兼容旧的ISA总线标准，PCI总线还可以通过PCI-ISA桥来连接ISA总线，从而支持以前的ISA设备。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/16.jpeg" alt="img not found"><br>当PCI刚加电时，卡上只有配置空间是可被访问的，因而PCI卡开始不能由驱动或用户程序访问，这与ISA卡有本质的区别（CPU可直接读取ISA卡在存储空间或I&#x2F;O空间映射的地址）。PCI配置空间保存着该卡工作所需的所有信息，如厂家、卡功能、资源要求、处理能力、功能模块数量、主控卡能力等。通过对这个空间信息的读取与编程，可完成对PCI卡的配置。下图中PCI配置空间共为256字节，主要包括如下信息。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/17.jpeg" alt="img not found"></p>
+<ol>
+<li>制造商标识（Vendor ID）：由PCI组织分配给厂家。</li>
+<li>设备标识（Device ID）：按产品分类给本卡的编号。</li>
+<li>分类码（Class Code）：本卡功能的分类码，如图卡、显示卡、解压卡等。</li>
+<li>申请存储器空间：PCI卡内有存储器或以存储器编址的寄存器和I&#x2F;O空间，为使驱动程序和应用程序能访问它们，需申请CPU的一段存储区域以进行定位。配置空间的基地址寄存器用于此目的。</li>
+<li>申请I&#x2F;O空间：配置空间的基地址寄存器也用来进行系统I&#x2F;O空间的申请。</li>
+<li>中断资源申请：配置空间中的中断引脚和中断线用来向系统申请中断资源。中断资源的申请通过中断引脚和中断线来完成的。偏移3DH处为中断引脚寄存器。其值表明PCI设备使用了哪一个中断引脚，对应关系为1-INTA#、2-INTB#、3-INTC#、4-INTD#。</li>
+</ol>
+<p>PCI总线上的信号大体可分为如下几组：</p>
+<ol>
+<li>系统接口信号；</li>
+<li>地址与数据接口信号；</li>
+<li>接口控制信号；</li>
+<li>仲裁信号；</li>
+<li>错误报告信号；</li>
+<li>中断接口信号；</li>
+<li>其他接口信号。</li>
+</ol>
+<p>如下图所示，这些信号的详细定义如下。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/18.jpeg" alt="img not found"></p>
+<ol>
+<li>CLK：系统时钟</li>
+<li>AD31-AD0：地址和数据复用信号线信号</li>
+<li>C&#x2F;BE3-C&#x2F;BE0：总线命令和地址使能信号</li>
+<li>PAR：奇偶校验信号</li>
+<li>FRAME#：帧周期信号，指示总线操作起始和终止</li>
+<li>IRDY#：主设备准备好信号</li>
+<li>TRDY#：目标设备准备好信号</li>
+<li>STOP#：目标设备要求终止当前数据传输信号</li>
+<li>DEVSEL#：目标设备选中信号</li>
+<li>IDSEL：配置空间读写时的片选信号</li>
+<li>LOCK#：总线锁定信号</li>
+<li>RST#：复位信号</li>
+<li>INTA#、INTB#、INTC#、INTD#：中断请求</li>
+<li>REQ#、GNT#：PCI总线请求与仲裁后的授权</li>
+<li>AD63-AD32、C&#x2F;BE7-C&#x2F;BE4等：作用与扩展的64位PCI总线</li>
+</ol>
+<p>cPCI（compact PCI，紧凑型PCI）是以PCI电气规范为标准的高性能工业用总线，结合了VME（Visa Module Eurocard，维萨信用卡模块欧洲卡）的高性能、可扩展性和可靠性与PCI标准的经济有效和灵活性。cPCI的CPU及外设与标准PCI是相同的，使用与传统PCI相同的芯片和软件，操作系统、驱动和应用程序都感觉不到两者的区别。</p>
+<h1 id="2-4-CPLD和FPGA"><a href="#2-4-CPLD和FPGA" class="headerlink" title="2.4 CPLD和FPGA"></a>2.4 CPLD和FPGA</h1><p>CPLD（复杂可编程逻辑器件）由完全可编程的与或门阵列以及宏单元组成。<br>CPLD中基本逻辑单元是宏单元，宏单元由一些“与或”阵列加上触发器构成，其中“与或”阵列完成组合逻辑功能，触发器完成时序逻辑。宏单元中与阵列的输出称为乘积项，其数量标志了CPLD的容量。乘积项阵列实际上就是一个“与或”阵列，每一个交叉点都是一个可编程熔丝，如果导通就是实现“与”逻辑。在“与”阵列之后一般还有一个“或”阵列，用以完成最小逻辑表达式中的“或”关系。下图给出了非常典型的CPLD的单个宏单元的结构。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/19.jpeg" alt="img not found"><br>下图给出了一个典型的CPLD的整体结构。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/20.jpeg" alt="img not found"><br>这个CPLD由LAB（逻辑阵列模块，由多个宏单元组成）通过PIA（可编程互连阵列）互连组成，而CPLD与外部的接口则由I&#x2F;O控制模块提供。<br>图中宏单元的输出会经I&#x2F;O控制块送至I&#x2F;O引脚，I&#x2F;O控制块控制每一个I&#x2F;O引脚的工作模式，决定其为输入、输出还是双向引脚，并决定其三态输出的使能端控制。<br>与CPLD不同，FPGA（现场可编程门阵列）基于LUT（查找表）工艺。查找表本质上是一片RAM，当用户通过原理图或HDL（硬件描述语言）语言描述了一个逻辑电路之后，FPGA开发软件会自动计算逻辑电路的所有可能的结果，并把结果事先写入RAM。这样，输入一组信号进行逻辑运算就等同于输入一个地址进行查表，并输出对应地址的内容。<br>下图所示为一个典型的FPGA的内部结构。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/21.jpeg" alt="img not found"><br>这个FPGA由IOC（输入&#x2F;输出控制模块）、EAB（嵌入式阵列块）、LAB和FAST TRACK（快速通道互连）构成。<br>IOC是内部信号到I&#x2F;O引脚的接口，它位于FAST TRACK的行和列的末端，每个IOC包含一个双向I&#x2F;O缓冲器和一个既可以做输入寄存器，也可以做输出寄存器的触发器。<br>EAB（嵌入式存储块）是一种输入输出带有寄存器的非常灵活的RAM。EAB不仅可以用作存储器，也可以事先被写入查表值来构成如乘法器、纠错逻辑等电路。当用于RAM时，EAB可配置成8位、4位、2位和1位长度的数据格式。<br>LAB主要用于逻辑电路设计，一个LAB包括多个LE（逻辑单元），每个LE包括组合逻辑及一个可编程触发器。一系列LAB构成的逻辑阵列用来实现普通逻辑功能，如计数器、加法器、状态机等。<br>器件内部信号的互连和器件引出端之间的信号互连由FAST TRACK连线提供，FAST TRACK遍布于整个FPGA器件，是一系列水平和垂直走向的连续分布线通道。<br>下图所示为一个4输入LUT的实际逻辑电路与LUT实现方式的对应关系。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/22.jpeg" alt="img not found"><br>CPLD和FPGA的主要厂商由Altera、Xilinx和Lattice等，采用专门的开发流程，在设计阶段使用HDL语言（VHDL、Verilog HDL）编程。它们可以实现许多复杂的功能，如实现UART、I²C等I&#x2F;O控制芯片、通信算法、音视频编解码算法等，甚至还可以直接集成ARM等CPU核和外围电路。<br><code>对于驱动工程师而言，我们只需要这样看待CPLD和FPGA：如果它们完成的是特定的接口和控制功能，我们就直接把它当成由很多逻辑门（与、或、非）组成的完成一系列时序逻辑和组合逻辑的ASIC；如果它完成的是CPU的功能，我们就直接把它当成CPU。</code>驱动工程师眼里的硬件比IC设计师要宏观。</p>
+<h1 id="2-5-原理图分析"><a href="#2-5-原理图分析" class="headerlink" title="2.5 原理图分析"></a>2.5 原理图分析</h1><h2 id="2-5-1-原理图分析的内容"><a href="#2-5-1-原理图分析的内容" class="headerlink" title="2.5.1 原理图分析的内容"></a>2.5.1 原理图分析的内容</h2><p><code>原理图分析的含义是指通过阅读电路板的原理图获得各种存储器、外设所使用的硬件资源，主要包括存储器和外设控制芯片所使用的片选、中断和DMA资源。</code>通过分析片选得出芯片的内存、I&#x2F;O基地址，通过分析中断、DMA信号获得芯片使用的中断号和DMA通道，并归纳出如下表所示的表格。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/23.jpeg" alt="img not found"><br>上述表格对驱动开发的意义重大，在大多数情况下，硬件工程师已经给驱动工程师提供了这个表格。</p>
+<h2 id="2-5-2-原理图的分析方法"><a href="#2-5-2-原理图的分析方法" class="headerlink" title="2.5.2 原理图的分析方法"></a>2.5.2 原理图的分析方法</h2><p>原理图的分析方法是以CPU为中心向存储器和外设辐射，步骤如下。</p>
+<ol>
+<li>阅读CPU部分，获知CPU的哪些片选、中断和集成的外设控制器被使用，列出这些元素a、b、c…。CPU的引脚比较多的时候，芯片可能会被分成几个模块单独被画在原理图的不同页上，这时候应该把相应的部分都分析到位。</li>
+<li>对第一步中列出的元素从原理图中对应的外设和存储器电路中分析出实际的使用情况。</li>
+</ol>
+<p>硬件原理图包含如下元素。</p>
+<ol>
+<li><code>符号（symbol）</code><br>symbol描述芯片的外围引脚以及引脚的信号，复杂的芯片可能被分割为几个symbol。在symbol中，一般把属于同一个信号群的引脚排列在一起。下图给出了NOR Flash AM29LV800B和E28F128J3A的symbol。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/24.jpeg" alt="img not found"></li>
+<li><code>网络（net）</code><br>描述芯片、接插件和分离元器件引脚之间的互连关系，每个网络需要根据信号的定义赋予一个合适的名字，如果没有给网络取名字，EDA软件会自动添加一个默认的网络名。添加网络后的E28F128J3A如下图所示。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/25.jpeg" alt="img not found"></li>
+<li><code>描述（description）</code><br>原理图中会添加一些文字来辅助描述原理图（类似于源代码中的注释），如每页页脚会有该页的功能描述，对重要的信号，在原理图的相应symbol和net也会附带文字说明。下图所示为原理图中描述的例子。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/26.jpeg" alt="img not found"></li>
+</ol>
+<h1 id="2-6-硬件时序分析"><a href="#2-6-硬件时序分析" class="headerlink" title="2.6 硬件时序分析"></a>2.6 硬件时序分析</h1><h2 id="2-6-1-时序分析的概念"><a href="#2-6-1-时序分析的概念" class="headerlink" title="2.6.1 时序分析的概念"></a>2.6.1 时序分析的概念</h2><p>对驱动工程师或硬件工程师而言，时序分析的意思就是让芯片之间的访问满足芯片手册中时序图信号有效的先后顺序、采样建立时间和保持时间的要求，在电路板工作不正常的时候，准确地定位时序方面的问题。<br>建立时间是指在触发器的时钟信号边沿到来之前，数据已经保持稳定不变的时间，如果建立时间不够，数据将不能在这个时钟边沿被正确采样；保持时间是指在触发器的时钟信号边沿到来以后，数据还需稳定不变的时间，如果保持时间不够，数据同样不能被正确采样。如下图所示，<code>数据稳定传输必须满足建立和保持时间的要求，当然在一些情况下，建立时间和保持时间的值可以为0</code>。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/27.jpeg" alt="img not found"><br>在工具方面，SynaptiCAD公司的Timing Diagrammer Pro是一种非常好的数字&#x2F;模拟时序图编辑器及分析引擎。</p>
+<h2 id="2-6-2-典型硬件时序"><a href="#2-6-2-典型硬件时序" class="headerlink" title="2.6.2 典型硬件时序"></a>2.6.2 典型硬件时序</h2><p><code>最典型的硬件时序是SRAM的读写时序，在读/写过程中涉及的信号包括地址、数据、片选、读/写、字节使能和就绪/忙。</code>对于一个16位、32位（甚至64位）的SRAM，字节使能表明哪些字节被读写。<br>下图给出了SRAM的一个读时序，写时序与此类似。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/28.jpeg" alt="img not found"><br>首先是地址总线上输出要读写的地址，然后SRAM片选被发出，接着读&#x2F;写信号被输出，之后读写信号要经历数个等待周期。当SRAM读写速度比较慢时，等待周期可以由MCU的相应寄存器设置，也可以通过设备就绪&#x2F;忙（nWait）向CPU报告，这样，读写过程会自动添加等待周期。<br><code>NOR Flash和许多外设都使用了类似SRAM的访问时序，因此，牢固掌握这个时序意义重大。</code>一般，在芯片数据手册给出的时序图中，会给出图中各段时间的含义和要求，真实的电路板必须满足芯片手册上描述的建立时间和保持时间的最小要求。</p>
+<h1 id="2-7-仪器仪表使用"><a href="#2-7-仪器仪表使用" class="headerlink" title="2.7 仪器仪表使用"></a>2.7 仪器仪表使用</h1><h2 id="2-7-1-万用表"><a href="#2-7-1-万用表" class="headerlink" title="2.7.1 万用表"></a>2.7.1 万用表</h2><p>在电路板调试过程中我们主要使用万用表的以下两个功能：</p>
+<ol>
+<li>测量电平；</li>
+<li>使用二极管挡测量电路板上网络的连通性，当示波器被设置在二极管挡时，测量连通的网络会发出“滴滴”的鸣叫，否则，没有连通。</li>
+</ol>
+<h1 id="2-7-2-示波器"><a href="#2-7-2-示波器" class="headerlink" title="2.7.2 示波器"></a>2.7.2 示波器</h1><p>示波器是利用电子示波管的特性，将人眼无法直接观测的交变信号转换成图像，显示在荧光屏上以便测量的电子仪器。它是观察数字电路实验现象、分析实验中的问题、测量实验结果必不可少的重要仪器。<br>使用示波器主要应注意调节垂直偏转因数选择（VOLTS&#x2F;DIV）和微调、时基选择（TIME&#x2F;DIV）和微调以及触发方式。<br>如果VOLTS&#x2F;DIV设置不合理，则可能出现电压幅度超过整个屏幕或在屏幕上变动太过微小无法观测的现象。下图所示为同一个波形在VOLTS&#x2F;DIV设置由大到小变化过程中的示意图。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/29.jpeg" alt="img not found"><br>如果TIME&#x2F;DIV设置不合适，则可能造成波形混迭。混迭意味着屏幕上显示的波形频率低于信号的实际频率。这时候，可以通过慢慢改变TIME&#x2F;DIV到较快的时基挡，如果波形的频率参数急剧改变或者晃动的波形在某个较快的时基挡稳定下来，说明之前发生了波形混迭。根据奈奎斯特定理，采样速率至少高于信号高频成分的两倍才不会发生混迭，如一个500MHz的信号，至少需要1GS&#x2F;s的采样速率。下图所示为同一个波形在TIME&#x2F;DIV设置由小到大变化过程中的示意图。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/30.jpeg" alt="img not found"><br>示波器的触发能使信号在正确的位置点同步水平扫描，使信号特性清晰。触发控制按钮可以稳定重复的波形并捕获单次波形。大多数用示波器的用户只采用边沿触发方式，如果拥有其他触发能力在某些应用上是非常有用的，特别是对新设计产品的故障查询，先进的触发方式可将所关系的事件分离出来，找出用户所关心的非正常问题，从而最有效地利用采样速率和存储深度。触发能力的提高可以较大提高测试过程的灵活性。</p>
+<h2 id="2-7-3-逻辑分析仪"><a href="#2-7-3-逻辑分析仪" class="headerlink" title="2.7.3 逻辑分析仪"></a>2.7.3 逻辑分析仪</h2><p>逻辑分析仪是利用时钟从测试设备上采集数字信号并进行显示的仪器，其最主要的作用是用于时序的判定。与示波器不同，逻辑分析仪并不具备许多电压等级，通常只显示两个电压（逻辑1和0）。在设定了参考电压之后，逻辑分析仪对待测试信号通过比较器来进行判定，高于参考电压者为High，低于参考电压者为Low。<br>例如，如果以nMHz采样率测量一个信号，逻辑分析仪会以1000&#x2F;n ns为周期采样信号，当参考电压设定为1.5V时，超过1.5V则判定为1，低于1.5V则为0，将逻辑1和0连接成连续的波形，工程师依据此连续波形可寻找时序问题。<br>高端的逻辑分析仪会安装Windows XP操作系统并提供非常友善的逻辑分析应用软件，在其中可方便地编辑探针、信号并查看波形。<br>逻辑分析仪的波形可以显示地址、数据、控制信号及任意外部探钩信号的变化轨迹，在使用之前应先编辑每个探钩的信号名。<br><code>逻辑分析仪具有超强的逻辑分析跟踪功能，它可以捕获并记录嵌入式处理器的总线周期，也可以捕获实时跟踪用的ETM接口的查询执行信息，并对这些记录进行分析、译码并还原出应用程序的执行过程。</code>因此，可使用逻辑分析仪通过触发接口与ICD（在线调试器）协调工作以补充ICD在跟踪功能方面的不足。逻辑分析仪与ICD协作可为工程师提供断点、触发和跟踪调试手段。如下图所示。<br><img src="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/31.jpeg" alt="img not found"></p>
+<h1 id="2-8-总结"><a href="#2-8-总结" class="headerlink" title="2.8 总结"></a>2.8 总结</h1><p>本章简单地讲解了驱动工程师必备的硬件基础知识，包括处理器、存储器的分类、原理与用途，并分析了常见的外围设备接口与总线的工作方式。<br>此外，本章还讲解了原理图、硬件时序分析方法以及万用表、示波器和逻辑分析仪的使用方法。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux-Kernel/" rel="tag"># Linux Kernel</a>
+              <a href="/tags/Linux-%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/" rel="tag"># Linux 设备驱动</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/12/29/%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A6%82%E8%BF%B0/" rel="prev" title="设备驱动概述">
+                  <i class="fa fa-chevron-left"></i> 设备驱动概述
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 2022 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Nibil</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">763k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">11:34</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.0/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+</body>
+</html>

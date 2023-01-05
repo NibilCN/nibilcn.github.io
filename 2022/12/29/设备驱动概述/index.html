@@ -166,13 +166,13 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">49</span>
+          <span class="site-state-item-count">50</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">58</span>
+        <span class="site-state-item-count">59</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
@@ -343,17 +343,17 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">    serial.h 文件</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">extern</span> <span class="type">void</span> <span class="title function_">SerialInit</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line"><span class="keyword">extern</span> <span class="type">void</span> <span class="title function_">SerialSend</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *buf,<span class="type">int</span> count)</span>;</span><br><span class="line"><span class="keyword">extern</span> <span class="type">void</span> <span class="title function_">SerailRecv</span><span class="params">(<span class="type">char</span> *buf,<span class="type">int</span> count)</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">    serial.c 文件</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="comment">//串口初始化</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">SerialInit</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//串口发送</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">SerialSend</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *buf,<span class="type">int</span> count)</span></span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//串口接收</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">SerailRecv</span><span class="params">(<span class="type">char</span> *buf,<span class="type">int</span> count)</span></span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//串口中断处理函数</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">SerialIsr</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">    serailInt = <span class="number">1</span>；</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>其他模块需要使用这个设备的时候，只需要包含设备驱动的头文件serial.h，然后调用其中的外部接口函数即可。如我们要从串口上发送字符串“Hello World”，使用函数SerialSend(“Hello World”,11)即可;<br>由此可见，在没有操作系统的情况下，设备驱动的接口被直接提交给了应用软件工程师，应用软件没有跨越任何层次就直接访问到了设备驱动的接口。设备驱动包含的接口函数也与硬件的功能直接吻合，没有任何附加功能。下图所示为无操作系统情况下硬件、设备驱动与应用软件的关系。<br><img src="/2022/12/29/%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A6%82%E8%BF%B0/1.jpeg" alt="img not found"><br>有的工程师把单任务系统设计成了如下图所示的结构，即设备驱动和具体的应用软件模块出于同一层次，这显然是不合理的，不符合软件设计中高内聚低耦合的要求。<br><img src="/2022/12/29/%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A6%82%E8%BF%B0/2.jpeg" alt="img not found"><br>另一种不合理的设计是直接在应用中操作硬件的寄存器，而不单独设计驱动模块，如下图所示。这种设计意味着系统中不存在或未能充分利用可被重用的驱动代码。<br><img src="/2022/12/29/%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A6%82%E8%BF%B0/3.jpeg" alt="img not found"></p>
 <h1 id="1-3-有操作系统时的设备驱动"><a href="#1-3-有操作系统时的设备驱动" class="headerlink" title="1.3 有操作系统时的设备驱动"></a>1.3 有操作系统时的设备驱动</h1><p>1.2节中的设备驱动直接运行在硬件之上，不与任何操作系统关联。当系统中包含操作系统后，设备驱动会变得怎样？<br>首先，无操作系统时设备驱动的硬件操作工作仍然是必不可少的，没有这一部分，设备驱动不可能与硬件打交道。<br>其次，我们还需要将设备驱动融入内核。为了实现这种融合，必须在所有的设备驱动中设计面向操作系统内核的接口，这样的接口由操作系统规定，对一类设备而言结构一致，独立于具体的设备。<br>由此可见，当系统中存在操作系统的时候，设备驱动变成了连接硬件和内核的桥梁。如下图所示，操作系统的存在势必要求设备驱动附加更多的代码和功能，把单一的“驱使硬件设备行动”变成了操作系统内与硬件交互的模块，它对外呈现为操作系统的API，不再给应用软件工程师直接提供接口。<br><img src="/2022/12/29/%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A6%82%E8%BF%B0/4.jpeg" alt="img not found"><br>有了操作系统之后，设备驱动反而变得复杂，那要操作系统干什么？<br>首先，一个复杂的软件系统需要处理多个并发的任务，没有操作系统，想完成多任务并发是很困难的。<br>其次，操作系统给我们提供内存管理机制。一个典型的例子是，对于多数含MMU的处理器而言，Windows、Linux等操作系统可以让每个进程都独立地访问4GB的内存空间。<br>上述优点似乎并没有体现在设备驱动上，操作系统的存在给设备驱动究竟带来了什么好处呢？<br>简而言之，操作系统通过给设备驱动制造麻烦来达到给上层应用提供便利的目的。如果设备驱动都按照操作系统给出的独立于设备的接口而设计，应用程序将可使用统一的系统调用接口来访问各种设备。对于类Unix的VxWorks、Linux等操作系统而言，应用程序通过write()、read()等函数读写文件就可以访问各种字符设备和块设备，而不用管设备的具体类型和工作方式，是非常方便的。</p>
-<h1 id="1-4-Linux设备驱动"><a href="#1-4-Linux设备驱动" class="headerlink" title="1.4 Linux设备驱动"></a>1.4 Linux设备驱动</h1><h2 id="1-4-1-设备的分类及特点"><a href="#1-4-1-设备的分类及特点" class="headerlink" title="1.4.1 设备的分类及特点"></a>1.4.1 设备的分类及特点</h2><p>计算机系统的硬件主要由CPU、存储器和外设组成。随着IC制造工艺的发展，目前，芯片的集成度越来越高，往往在CPU内部就集成了存储器和外设适配器。<code>ARM、PowerPC、MIPS等处理器都集成了UART、IIC控制器、USB控制器、SDRAM控制器等，有的处理器还集成了片内RAM和Flash。</code><br>驱动针对的对象是存储器和外设（包括CPU内部集成的存储器和外设），而不是针对CPU核。Linux将存储器和外设分为3个基础大类：</p>
+<h1 id="1-4-Linux设备驱动"><a href="#1-4-Linux设备驱动" class="headerlink" title="1.4 Linux设备驱动"></a>1.4 Linux设备驱动</h1><h2 id="1-4-1-设备的分类及特点"><a href="#1-4-1-设备的分类及特点" class="headerlink" title="1.4.1 设备的分类及特点"></a>1.4.1 设备的分类及特点</h2><p>计算机系统的硬件主要由CPU、存储器和外设组成。随着IC制造工艺的发展，目前，芯片的集成度越来越高，往往在CPU内部就集成了存储器和外设适配器。<code>ARM、PowerPC、MIPS等处理器都集成了UART、I2C控制器、USB控制器、SDRAM控制器等，有的处理器还集成了片内RAM和Flash。</code><br>驱动针对的对象是存储器和外设（包括CPU内部集成的存储器和外设），而不是针对CPU核。Linux将存储器和外设分为3个基础大类：</p>
 <ol>
 <li>字符设备；</li>
 <li>块设备；</li>
 <li>网络设备。</li>
 </ol>
-<p>字符设备是指那些必须以串行顺序依次进行访问的设备，如触摸屏、磁盘驱动器、鼠标等。块设备可以用任意顺序进行访问，以块为单位进行操作，如硬盘、软驱等。字符设备不经过系统的快速缓冲，而块设备经过系统的快速缓冲。但是，字符设备和块设备并没有明显的界限，如Flash设备符合块设备的特点，但是我们仍然可以把它作为一个字符设备来访问。<br>字符设备和块设备的驱动设计呈现出很大的差异，但是对于用户而言，他们都使用文件系统的操作接口open()、close()、read()、write()等函数进行访问。<br>在Linux系统中，网络设备面向数据包的接收和发送而设计，它并不对应文件系统的节点。内核与网络设备的通信和内核与字符设备、块设备的通信方式完全不同。<br>另外，TTY驱动、IIC驱动、USB驱动、PCI驱动、LCD驱动等本身大体可归纳入3个基础大类，但是对于这些复杂的设备，Linux系统还定义了独特的驱动体系结构。</p>
+<p>字符设备是指那些必须以串行顺序依次进行访问的设备，如触摸屏、磁盘驱动器、鼠标等。块设备可以用任意顺序进行访问，以块为单位进行操作，如硬盘、软驱等。字符设备不经过系统的快速缓冲，而块设备经过系统的快速缓冲。但是，字符设备和块设备并没有明显的界限，如Flash设备符合块设备的特点，但是我们仍然可以把它作为一个字符设备来访问。<br>字符设备和块设备的驱动设计呈现出很大的差异，但是对于用户而言，他们都使用文件系统的操作接口open()、close()、read()、write()等函数进行访问。<br>在Linux系统中，网络设备面向数据包的接收和发送而设计，它并不对应文件系统的节点。内核与网络设备的通信和内核与字符设备、块设备的通信方式完全不同。<br>另外，TTY驱动、I2C驱动、USB驱动、PCI驱动、LCD驱动等本身大体可归纳入3个基础大类，但是对于这些复杂的设备，Linux系统还定义了独特的驱动体系结构。</p>
 <h2 id="1-4-2-Linux设备驱动与整个软硬件系统的关系"><a href="#1-4-2-Linux设备驱动与整个软硬件系统的关系" class="headerlink" title="1.4.2 Linux设备驱动与整个软硬件系统的关系"></a>1.4.2 Linux设备驱动与整个软硬件系统的关系</h2><p>如下图所示，除网络设备之外，字符设备与块设备都被映射到Linux文件系统的文件和目录，通过文件系统的系统调用接口open()、write()、read()、close()等函数即可访问字符设备和块设备。所有的字符设备和块设备都被统一地呈现给用户。块设备比字符设备更复杂，在它上面会首先建立一个磁盘&#x2F;Flash文件系统，如FAT、Ext3、YAFFS、JFFS等。FAT、Ext3、YAFFS、JFFS规范了文件和目录在存储介质上的组织。<br>应用程序可以使用Linux的系统调用接口编程，也可以使用C库函数，出于代码可移植性的考虑，后者更值得推荐。<code>C库函数本身也通过系统调用接口而实现，如C库函数中的fopen()、fwrite()、fread()、fclose()分别会调用操作系统API的open()、write()、read()、close()函数。</code><br><img src="/2022/12/29/%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A6%82%E8%BF%B0/5.jpeg" alt="img not found"></p>
 <h2 id="1-4-3-编写Linux设备驱动的技术基础"><a href="#1-4-3-编写Linux设备驱动的技术基础" class="headerlink" title="1.4.3 编写Linux设备驱动的技术基础"></a>1.4.3 编写Linux设备驱动的技术基础</h2><p>Linux设备驱动的学习是一项浩大的工程，读者需要首先掌握以下基础。</p>
 <ol>
-<li><code>编写Linux设备驱动要求工程师具有良好的硬件基础，懂得SRAM、Flash、SDRAM、磁盘的读写方式，UART、IIC、USB等设备的接口，轮询、中断、DMA的原理，PCI总线的工作方式以及CPU的内存管理单元（MMU）等。</code></li>
+<li><code>编写Linux设备驱动要求工程师具有良好的硬件基础，懂得SRAM、Flash、SDRAM、磁盘的读写方式，UART、I2C、USB等设备的接口，轮询、中断、DMA的原理，PCI总线的工作方式以及CPU的内存管理单元（MMU）等。</code></li>
 <li><code>编写Linux设备驱动要求工程师具有良好的C语言基础，能灵活地运用C语言的结构体、指针、函数指针及内存动态申请和释放等。</code></li>
 <li><code>编写Linux设备驱动要求工程师具有一定的Linux内核基础，虽然并不要求工程师对内核各个部分有深入的研究，但至少要了解设备驱动和内核的接口，尤其是对于块设备、网络设备、Flash设备、串口设备等复杂设备。</code></li>
 <li><code>编写Linux设备驱动要求工程师具有良好的多任务并发控制和同步的基础，因为在设备驱动中会大量使用自旋锁、互斥、信号量、等待队列等并发与同步机制。</code></li>
@@ -387,6 +387,9 @@
                 </a>
             </div>
             <div class="post-nav-item">
+                <a href="/2022/12/30/%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%A1%AC%E4%BB%B6%E5%9F%BA%E7%A1%80/" rel="next" title="驱动设计的硬件基础">
+                  驱动设计的硬件基础 <i class="fa fa-chevron-right"></i>
+                </a>
             </div>
           </div>
     </footer>
@@ -406,8 +409,8 @@
 
 
 <div class="copyright">
-  &copy; 
-  <span itemprop="copyrightYear">2022</span>
+  &copy; 2022 – 
+  <span itemprop="copyrightYear">2023</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -418,13 +421,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="站点总字数">747k</span>
+    <span title="站点总字数">763k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">11:19</span>
+    <span title="站点阅读时长">11:34</span>
   </span>
 </div>
 <div class="busuanzi-count">
