@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":false,"version":"8.12.2","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"mac"},"bookmark":{"enable":true,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="由于字符设备和块设备都很好地体现了“一切都是文件”的设计思想，掌握Linux文件系统、设备文件系统的知识非常重要。首先，设备驱动最终通过操作系统的文件系统调用或C库函数（本质也基于系统调用）被访问。其次，驱动工程师在设备驱动中不可避免地会与设备文件系统打交道，如Linux2.4内核的devfs文件系统和Linux2.6内核的基于sysfs的udev文件系统。5.1节讲解了通过Linux API和C">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux文件系统和设备文件系统">
+<meta property="og:url" content="http://example.com/2023/01/10/Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%92%8C%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/index.html">
+<meta property="og:site_name" content="Laugh Tale">
+<meta property="og:description" content="由于字符设备和块设备都很好地体现了“一切都是文件”的设计思想，掌握Linux文件系统、设备文件系统的知识非常重要。首先，设备驱动最终通过操作系统的文件系统调用或C库函数（本质也基于系统调用）被访问。其次，驱动工程师在设备驱动中不可避免地会与设备文件系统打交道，如Linux2.4内核的devfs文件系统和Linux2.6内核的基于sysfs的udev文件系统。5.1节讲解了通过Linux API和C">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2023/01/10/Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%92%8C%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/1.jpeg">
+<meta property="og:image" content="http://example.com/2023/01/10/Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%92%8C%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/2.jpeg">
+<meta property="article:published_time" content="2023-01-10T02:51:21.000Z">
+<meta property="article:modified_time" content="2023-01-10T02:51:21.000Z">
+<meta property="article:author" content="Nibil">
+<meta property="article:tag" content="Linux Kernel">
+<meta property="article:tag" content="Linux 设备驱动">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2023/01/10/Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%92%8C%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/1.jpeg">
+
+
+<link rel="canonical" href="http://example.com/2023/01/10/Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%92%8C%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":"","permalink":"http://example.com/2023/01/10/Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%92%8C%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/","path":"2023/01/10/Linux文件系统和设备文件系统/","title":"Linux文件系统和设备文件系统"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Linux文件系统和设备文件系统 | Laugh Tale</title>
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+  <!--pjax：防止跳转页面音乐暂停-->
+  <script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.js"></script>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Laugh Tale</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">A Nibil's Sharing Blog</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#5-1-Linux%E6%96%87%E4%BB%B6%E6%93%8D%E4%BD%9C"><span class="nav-number">1.</span> <span class="nav-text">5.1 Linux文件操作</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-1-%E6%96%87%E4%BB%B6%E6%93%8D%E4%BD%9C%E7%9A%84%E7%9B%B8%E5%85%B3%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8"><span class="nav-number">1.1.</span> <span class="nav-text">5.1.1 文件操作的相关系统调用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%88%9B%E5%BB%BA"><span class="nav-number">1.1.1.</span> <span class="nav-text">1. 创建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%89%93%E5%BC%80"><span class="nav-number">1.1.2.</span> <span class="nav-text">2. 打开</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E8%AF%BB%E5%86%99"><span class="nav-number">1.1.3.</span> <span class="nav-text">3. 读写</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E5%AE%9A%E4%BD%8D"><span class="nav-number">1.1.4.</span> <span class="nav-text">4. 定位</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%E5%85%B3%E9%97%AD"><span class="nav-number">1.1.5.</span> <span class="nav-text">5. 关闭</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-2-C%E5%BA%93%E5%87%BD%E6%95%B0%E7%9A%84%E6%96%87%E4%BB%B6%E6%93%8D%E4%BD%9C"><span class="nav-number">1.2.</span> <span class="nav-text">5.1.2 C库函数的文件操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%88%9B%E5%BB%BA%E5%92%8C%E6%89%93%E5%BC%80"><span class="nav-number">1.2.1.</span> <span class="nav-text">1. 创建和打开</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E8%AF%BB%E5%86%99"><span class="nav-number">1.2.2.</span> <span class="nav-text">2. 读写</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E5%85%B3%E9%97%AD"><span class="nav-number">1.2.3.</span> <span class="nav-text">3. 关闭</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-2-Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">2.</span> <span class="nav-text">5.2 Linux文件系统</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-1-Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="nav-number">2.1.</span> <span class="nav-text">5.2.1 Linux文件系统目录结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-x2F-bin"><span class="nav-number">2.1.1.</span> <span class="nav-text">1. &#x2F;bin</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-x2F-boot"><span class="nav-number">2.1.2.</span> <span class="nav-text">2. &#x2F;boot</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-x2F-dev"><span class="nav-number">2.1.3.</span> <span class="nav-text">3. &#x2F;dev</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-x2F-etc"><span class="nav-number">2.1.4.</span> <span class="nav-text">4. &#x2F;etc</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-x2F-home"><span class="nav-number">2.1.5.</span> <span class="nav-text">5. &#x2F;home</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-x2F-lib"><span class="nav-number">2.1.6.</span> <span class="nav-text">6. &#x2F;lib</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-x2F-lost-found"><span class="nav-number">2.1.7.</span> <span class="nav-text">7. &#x2F;lost+found</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-x2F-mnt"><span class="nav-number">2.1.8.</span> <span class="nav-text">8. &#x2F;mnt</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-x2F-opt"><span class="nav-number">2.1.9.</span> <span class="nav-text">9. &#x2F;opt</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#10-x2F-proc"><span class="nav-number">2.1.10.</span> <span class="nav-text">10. &#x2F;proc</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#11-x2F-root"><span class="nav-number">2.1.11.</span> <span class="nav-text">11. &#x2F;root</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#12-x2F-sbin"><span class="nav-number">2.1.12.</span> <span class="nav-text">12. &#x2F;sbin</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#13-x2F-tmp"><span class="nav-number">2.1.13.</span> <span class="nav-text">13. &#x2F;tmp</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#14-x2F-usr"><span class="nav-number">2.1.14.</span> <span class="nav-text">14. &#x2F;usr</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#15-x2F-var"><span class="nav-number">2.1.15.</span> <span class="nav-text">15. &#x2F;var</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#16-x2F-sys"><span class="nav-number">2.1.16.</span> <span class="nav-text">16. &#x2F;sys</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#17-x2F-initrd"><span class="nav-number">2.1.17.</span> <span class="nav-text">17. &#x2F;initrd</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-2-Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E4%B8%8E%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8"><span class="nav-number">2.2.</span> <span class="nav-text">5.2.2 Linux文件系统与设备驱动</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-file%E7%BB%93%E6%9E%84%E4%BD%93"><span class="nav-number">2.2.1.</span> <span class="nav-text">1. file结构体</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-inode%E7%BB%93%E6%9E%84%E4%BD%93"><span class="nav-number">2.2.2.</span> <span class="nav-text">2. inode结构体</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-3-devfs%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">3.</span> <span class="nav-text">5.3 devfs设备文件系统</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-4-udev%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">4.</span> <span class="nav-text">5.4 udev设备文件系统</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-4-1-udev%E4%B8%8Edevfs%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">4.1.</span> <span class="nav-text">5.4.1 udev与devfs的区别</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Nibil</p>
+  <div class="site-description" itemprop="description">A Nibil's Sharing Blog</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">53</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">62</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/NibilCN" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;NibilCN" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-inner">
+      <!-- require APlayer -->
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css">
+      <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
+      <!-- require MetingJS -->
+      <script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+      <!--网易云-->   
+      <meting-js
+        server="netease"
+        id="7593069088"
+        type="playlist" 
+        mini="false"
+        fixed="false"
+        list-folded="true"
+        autoplay="true"
+        volume="0.4"
+        theme="#FADFA3"
+        order="random"
+        loop="all"
+        preload="auto"
+        mutex="true">
+      </meting-js>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/NibilCN" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/01/10/Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%92%8C%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Nibil">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Laugh Tale">
+      <meta itemprop="description" content="A Nibil's Sharing Blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Linux文件系统和设备文件系统 | Laugh Tale">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux文件系统和设备文件系统
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-01-10 10:51:21" itemprop="dateCreated datePublished" datetime="2023-01-10T10:51:21+08:00">2023-01-10</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">学习</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/" itemprop="url" rel="index"><span itemprop="name">书籍</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/LINUX%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E8%AF%A6%E8%A7%A3/" itemprop="url" rel="index"><span itemprop="name">LINUX设备驱动开发详解</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0/%E4%B9%A6%E7%B1%8D/LINUX%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E8%AF%A6%E8%A7%A3/%E7%AC%AC5%E7%AB%A0-Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%92%8C%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">第5章 Linux文件系统和设备文件系统</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>10k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>9 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>由于字符设备和块设备都很好地体现了“一切都是文件”的设计思想，掌握Linux文件系统、设备文件系统的知识非常重要。<br>首先，设备驱动最终通过操作系统的文件系统调用或C库函数（本质也基于系统调用）被访问。<br>其次，驱动工程师在设备驱动中不可避免地会与设备文件系统打交道，如Linux2.4内核的devfs文件系统和Linux2.6内核的基于sysfs的udev文件系统。<br>5.1节讲解了通过Linux API和C库函数在用户空间进行Linux文件操作的编程方法。<br>5.2节分析了Linux文件系统的目录结构，简单介绍了Linux内核中文件系统的实现，并给出了文件系统与设备驱动的关系。<br>5.3节和5.4节分别讲解Linux2.4内核的devfs和Linux2.6内核所采用的udev设备文件系统，并分析了两者的区别。</p>
+<span id="more"></span>
+
+<h1 id="5-1-Linux文件操作"><a href="#5-1-Linux文件操作" class="headerlink" title="5.1 Linux文件操作"></a>5.1 Linux文件操作</h1><h2 id="5-1-1-文件操作的相关系统调用"><a href="#5-1-1-文件操作的相关系统调用" class="headerlink" title="5.1.1 文件操作的相关系统调用"></a>5.1.1 文件操作的相关系统调用</h2><p>Linux的文件操作系统调用涉及创建、打开、读写和关闭文件。</p>
+<h3 id="1-创建"><a href="#1-创建" class="headerlink" title="1. 创建"></a>1. 创建</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">create</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *filename,<span class="type">mode_t</span> mode)</span>;</span><br></pre></td></tr></table></figure>
+<p>参数mode指定新建文件的存取权限，它同umask一起决定文件的最终权限（mode&amp;umask），其中umask代表了文件在创建时需要去掉的一些存取权限。umask可以通过系统调用umask()来改变，如下所示:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">umask</span><span class="params">(<span class="type">int</span> newmask)</span>;</span><br></pre></td></tr></table></figure>
+<p>该调用将umask设置为newmask，然后返回旧的umask，它只影响读、写和执行权限。</p>
+<h3 id="2-打开"><a href="#2-打开" class="headerlink" title="2. 打开"></a>2. 打开</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">open</span><span class="params">(<span class="type">const</span> cahr *pathname,<span class="type">int</span> flags)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">open</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *pathname,<span class="type">int</span> flags,<span class="type">mode_t</span> mode)</span>;</span><br></pre></td></tr></table></figure>
+<p>open()函数有两个形式，其中pathname是我们要打开的文件名（包含路径名称，默认时认为在当前路径下面），flags可以是如下表所示的一个值或者几个值的组合。<br><strong>文件打开标志</strong></p>
+<table>
+<thead>
+<tr>
+<th>标志</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>O_RDONLY</td>
+<td>以只读的方式打开文件</td>
+</tr>
+<tr>
+<td>O_WRONLY</td>
+<td>以只写的方式打开文件</td>
+</tr>
+<tr>
+<td>O_RDWR</td>
+<td>以读写的方式打开文件</td>
+</tr>
+<tr>
+<td>O_APPEND</td>
+<td>以追加的方式打开文件</td>
+</tr>
+<tr>
+<td>O_CREAT</td>
+<td>创建一个文件</td>
+</tr>
+<tr>
+<td>O_EXEC</td>
+<td>如果使用了O_CREAT而且文件已经存在，就会发生一个错误</td>
+</tr>
+<tr>
+<td>O_NOBLOCK</td>
+<td>以非阻塞的方式打开一个文件</td>
+</tr>
+<tr>
+<td>O_TRUNC</td>
+<td>如果文件已经存在，则删除文件的内容</td>
+</tr>
+</tbody></table>
+<p>O_RDONLY、O_WRONLY、O_RDWR这3个标志只能使用任意的一个。<br>如果使用了O_CREAT标志，则使用的函数是<code>int open(const char *pathname,int flags,mode_t mode);</code>这个时候我们还要指定mode标志，用来表示文件的访问权限。mode可以是如下表所示值的组合。<br><strong>文件访问权限</strong></p>
+<table>
+<thead>
+<tr>
+<th>标志</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>S_IRUSR</td>
+<td>用户可以读</td>
+</tr>
+<tr>
+<td>S_IWUSR</td>
+<td>用户可以写</td>
+</tr>
+<tr>
+<td>S_IXUSR</td>
+<td>用户可以执行</td>
+</tr>
+<tr>
+<td>S_IRWXU</td>
+<td>用户可以读、写、执行</td>
+</tr>
+<tr>
+<td>S_IRGRP</td>
+<td>组可以读</td>
+</tr>
+<tr>
+<td>S_IWGRP</td>
+<td>组可以写</td>
+</tr>
+<tr>
+<td>S_IXGRP</td>
+<td>组可以执行</td>
+</tr>
+<tr>
+<td>S_IRWXG</td>
+<td>组可以读、写、执行</td>
+</tr>
+<tr>
+<td>S_IROTH</td>
+<td>其他人可以读</td>
+</tr>
+<tr>
+<td>S_IWOTH</td>
+<td>其他人可以写</td>
+</tr>
+<tr>
+<td>S_IXOTH</td>
+<td>其他人可以执行</td>
+</tr>
+<tr>
+<td>S_IRWXO</td>
+<td>其他人可以读、写、执行</td>
+</tr>
+<tr>
+<td>S_ISUID</td>
+<td>设置用户的执行ID</td>
+</tr>
+<tr>
+<td>S_ISGIS</td>
+<td>设置组的执行ID</td>
+</tr>
+</tbody></table>
+<p>除了可以通过上述宏进行“或”逻辑产生标志之外，我们也可以自己用数字表示，Linux总共用5个数字来表示文件的各种权限：第一位表示设置用户ID；第二位表示设置组ID；第三位表示用户自己的权限位；第四位表示组的权限；第五位表示其他人的权限。每个数字可以取1（执行权限）、2（写权限）、4（读权限）、0（无）或者是这些值的和。<br>例如，如果要创建一个用户可读、可写、可执行，但是组没有权限，其他人可以读、可以执行的文件，并设置用户ID位。那么，应该使用的模式是1（设置用户ID）、0（不设置组ID）、7（1+2+4，读、写、执行）、0（没有权限）、5（1+4，读、执行）即10705，如下所示：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">open(<span class="string">&quot;test&quot;</span>,O_CREAT,<span class="number">10705</span>);</span><br></pre></td></tr></table></figure>
+<p>上述语句等价于：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">open(<span class="string">&quot;test&quot;</span>,O_CREAT,S_IRWXU | S_IROTH | S_IXOTH | S_ISUID);</span><br></pre></td></tr></table></figure>
+<p>如果文件打开成功，open函数会返回一个文件描述符，以后对该文件的所有操作就可以通过对这个文件描述符进行操作来实现。</p>
+<h3 id="3-读写"><a href="#3-读写" class="headerlink" title="3. 读写"></a>3. 读写</h3><p>在文件打开之后，我们才可以对文件进行读写，Linux系统中提供文件读写的系统调用是read、write函数，如下所示：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">read</span><span class="params">(<span class="type">int</span> fd,<span class="type">const</span> <span class="type">void</span> *buf,<span class="type">size_t</span> length)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">write</span><span class="params">(<span class="type">int</span> fd,<span class="type">const</span> <span class="type">void</span> *buf,<span class="type">size_t</span> length)</span>;</span><br></pre></td></tr></table></figure>
+<p>其中参数buf为指向缓冲区的指针，length为缓冲区的大小（以字节为单位）。函数read()实现从文件描述符fd所指定的文件中读取length个字节到buf所指向的缓冲区中，返回值为实际读取的字节数。函数write实现将把length个字节从buf所指向的缓冲区写到文件描述符fd所指向的文件中，返回值为实际写入的字节数。<br>以O_CREAT为标志的open函数实际上实现了文件创建的功能，因此，下面的函数等同creat()函数：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">open</span><span class="params">(pathname,O_CREAT | O_WRONLY | O_TRUNC,mode)</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-定位"><a href="#4-定位" class="headerlink" title="4. 定位"></a>4. 定位</h3><p>对于随机文件，我们可以随机地指定位置读写，使用如下函数进行定位：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">lseek</span><span class="params">(<span class="type">int</span> fd,<span class="type">offset_t</span> offset,<span class="type">int</span> where)</span>;</span><br></pre></td></tr></table></figure>
+<p>lseek()将文件读写指针相对where移动offset个字节。操作成功时，返回文件指针相对于文件头的位置。参数where可以使用如下值。<br>SEEK_SET：相对文件开头。<br>SEEK_CUR：相对文件读写指针的当前位置。<br>SEEK_END：相对文件末尾。<br>offset可取负值，例如下述调用可将文件指针相对当前位置向前移动5个字节。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lseek(fd,<span class="number">-5</span>,SEEK_CUR);</span><br></pre></td></tr></table></figure>
+<p>由于lseek()函数的返回值为文件指针相对于文件头的位置，因此下列调用的返回值就是文件的长度：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lseek(fd,<span class="number">0</span>,SEEK_END);</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-关闭"><a href="#5-关闭" class="headerlink" title="5. 关闭"></a>5. 关闭</h3><p>当操作完成之后，就要关闭文件了，只要调用close函数就可以了，其中fd是要关闭的文件描述符。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">close</span><span class="params">(<span class="type">int</span> fd)</span>;</span><br></pre></td></tr></table></figure>
+<p>例程：编写一个程序，在当前目录中创建用户可读写文件“hello.txt”，在其中写入“Hello，software weekly”，关闭该文件。再次打开该文件，读取其中的内容并输出在屏幕上，代码如下所示：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/stat.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;fcntl.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> LENGTH 100</span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> fd,len;</span><br><span class="line">    <span class="type">char</span> str[LENGTH];</span><br><span class="line"></span><br><span class="line">    fd = open(<span class="string">&quot;hello.txt&quot;</span>,O_CREAT | O_RDWR,S_IRUSR | S_IWUSR);</span><br><span class="line">    <span class="keyword">if</span>(fd)</span><br><span class="line">    &#123;</span><br><span class="line">        write(fd,<span class="string">&quot;Hello World&quot;</span>,<span class="built_in">strlen</span>(<span class="string">&quot;Hello World&quot;</span>));</span><br><span class="line">        close(fd);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fd = open(<span class="string">&quot;hello.txt&quot;</span>,O_RDWR);</span><br><span class="line">    len = read(fd,str,LENGTH);</span><br><span class="line">    str[len] = <span class="string">&#x27;\0&#x27;</span>;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%s\n&quot;</span>,str);</span><br><span class="line">    close(fd);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译并运行，执行结果为输出“Hello World”。</p>
+<h2 id="5-1-2-C库函数的文件操作"><a href="#5-1-2-C库函数的文件操作" class="headerlink" title="5.1.2 C库函数的文件操作"></a>5.1.2 C库函数的文件操作</h2><p>C库函数的文件操作实际上是独立于具体的操作系统平台的，不管是在DOS、Windows、Linux还是Vxworks中都是这些函数。</p>
+<h3 id="1-创建和打开"><a href="#1-创建和打开" class="headerlink" title="1. 创建和打开"></a>1. 创建和打开</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">FILE *<span class="title function_">fopen</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *path,<span class="type">const</span> <span class="type">char</span> *mode)</span>;</span><br></pre></td></tr></table></figure>
+<p>fopen()实现打开指定文件filename，其中的mode为打开模式，C库函数中支持的打开模式如下表所示。<br><strong>C库函数文件打开标志</strong></p>
+<table>
+<thead>
+<tr>
+<th>标志</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>r、rb</td>
+<td>以只读方式打开</td>
+</tr>
+<tr>
+<td>w、wb</td>
+<td>以只写方式打开。如果文件不存在，则创建该文件，否则文件被截断</td>
+</tr>
+<tr>
+<td>a、ab</td>
+<td>以追加方式打开。如果文件不存在，则创建该文件</td>
+</tr>
+<tr>
+<td>r+、r+b、rb+</td>
+<td>以读写方式打开</td>
+</tr>
+<tr>
+<td>w+、W+b、wb+</td>
+<td>以读写方式打开。如果文件不存在，则创建新文件，否则文件被截断</td>
+</tr>
+<tr>
+<td>a+、a+b、ab+</td>
+<td>以读和追加方式打开。如果文件不存在，则创建新文件</td>
+</tr>
+</tbody></table>
+<p><code>其中b用于区分二进制文件和文本文件，这一点在DOS、Windows系统中是有区分的，但是Linux系统不区分二进制和文本文件。</code></p>
+<h3 id="2-读写"><a href="#2-读写" class="headerlink" title="2. 读写"></a>2. 读写</h3><p>C库函数支持以字符、字符串等为单位，支持按照某种格式进行文件的读写，这一组函数为：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">fgetc</span><span class="params">(FILE *stream)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">fputc</span><span class="params">(<span class="type">int</span> c,FILE *stream)</span>;</span><br><span class="line"><span class="type">char</span> *<span class="title function_">fgets</span><span class="params">(<span class="type">char</span> *s,<span class="type">int</span> n,FILE *stream)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">fputs</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *s,FILE *stream)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">fprintf</span><span class="params">(FILE *stream,<span class="type">const</span> <span class="type">char</span> *format,...)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">fscanf</span><span class="params">(FILE *stream,<span class="type">const</span> <span class="type">char</span> *format,...)</span>;</span><br><span class="line"><span class="type">size_t</span> <span class="title function_">fread</span><span class="params">(<span class="type">void</span> *ptr,<span class="type">size_t</span> size,<span class="type">size_t</span> n,FILE *stream)</span>;</span><br><span class="line"><span class="type">size_t</span> <span class="title function_">fwrite</span><span class="params">(<span class="type">const</span> <span class="type">void</span> *ptr,<span class="type">size_t</span> size,<span class="type">size_t</span> size,FILE *stream)</span>;</span><br></pre></td></tr></table></figure>
+<p>fread()实现从stream中读取n个字段，每个字段为size个字节，并将读取的字段放入ptr所指的字符数组中，返回实际已读取的字段数。在读取的字段数小于num时，可能是在函数调用时出现错误，也可能是读到文件的结尾。所以要通过调用feof()和ferror()来判断。<br>write()实现从缓冲区ptr所指的数组中把n个字段写到stream中，每个字段长为size个字节，返回实际写入的字段数。<br>另外，C库函数还提供了读写过程中的定位能力，这些函数包括：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">fgetpos</span><span class="params">(FILE *stream,<span class="type">fpos_t</span> *pos)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">fsetpos</span><span class="params">(FILE *stream,<span class="type">const</span> <span class="type">fpos_t</span> *pos)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">fseek</span><span class="params">(FILE *stream,<span class="type">long</span> offset,<span class="type">int</span> where)</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-关闭"><a href="#3-关闭" class="headerlink" title="3. 关闭"></a>3. 关闭</h3><p>利用C库函数关闭文件依然是很简单的操作，如下所示：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">fclose</span><span class="params">(FILE *stream)</span>;</span><br></pre></td></tr></table></figure>
+<p>例程：将第5.1.1节中的例程用C库函数来实现，如下所示：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> LENGTH 100</span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    FILE *fd;</span><br><span class="line">    <span class="type">char</span> str[LENGTH];</span><br><span class="line"></span><br><span class="line">    fd = fopen(<span class="string">&quot;hello.txt&quot;</span>,<span class="string">&quot;w+&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span>(fd)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">fputs</span>(<span class="string">&quot;Hello World&quot;</span>,fd);</span><br><span class="line">        fclose(fd);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fd = fopen(<span class="string">&quot;hello.txt&quot;</span>,<span class="string">&quot;r&quot;</span>);</span><br><span class="line">    fgets(str,LENGTH,fd);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%s\n&quot;</span>,str);</span><br><span class="line">    fclose(fd);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="5-2-Linux文件系统"><a href="#5-2-Linux文件系统" class="headerlink" title="5.2 Linux文件系统"></a>5.2 Linux文件系统</h1><h2 id="5-2-1-Linux文件系统目录结构"><a href="#5-2-1-Linux文件系统目录结构" class="headerlink" title="5.2.1 Linux文件系统目录结构"></a>5.2.1 Linux文件系统目录结构</h2><p>进入Linux根目录，运行“ls -l”命令，可以看到Linux系统包含以下目录。</p>
+<h3 id="1-x2F-bin"><a href="#1-x2F-bin" class="headerlink" title="1. &#x2F;bin"></a>1. &#x2F;bin</h3><p>包含基本命令，如ls、cp、mkdir等，这个目录中的文件都是可执行的。</p>
+<h3 id="2-x2F-boot"><a href="#2-x2F-boot" class="headerlink" title="2. &#x2F;boot"></a>2. &#x2F;boot</h3><p>Linux系统的内核及引导系统程序所需要的文件，如vmlinux、initrd.img文件都位于这个目录中。</p>
+<h3 id="3-x2F-dev"><a href="#3-x2F-dev" class="headerlink" title="3. &#x2F;dev"></a>3. &#x2F;dev</h3><p>设备文件存储目录，应用程序通过对这些文件的读写和控制就可以访问实际的设备。</p>
+<h3 id="4-x2F-etc"><a href="#4-x2F-etc" class="headerlink" title="4. &#x2F;etc"></a>4. &#x2F;etc</h3><p>系统配置文件的所在地，一些服务器的配置文件也在这里，如用户账号及密码配置文件。</p>
+<h3 id="5-x2F-home"><a href="#5-x2F-home" class="headerlink" title="5. &#x2F;home"></a>5. &#x2F;home</h3><p>普通用户的家目录</p>
+<h3 id="6-x2F-lib"><a href="#6-x2F-lib" class="headerlink" title="6. &#x2F;lib"></a>6. &#x2F;lib</h3><p>库文件存放目录</p>
+<h3 id="7-x2F-lost-found"><a href="#7-x2F-lost-found" class="headerlink" title="7. &#x2F;lost+found"></a>7. &#x2F;lost+found</h3><p>在Ext2或Ext3文件系统中，当系统意外崩溃或机器意外关机时会产生一些文件碎片放在这里。</p>
+<h3 id="8-x2F-mnt"><a href="#8-x2F-mnt" class="headerlink" title="8. &#x2F;mnt"></a>8. &#x2F;mnt</h3><p>&#x2F;mnt这个目录一般是用于存放挂载存储设备的挂载目录的，比如有cdrom等目录，可以参看&#x2F;etc&#x2F;fstab的定义。有时我们可以把让系统开机自动挂载文件系统，把挂载点放在这里也是可以的。</p>
+<h3 id="9-x2F-opt"><a href="#9-x2F-opt" class="headerlink" title="9. &#x2F;opt"></a>9. &#x2F;opt</h3><p>opt是“可选”的意思，有些软件包会被安装在这里，用户自己编译的软件包也可以安装在这个目录中.</p>
+<h3 id="10-x2F-proc"><a href="#10-x2F-proc" class="headerlink" title="10. &#x2F;proc"></a>10. &#x2F;proc</h3><p>操作系统运行时，进程及内核信息（CPU、硬盘分区、内存信息等）存放在这里。&#x2F;proc目录为伪文件系统proc的挂载目录，proc并不是真正的文件系统，它存在于内存之中。</p>
+<h3 id="11-x2F-root"><a href="#11-x2F-root" class="headerlink" title="11. &#x2F;root"></a>11. &#x2F;root</h3><p>Linux超级权限用户root的家目录。</p>
+<h3 id="12-x2F-sbin"><a href="#12-x2F-sbin" class="headerlink" title="12. &#x2F;sbin"></a>12. &#x2F;sbin</h3><p>存放可执行文件，大多是涉及系统管理的命令，是超级权限用户root的可执行命令存放地，普通用户无权限执行这个目录下的命令，这个目录和&#x2F;usr&#x2F;sbin；&#x2F;usr&#x2F;local&#x2F;sbin目录是相似的。</p>
+<h3 id="13-x2F-tmp"><a href="#13-x2F-tmp" class="headerlink" title="13. &#x2F;tmp"></a>13. &#x2F;tmp</h3><p>有时用户运行程序的时候会产生临时文件，&#x2F;tmp用来存放临时文件。</p>
+<h3 id="14-x2F-usr"><a href="#14-x2F-usr" class="headerlink" title="14. &#x2F;usr"></a>14. &#x2F;usr</h3><p>这个是系统存放程序的目录，比如命令、帮助文件等，它包含很多文件和目录，Linux发行版提供的软件包大多被安装在这里。</p>
+<h3 id="15-x2F-var"><a href="#15-x2F-var" class="headerlink" title="15. &#x2F;var"></a>15. &#x2F;var</h3><p>var表示的是变化的意思，这个目录的内容经常变动，如&#x2F;var的&#x2F;var&#x2F;log目录被用来存放系统日志。</p>
+<h3 id="16-x2F-sys"><a href="#16-x2F-sys" class="headerlink" title="16. &#x2F;sys"></a>16. &#x2F;sys</h3><p>Linux2.6内核所支持的sysfs文件系统被映射在此目录。Linux设备驱动模型中的总线、驱动和设备都可以在sysfs文件系统中找到对应的节点。当内核检测到系统中出现新设备后，内核会在sysfs文件系统中为该设备生成一项新的记录。</p>
+<h3 id="17-x2F-initrd"><a href="#17-x2F-initrd" class="headerlink" title="17. &#x2F;initrd"></a>17. &#x2F;initrd</h3><p>若在启动过程中使用了initrd映像作为临时根文件系统，则在执行完其上的&#x2F;linuxrc挂接真正的根文件系统后，原来的初始RAM文件系统被映射到&#x2F;initrd目录。</p>
+<h2 id="5-2-2-Linux文件系统与设备驱动"><a href="#5-2-2-Linux文件系统与设备驱动" class="headerlink" title="5.2.2 Linux文件系统与设备驱动"></a>5.2.2 Linux文件系统与设备驱动</h2><p>下图所示为Linux系统中虚拟文件系统、磁盘文件（存放于RamDisk、Flash、ROM、SD卡、U盘等文件系统中的文件也属于磁盘文件）及一般的设备文件与设备驱动程序之间的关系。<br><img src="/2023/01/10/Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%92%8C%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/1.jpeg" alt="img not found"><br><code>应用程序和VFS之间的接口是系统调用，而VFS与磁盘文件系统以及普通设备之间的接口是file_operations结构体成员函数，这个结构体包含对文件进行打开、关闭、读写、控制的一系列成员函数。</code><br><code>由于字符设备的上层没有磁盘文件系统，所以字符设备的file_operations成员函数就直接有设备驱动提供了，file_operations正是字符设备驱动的核心。</code><br>而对于块存储设备而言，ext2、fat、jffs2等文件系统中会实现针对VFS的file_operations成员函数，设备驱动层将看不到file_operations的存在。磁盘文件系统和设备驱动会将对磁盘上文件的访问最终转换成对磁盘上柱面和扇区的访问。<br>在设备驱动程序的设计中，一般而言，会关心结构体file和inode这两个结构体。</p>
+<h3 id="1-file结构体"><a href="#1-file结构体" class="headerlink" title="1. file结构体"></a>1. file结构体</h3><p>文件结构代表一个打开的文件（设备对应于设备文件），系统中每个打开的文件在内核空间都有一个关联的struct file。它由内核在打开文件时创建m并传递给在文件上进行操作的任何函数。在文件的所有实例都关闭后，内核释放这个数据结构。在内核和驱动源代码中，struct file的指针通常被命名为file或filp（file pointer）。代码如下所示。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">file</span> &#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">union</span> &#123;</span></span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>				<span class="title">fu_list</span>;</span><span class="comment">//文件对象链表</span></span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">rcu_head</span> 				<span class="title">fu_rcuhead</span>;</span><span class="comment">//释放之后的RCU链表</span></span><br><span class="line">	&#125; f_u;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">path</span>							<span class="title">f_path</span>;</span><span class="comment">//包含目录项</span></span><br><span class="line">	<span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span>		*<span class="title">f_op</span>;</span><span class="comment">//文件操作表</span></span><br><span class="line">	<span class="type">spinlock_t</span>							f_lock;<span class="comment">//单个文件结构锁</span></span><br><span class="line">	<span class="type">atomic_t</span>							f_count;<span class="comment">//文件对象的使用计数</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span>						f_flags;<span class="comment">//当文件打开时所指定的标志</span></span><br><span class="line">	<span class="type">mode_t</span>								f_mode;<span class="comment">//文件的访问模式</span></span><br><span class="line">	<span class="type">loff_t</span>								f_pos;<span class="comment">//文件当前的位移量（文件指针）</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">fown_struct</span>					<span class="title">f_owner</span>;</span><span class="comment">//拥有者通过信号进行异步I/O数据的传送</span></span><br><span class="line">	<span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">cred</span>					*<span class="title">f_cred</span>;</span><span class="comment">//文件的信任状态</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">file_ra_state</span>				<span class="title">f_ra</span>;</span><span class="comment">//预读状态</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>						f_version;<span class="comment">//版本号</span></span><br><span class="line">	<span class="type">void</span>								*f_security;<span class="comment">//安全模块</span></span><br><span class="line">	<span class="type">void</span>								*private_data;<span class="comment">//tty设备驱动的钩子</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>					<span class="title">f_ep_links</span>;</span><span class="comment">//事件池链表</span></span><br><span class="line">	<span class="type">spinlock_t</span>							f_ep_lock;<span class="comment">//事件池锁</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">address_space</span>				*<span class="title">f_mapping</span>;</span><span class="comment">//页缓存映射</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>						f_mnt_write_state;<span class="comment">//调试状态</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>文件读&#x2F;写模式mode、标志f_flags都是设备驱动关心的内容，而私有数据指针private_data在设备驱动中被广泛应用，大多被指向设备驱动自定义用于描述设备的结构体。<br>驱动程序中经常会使用如下类似的代码来检测用户打开文件的读写方式。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(file-&gt;f_mode &amp; FMODE_WRITE)<span class="comment">//用户要求可写</span></span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span>(file-&gt;f_mode &amp; FMODE_READ)<span class="comment">//用户要求可读</span></span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>下面的代码可用于判断以阻塞还是非阻塞方式打开设备文件。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(file-&gt;f_flags &amp; O_NONBLOCK)<span class="comment">//非阻塞</span></span><br><span class="line">    pr_debug(<span class="string">&quot;open: non-blocking\n&quot;</span>);</span><br><span class="line"><span class="keyword">else</span><span class="comment">//阻塞</span></span><br><span class="line">    pr_debug(<span class="string">&quot;open: blocking\n&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-inode结构体"><a href="#2-inode结构体" class="headerlink" title="2. inode结构体"></a>2. inode结构体</h3><p>VFS inode包含文件访问权限、属主、组、大小、生成时间、访问时间、最后修改时间等信息。它是Linux管理文件系统的最基本单位，也是文件系统连接任何子目录、文件的桥梁，inode结构体的定义如下所示。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">inode</span> &#123;</span></span><br><span class="line">    ...</span><br><span class="line">    <span class="type">imode_t</span>             i_mode;<span class="comment">//inode的权限</span></span><br><span class="line">	<span class="type">uid_t</span>			    i_uid;<span class="comment">//inode拥有者的id</span></span><br><span class="line">	<span class="type">gid_t</span>			    i_gid;<span class="comment">//inode所属的群组id</span></span><br><span class="line">	<span class="type">dev_t</span>			    i_rdev;<span class="comment">//若是设备文件，此字段将记录设备的设备号</span></span><br><span class="line">	<span class="type">loff_t</span>			    i_size;<span class="comment">//inode所代表的文件大小</span></span><br><span class="line"></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">timespec</span>		<span class="title">i_atime</span>;</span><span class="comment">//inode最近一次的存取时间</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">timespec</span>		<span class="title">i_mtime</span>;</span><span class="comment">//inode最近一次的修改时间</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">timespec</span>		<span class="title">i_ctime</span>;</span><span class="comment">//inode的产生时间</span></span><br><span class="line"></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>       i_blksize;<span class="comment">//inode在做I/O时的区块大小</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>       i_blocks;<span class="comment">//inode所使用的block数，一个block为512byte</span></span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">block_device</span>	*<span class="title">i_bdev</span>;</span><span class="comment">//若是块设备，为其对应的block_device结构体指针</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">cdev</span>		    *<span class="title">i_cdev</span>;</span><span class="comment">//若是字符设备，为其对应的cdev结构体指针</span></span><br><span class="line">    ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>对于表示设备文件的inode结构，i_rdev字段包含设备编号。Linux2.6设备编号分为主设备编号和次设备编号，前者为dev_t的高12位，后者为dev_t的低20位。下列操作用于从一个inode中获得主设备号和次设备号。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">int</span> <span class="title function_">iminor</span><span class="params">(<span class="keyword">struct</span> inode *inode)</span>;</span><br><span class="line"><span class="type">unsigned</span> <span class="type">int</span> <span class="title function_">imajor</span><span class="params">(<span class="keyword">struct</span> inode *inode)</span>;</span><br></pre></td></tr></table></figure>
+<p>查看&#x2F;proc&#x2F;devices文件可以获知系统中注册的设备，第一列为主设备号，第二列为设备名，如下图所示。<br><img src="/2023/01/10/Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%92%8C%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/2.jpeg" alt="img not found"><br>查看&#x2F;dev目录可以获知系统中包含的设备文件，日期的前两列给出了对应设备的主设备号和次设备号，如下所示：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">crw-rw----  <span class="number">1</span>   root    uucp    <span class="number">4</span>,  <span class="number">64</span>  Jan <span class="number">30</span>  <span class="number">2003</span>    /dev/ttyS0</span><br><span class="line">brw-rw----  <span class="number">1</span>   root    disk    <span class="number">8</span>,   <span class="number">0</span>  Jan <span class="number">30</span>  <span class="number">2003</span>    /dev/sda</span><br></pre></td></tr></table></figure>
+<p>主设备号是与驱动对应的概念，同一类设备一般使用相同的主设备号，不同类的设备一般使用不同的主设备号。因为同一驱动可支持多个同类设备，因此用次设备号来描述使用该驱动的设备的序号，序号一般从0开始。<br>内核Documents目录下的devices.txt文件描述了Linux设备号的分配情况，需要注意的是，设备号标志并不是硬性规定，在具体的设备驱动程序中，尽管一般会遵循，但是也可以有例外。</p>
+<h1 id="5-3-devfs设备文件系统"><a href="#5-3-devfs设备文件系统" class="headerlink" title="5.3 devfs设备文件系统"></a>5.3 devfs设备文件系统</h1><p>devfs（设备文件系统）是由Linux2.4内核引入的，引入时被许多工程师给予了高度评价，它的出现使得设备驱动程序能自主地管理它自己的设备文件。具体来说，devfs具有如下优点。</p>
+<ol>
+<li><code>可以通过程序在设备初始化时在/dev目录下创建设备文件，卸载设备时将它删除。</code></li>
+<li><code>设备驱动程序可以指定设备名、所有者和权限位，用户空间程序仍可以修改所有者和权限位。</code></li>
+<li><code>不再需要为设备驱动程序分配主设备号以及处理次设备号，在程序中可以直接给register_chrdev()传递0主设备号以动态获得可用的主设备号，并在devfs_register()中指定次设备号。</code></li>
+</ol>
+<p>驱动程序应调用下面这些函数来进行设备文件的创建和删除工作。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//创建设备目录</span></span><br><span class="line"><span class="type">devfs_handle_t</span> <span class="title function_">devfs_mk_dir</span><span class="params">(<span class="type">devfs_handle_t</span> dir,<span class="type">const</span> <span class="type">char</span> *name,<span class="type">void</span> *info)</span>;</span><br><span class="line"><span class="comment">//创建设备文件</span></span><br><span class="line"><span class="type">devfs_handle_t</span> <span class="title function_">devfs_register</span><span class="params">(<span class="type">devfs_handle_t</span> dir,<span class="type">const</span> <span class="type">char</span> *name,<span class="type">unsigned</span> <span class="type">int</span> flags,</span></span><br><span class="line"><span class="params">                                <span class="type">unsigned</span> <span class="type">int</span> major,<span class="type">unsigned</span> <span class="type">int</span> minor,<span class="type">umode_t</span> mode,<span class="type">void</span> *ops,<span class="type">void</span> *info)</span>;</span><br><span class="line"><span class="comment">//撤销设备文件</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">devfs_unregister</span><span class="params">(<span class="type">devfs_handle_t</span> de)</span>;</span><br></pre></td></tr></table></figure>
+<p>在Linux2.4的设备驱动编程中，分别在模块加载和卸载函数中创建和撤销设备文件是被普遍采用并值得大力推荐的好方法。下列代码给出了一个使用devfs的例子。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">devfs_handle_t</span> devfs_handle;</span><br><span class="line"><span class="type">static</span> <span class="type">int</span> __init <span class="title function_">xxx_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> ret;</span><br><span class="line">    <span class="type">int</span> i;</span><br><span class="line">    <span class="comment">//在内核中注册设备</span></span><br><span class="line">    ret = register_chrdev(XXX_MAJOR,DEVICE_NAME,&amp;xxx_fops);</span><br><span class="line">    <span class="keyword">if</span>(ret &lt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        printk(DEVICE_NAME<span class="string">&quot;can&#x27;t register major number\n&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> ret;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//创建设备文件</span></span><br><span class="line">    devfs_handle = devfs_register(<span class="literal">NULL</span>,DEVICE_NAME,DEVFS_FL_DEFAULT,</span><br><span class="line">                                  XXX_MAJOR,<span class="number">0</span>,S_IFCHR | S_IRUSR | S_IWUSR,&amp;xxx_fops,<span class="literal">NULL</span>);</span><br><span class="line">    ...</span><br><span class="line">    printk(DEVICE_NAME<span class="string">&quot;initialized\n&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __exit <span class="title function_">xxx_exit</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    devfs_unregister(devfs_handle);<span class="comment">//撤销设备文件</span></span><br><span class="line">    unregister_chrdev(XXX_MAJOR,DEVICE_NAME);<span class="comment">//注销设备</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">module_init(xxx_init);</span><br><span class="line">module_exit(xxx_exit);</span><br></pre></td></tr></table></figure>
+<p>代码中第7行和第25行分别用于注册和注销字符设备，使用的register_chrdev()和unregister_chrdev()在Linux2.6内核中虽然仍然被支持，但是是过时的做法。第15行和第24行分别用于创建和删除devfs文件节点。</p>
+<h1 id="5-4-udev设备文件系统"><a href="#5-4-udev设备文件系统" class="headerlink" title="5.4 udev设备文件系统"></a>5.4 udev设备文件系统</h1><h2 id="5-4-1-udev与devfs的区别"><a href="#5-4-1-udev与devfs的区别" class="headerlink" title="5.4.1 udev与devfs的区别"></a>5.4.1 udev与devfs的区别</h2>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux-Kernel/" rel="tag"># Linux Kernel</a>
+              <a href="/tags/Linux-%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/" rel="tag"># Linux 设备驱动</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2023/01/09/Linux%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97/" rel="prev" title="Linux内核模块">
+                  <i class="fa fa-chevron-left"></i> Linux内核模块
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 2022 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Nibil</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">805k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">12:12</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script><script src="/js/pjax.js"></script>
+
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.0/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+</body>
+</html>

@@ -3644,6 +3644,348 @@ hid_irq_in是USB中断传输方式的中断处理函数，当键盘被按下时�
       </tags>
   </entry>
   <entry>
+    <title>Linux内核模块</title>
+    <url>/2023/01/09/Linux%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>Linux设备驱动会以内核模块的形式出现，因此，学会编写Linux内核模块编程是学习Linux设备驱动的先决条件。<br>4.1-4.2节讲解了Linux内核模块的概念和结构，4.3-4.8节对Linux内核模块的各个组成部分进行详细讲解，4.1-4.2节与4.3-4.8节是整体与部分的关系。<br>4.9节讲解了独立存在的Linux内核模块的Makefile文件编写方法和模块的编译方法。</p>
+<span id="more"></span>
+
+<h1 id="4-1-Linux内核模块简介"><a href="#4-1-Linux内核模块简介" class="headerlink" title="4.1 Linux内核模块简介"></a>4.1 Linux内核模块简介</h1><p>Linux内核的整体结构非常庞大，其包含的组件也非常多。我们怎样把需要的部分都包含在内核中呢？<br>一种方法是把所有需要的功能都编译到Linux内核。这会导致两个问题，一是生成的内核会很大，二是如果我们要在现有的内核中新增或删除发功能，将不得不重新编译内核。<br>有没有一种机制使得编译出的内核本身并不需要包含所有功能，而在这些功能需要被使用的时候，其对应的代码可被动态地加载到内核中呢？<br>Linux提供了这样的一种机制，这种机制被称为模块（Module），可以实现以上效果。模块具有以下特点。</p>
+<ol>
+<li>模块本身不被编译入内核映像，从而控制了内核的大小。</li>
+<li>模块一旦被加载，它就和内核中的其他部分完全一样。</li>
+</ol>
+<p>为了使读者对模块建立初步的感性认识，我们先来看一个最简单的内核模块“Hello World”。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/init.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/module.h&gt;</span></span></span><br><span class="line"></span><br><span class="line">MODULE_LICENSE(<span class="string">&quot;Dual BSD/GPL&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">hello_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    printk(KERN_ALERT<span class="string">&quot;Hello World enter\n&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">hello_exit</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    printk(KERN_ALERT<span class="string">&quot;Hello World exit\n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">module_init(hello_init);</span><br><span class="line">module_exit(hello_exit);</span><br><span class="line"></span><br><span class="line">MODULE_AUTHOR(<span class="string">&quot;Song Baohua&quot;</span>);</span><br><span class="line">MODULE_DESCRIPTION(<span class="string">&quot;A simple Hello World Module&quot;</span>);</span><br><span class="line">MODULE_ALIAS(<span class="string">&quot;a simplest module&quot;</span>);</span><br></pre></td></tr></table></figure>
+<p>这个最简单的内核模块只包含内核模块加载函数、卸载函数和对Dual BSD&#x2F;GPL许可权限的声明以及一些描述信息。编译它会产生hello.ko目标文件，通过“insmod .&#x2F;hello.ko”命令可以加载它，通过“rmmod hello”命令可以卸载它，加载时输出“Hello World enter”，卸载时输出“Hello World exit”。<br>内核模块中用于输出的函数是内核空间的printk()而非用户空间的printf()，printk()的用法和printf()相似，但前者可定义输出级别。printk()可作为一种最基本的内核调试手段。<br>在Linux系统中，使用lsmod命令可以获得系统中加载了的所有模块以及模块间的依赖关系，例如：<br><img src="/2023/01/09/Linux%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97/1.jpeg" alt="img not found"><br>lsmod命令实际上读取并分析&#x2F;proc&#x2F;modules文件，与上述lsmod命令结果对应的&#x2F;proc&#x2F;modules文件如下：<br><img src="/2023/01/09/Linux%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97/2.jpeg" alt="img not found"><br>内核中已加载模块的信息也存在于&#x2F;sys&#x2F;module目录下，加载hello.ko后，内核中将包含&#x2F;sys&#x2F;module&#x2F;hello目录，该目录下又包含了一个refcnt文件和一个sections目录，在&#x2F;sys&#x2F;module&#x2F;hello目录下运行“tree -a”得到如下目录树：<br><img src="/2023/01/09/Linux%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97/3.jpeg" alt="img not found"><br>modprobe命令比insmod命令要强大，它在加载某模块时会同时加载该模块所依赖的其他模块。使用modprobe命令加载的模块若以“modprobe -r filename”的方式卸载将同时卸载其依赖的模块。<br>使用modinfo&lt;模块名&gt;命令可以获得模块的信息，包括模块的作者、模块的说明、模块所支持的参数以及vermagic，如下所示：<br><img src="/2023/01/09/Linux%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97/4.jpeg" alt="img not found"></p>
+<h1 id="4-2-Linux内核模块的程序结构"><a href="#4-2-Linux内核模块的程序结构" class="headerlink" title="4.2 Linux内核模块的程序结构"></a>4.2 Linux内核模块的程序结构</h1><p>一个内核模块主要由以下几个部分组成。</p>
+<ol>
+<li>模块加载函数（必须）。<br>当通过insmod或modprobe命令加载内核模块时，模块的加载函数会自动被执行，完成本模块的相关初始化工作。</li>
+<li>模块卸载函数（必须）。<br>当通过rmmod命令卸载某模块时，模块的卸载函数会自动被执行，完成与模块加载函数相反的功能。</li>
+<li>模块许可证声明（必须）。<br>模块许可证（LISENCE）声明描述内核模块的许可权限，如果不声明LICENSE，模块被加载时，将收到内核被污染的警告。<br>在Linux2.6内核中，可接受的LISENCE包括“GPL”、“GPL v2”、“GPL and additional rights”、“Dual BSD&#x2F;GPL”、“Dual MPL&#x2F;GPL”和“Proprietary”。<br>大多数情况下，内核模块应遵循GPL兼容许可权。Linux2.6内核模块最常见的是以MODULE_LISENCE(“Dual BSD&#x2F;GPL”)语句声明模块采用BSD&#x2F;GPL双LISENCE。</li>
+<li>模块参数（可选）。<br>模块参数是模块被加载的时候可以传递给它的值，它本身对应模块内部的全局变量。</li>
+<li>模块导出符号（可选）。<br>内核模块可以导出符号（symbol，对应于函数或变量），这样其他模块可以使用本模块中的变量或函数。</li>
+<li>模块作者等信息声明（可选）。</li>
+</ol>
+<h1 id="4-3-模块加载函数"><a href="#4-3-模块加载函数" class="headerlink" title="4.3 模块加载函数"></a>4.3 模块加载函数</h1><p>Linux内核模块加载函数一般以__init标识声明，典型的模块加载函数的形式如代码所示：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> __init <span class="title function_">initialization_function</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//初始化代码</span></span><br><span class="line">&#125;</span><br><span class="line">module_init(initialization_function);</span><br></pre></td></tr></table></figure>
+<p>模块加载函数必须以“module_init(函数名)”的形式被指定。它返回整型值，若初始化成功，应返回0。而在初始化失败时，应该返回错误编码。在Linux内核里面，错误编码是一个负值，在&lt;linux&#x2F;error.h&gt;中定义，包含-ENODEV、-ENOMEM之类的符号值。返回相应的错误编码是种非常好的习惯，因为只有这样，用户程序才可以利用perror等方法把它们转换成有意义的错误信息字符串。<br>在Linux2.6内核中，可以使用request_module(const char *fmt,…)函数加载内核模块，驱动开发人员可以通过调用</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">request_module(module_name);</span><br></pre></td></tr></table></figure>
+<p>或</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">request_module(<span class="string">&quot;char-major-%d-%d&quot;</span>,MAJOR(dev),MINOR(dev));</span><br></pre></td></tr></table></figure>
+<p>来加载其他内核模块。<br>在Linux内核中，所有标识为__init的函数在连接的时候都放在.init.text这个区段内，此外，所有的__init函数在区段.initcall.init中还保存了一份函数指针，在初始化时内核会通过这些函数指针调用这些__init函数，并在初始化完成后释放init区段（包括.init.text，.initcall.init等）。</p>
+<h1 id="4-4-模块卸载函数"><a href="#4-4-模块卸载函数" class="headerlink" title="4.4 模块卸载函数"></a>4.4 模块卸载函数</h1><p>Linux内核模块函数一般以__exit标识声明，典型的模块卸载函数的形式如下所示:</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> __exit <span class="title function_">cleanup_function</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//释放代码</span></span><br><span class="line">&#125;</span><br><span class="line">module_exit(cleanup_function);</span><br></pre></td></tr></table></figure>
+<p>模块卸载函数在模块卸载的时候执行，不返回任何值，必须以“module_exit(函数名)”的形式来指定。<br>通常来说，模块卸载函数要完成与模块加载函数相反的功能，如下所示。</p>
+<ol>
+<li>若模块加载函数注册了XXX，则模块卸载函数应该注销XXX。</li>
+<li>若模块加载函数动态申请了内存，则模块卸载函数应释放该内存。</li>
+<li>若模块加载函数申请了硬件资源（中断、DMA通道、I&#x2F;O端口和I&#x2F;O内存等）的占用，则模块卸载函数应释放这些硬件资源。</li>
+<li>若模块加载函数开启了硬件，则模块卸载函数中一般要关闭硬件。</li>
+</ol>
+<p>和__init一样，__exit也可以使对应函数在运行完成后自动回收内存。实际上，__init和__exit都是宏，其定义分别为：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> __init__attribute__((__section__(<span class="string">&quot;.init.text&quot;</span>)))</span></span><br></pre></td></tr></table></figure>
+<p>和</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">ifdef</span> MODULE</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> __exit__attribute__((__section__(<span class="string">&quot;.exit.text&quot;</span>)))</span></span><br><span class="line"><span class="meta">#<span class="keyword">else</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> __exit__attribute_used____attribute__((__section__(<span class="string">&quot;.exit.text&quot;</span>)))</span></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+<p>数据也可以被定义为_initdata和_exitdata，这两个宏分别为：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> __initdata__attribute__((__section__(<span class="string">&quot;.init.text&quot;</span>)))</span></span><br></pre></td></tr></table></figure>
+<p>和</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> __exitdata__attribute__((__section__(<span class="string">&quot;.exit.text&quot;</span>)))</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="4-5-模块参数"><a href="#4-5-模块参数" class="headerlink" title="4.5 模块参数"></a>4.5 模块参数</h1><p>我们可以用“module_param(参数名，参数类型，参数读&#x2F;写权限)”为模块定义一个参数，例如下列代码定义了一个整型参数和一个字符指针参数：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">char</span> *book_name = <span class="string">&quot;深入浅出Linux设备驱动&quot;</span>;</span><br><span class="line"><span class="type">static</span> <span class="type">int</span> num = <span class="number">4000</span>;</span><br><span class="line">module_param(num,<span class="type">int</span>,S_IRUGO);</span><br><span class="line">module_param(book_name,charp,S_IRUGO);</span><br></pre></td></tr></table></figure>
+<p>在装载内核模块时，用户可以向模块传递参数，形式为“insmod（或modprobe）模块名 参数名&#x3D;参数数值”，如果不传递，参数将使用模块内定义的默认值。<br>参数类型可以是byte、short、ushort、int、uint、long、ulong、charp（字符指针）、bool或invbool（布尔的反），在模块被编译时会将module_param中声明的类型与变量定义的类型进行比较，判断是否一致。<br>模块被加载后，在&#x2F;sys&#x2F;module&#x2F;目录下将出现以此模块名命名的目录。当“参数读&#x2F;写权限”为0时，表示此参数不存在sysfs文件系统下对应的文件节点，如果此模块存在“参数读&#x2F;写权限”不为0的命令行参数，在此模块的目录下还将出现parameters目录，包含一系列以参数名命名的文件节点，这些文件的权限值就是传入module_param()的“参数读&#x2F;写权限”，而文件的内容为参数的值。<br>除此之外，模块也可以拥有参数数组，形式为“module_param_array(数组名，数组类型，数组长，参数读&#x2F;写权限)”。从2.6.0-2.6.10版本，需将数组长变量名赋给“数组长”，从2.6.10版本开始，需将数组长变量的指针赋给“数组长”，当不需要保存实际输入的数组元素个数时，可以设置“数组长”为NULL。<br>运行inmod或modprobe命令时，应使用逗号分隔输入的数组元素。<br>现在我们定义一个包含两个参数的模块，并观察模块加载时被传递参数和不传递参数时的输出。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/init.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/module.h&gt;</span></span></span><br><span class="line">MODULE_LISENCE(<span class="string">&quot;Dual BSD/GPL&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">char</span> *book_name = <span class="string">&quot;dissecting Linux Device Driver&quot;</span>;</span><br><span class="line"><span class="type">static</span> <span class="type">int</span> num = <span class="number">4000</span>;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">book_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    printk(KERN_INFO<span class="string">&quot;book name:%s\n&quot;</span>,book_name);</span><br><span class="line">    printk(KERN_INFO<span class="string">&quot;book num:%d\n&quot;</span>,num);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">book_exit</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    printk(KERN_ALERT<span class="string">&quot;Book module exit\n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">module_init(book_init);</span><br><span class="line">module_exit(book_exit);</span><br><span class="line">module_param(num,<span class="type">int</span>,S_IRUGO);</span><br><span class="line">module_param(book_name,charp,S_IRUGO);</span><br><span class="line"></span><br><span class="line">MODULE_AUTHOR(<span class="string">&quot;Song Baohua,author@linuxdriver.cn&quot;</span>);</span><br><span class="line">MODULE_DESCRIPTION(<span class="string">&quot;A simple Module for testing module params&quot;</span>);</span><br><span class="line">MODULE_VERSION(<span class="string">&quot;V1.0&quot;</span>);</span><br></pre></td></tr></table></figure>
+<p>对上述模块运行“insmod book.ko”命令加载，相应输出都为模块内的默认值，通过查看“var&#x2F;log&#x2F;messages”日志文件可以看到内核的输出，如下所示：<br><img src="/2023/01/09/Linux%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97/5.jpeg" alt="img not found"><br>当用户运行“insmod book.ko book_name&#x3D;’GoodBook’num&#x3D;5000”命令时，输出的是用户传递的参数，如下所示：<br><img src="/2023/01/09/Linux%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97/6.jpeg" alt="img not found"></p>
+<h1 id="4-6-导出符号"><a href="#4-6-导出符号" class="headerlink" title="4.6 导出符号"></a>4.6 导出符号</h1><p><code>Linux2.6的“/proc/kallsyms”文件对应着内核符号表，它记录了符号以及符号所在的内存地址</code>。<br>模块可以使用如下宏导出符号到内核符号表：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">EXPORT_SYMBOL(符号名);</span><br><span class="line">EXPORT_SYMBOL_GPL(符号名);</span><br></pre></td></tr></table></figure>
+<p><code>导出的符号将可以被其他模块使用，使用前声明一下即可</code>。EXPORT_SYMBOL_GPL()只适合于包含GPL许可权的模块。下列代码给出了一个导出整数加、减运算符号的内核模块的例子（这些导出符号没有实际意义，只是为了演示）。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/init.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/module.h&gt;</span></span></span><br><span class="line">MODULE_LISENCE(<span class="string">&quot;Dual BSD/GPL&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">add_integar</span><span class="params">(<span class="type">int</span> a,<span class="type">int</span> b)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> a+b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">sub_integar</span><span class="params">(<span class="type">int</span> a,<span class="type">int</span> b)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> a-b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">EXPORT_SYMBOL(add_integar);</span><br><span class="line">EXPORT_SYMBOL(sub_integar);</span><br></pre></td></tr></table></figure>
+<p>从“&#x2F;proc&#x2F;kallsyms”文件中找出add_integar、sub_integar相关信息：<br><img src="/2023/01/09/Linux%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97/7.jpeg" alt="img not found"></p>
+<h1 id="4-7-模块声明与描述"><a href="#4-7-模块声明与描述" class="headerlink" title="4.7 模块声明与描述"></a>4.7 模块声明与描述</h1><p>在Linux内核模块中，我们可以用MODULE_AUTHOR、MODULE_DESCROIPTION、MODULE_VERSION、MODULE_DEVICE_TABLE、MODULE_ALIAS分别声明模块的作者、描述、版本、设备表和别名，例如：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">MODULE_AUTHOR(author);</span><br><span class="line">MODULE_DESCROIPTION(description);</span><br><span class="line">MODULE_VERSION(version_string);</span><br><span class="line">MODULE_DEVICE_TABLE(table_info);</span><br><span class="line">MODULE_ALIAS(alternate_name);</span><br></pre></td></tr></table></figure>
+<p>对于USB、PCI等设备驱动，通常会创建一个MODULE_DEVICE_TABLE，如下所示：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//对应此驱动的设备表</span></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">usb_device_id</span> <span class="title">skel_table</span>[] =</span> &#123;</span><br><span class="line">    &#123;USB_DEVICE(USB_SKEL_VENDOR_ID,USB_SKEL_PRODUCT_ID)&#125;,</span><br><span class="line">    &#123;&#125;<span class="comment">//表结束</span></span><br><span class="line">&#125;;</span><br><span class="line">MODULE_DEVICE_TABLE(usb,skel_table);</span><br></pre></td></tr></table></figure>
+<p>此时，并不需要读者理解MODULE_DEVICE_TABLE的作用。</p>
+<h1 id="4-8-模块的使用计数"><a href="#4-8-模块的使用计数" class="headerlink" title="4.8 模块的使用计数"></a>4.8 模块的使用计数</h1><p>Linux2.4内核中，模块自身通过MOD_INC_USE_COUNT、MOD_DEC_USE_COUNT宏来管理自己被使用的计数。<br>Linux2.6内核提供了模块计数管理接口try_module_get(&amp;module)和module_put(&amp;module)。从而取代Linux2.4内核中的模块使用计数管理宏。模块的实用计数一般不必由模块自身管理，而且模块计数管理还考虑了SMP与PREEMPT机制的影响。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">try_module_get</span><span class="params">(<span class="keyword">struct</span> module *module)</span>;</span><br></pre></td></tr></table></figure>
+<p>该函数用于增加模块使用计数；若返回0，表示调用失败，希望使用的模块没有被加载或正在被卸载中。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">module_put</span><span class="params">(<span class="keyword">struct</span> module *module)</span>;</span><br></pre></td></tr></table></figure>
+<p>该函数用于减少模块使用计数。<br>try_module_get()与module_put()的引入与使用与Linux2.6内核下的设备模型密切相关。Linux2.6内核为不同类型的设备定义了struct module *owner域，用来指向管理此设备的模块。当开始使用某个设备时，内核使用try_module_get(dev-&gt;owner)去增加管理此设备的owner模块的使用计数；当不再使用此设备时，内核使用module_put(dev-&gt;owner)减少对管理此设备的owner模块的使用计数。这样，当设备在使用时，管理此设备的模块将不再被使用时，模块才允许被卸载。<br>在Linux2.6内核下，对于设备驱动工程师来说，很少需要亲自调用try_module_get()与module_put()，因此此时开发人员所写的驱动通常为支持某具体设备的owner模块，对此设备owner模块的计数管理由内核更底层的代码（如总线驱动或是此类设备公用的核心模块）来实现，从而简化了设备驱动的开发。</p>
+<h1 id="4-9-模块的编译"><a href="#4-9-模块的编译" class="headerlink" title="4.9 模块的编译"></a>4.9 模块的编译</h1><p>我们可以为之前的一份代码编写一份简单的Makefile，如下所示：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">obj-m := hello.o</span><br></pre></td></tr></table></figure>
+<p>并使用如下命令编译Hello World模块，如下所示：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">make -C /usr/src/linux<span class="number">-2.6</span><span class="number">.15</span><span class="number">.5</span>/ M=/driver_study/ modules</span><br></pre></td></tr></table></figure>
+<p>如果当前处于模块所在的目录，则以下命令与上述命令相等：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">[root@localhost driver_study]<span class="meta">#make -C /usr/src/linux-2.6.15.5/ M=/driver_study/ modules</span></span><br><span class="line">make: Entering directory <span class="string">&#x27;/usr/src/linux-2.6.15.5&#x27;</span></span><br><span class="line">CC [M] /driver_study/hello.o</span><br><span class="line">Building modules, stage <span class="number">2.</span></span><br><span class="line">MODPOST</span><br><span class="line">CC     /driver_study/hello.mod.o</span><br><span class="line">LD [M] /driver_study/hello.ko</span><br><span class="line">make: Leaving directory <span class="string">&#x27;/usr/src/linux-2.6.15.5&#x27;</span></span><br></pre></td></tr></table></figure>
+<p>从中可以看出，编译过程中经历了这样的步骤：先进入Linux内核所在的目录，并编译出hello.o文件，运行MODPOST会生成临时的hello.mod.c文件，而后根据此文件编译出hello.mod.o，之后连接hello.o和hello.mod.o文件得到模块目标文件hello.ko，最后离开Linux内核所在的目录。<br>中间生成的hello.mod.c文件的源代码如下所示：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/module.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/vermagic.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/compiler.h&gt;</span></span></span><br><span class="line">MODULE_INFO(vermagic,VERMAGIC_STRIGN)</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">module__this_module</span></span></span><br><span class="line"><span class="class">__<span class="title">attribute__</span>((<span class="title">section</span>(&quot;.<span class="title">gnu</span>.<span class="title">linkonce</span>.<span class="title">this_module</span>&quot;))) =</span> &#123;</span><br><span class="line">    .name = KBUILD_MODNAME,</span><br><span class="line">    .init = init_module,</span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_MODULE_UNLOAD</span></span><br><span class="line">    .<span class="built_in">exit</span> = cleanup_module</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="type">char</span> __module_depends[]</span><br><span class="line">__attribute_used__</span><br><span class="line">__attribute__((section(<span class="string">&quot;.modinfo&quot;</span>))) = </span><br><span class="line"><span class="string">&quot;depends=&quot;</span>;</span><br></pre></td></tr></table></figure>
+<p>hello.mod.o产生ELF（Linux所采用的可执行&#x2F;可连接的文件格式）的两个节，即modinfo和.gnu.linkonce.this_module。<br>如果一个模块包括多个.c文件（如file1.c、file2.c），则应该以如下方式编写Makefile：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">obj-m := modulename.o</span><br><span class="line">module-objs := file1.o file2.o</span><br></pre></td></tr></table></figure>
+
+<h1 id="4-10-模块与GPL"><a href="#4-10-模块与GPL" class="headerlink" title="4.10 模块与GPL"></a>4.10 模块与GPL</h1><p>对于自己编写的驱动等内核代码，如果不编译为模块则无法绕开GPL，编译为模块后企业在产品中使用模块，则公司对外不再需要提供对应的源代码，为了使公司产品所使用的Linux操作系统支持模块，需要完成如下工作。</p>
+<ol>
+<li>在内核编译时应该选上“Enable loadable module support”，嵌入式产品一般不需要动态卸载模块，所以“可以卸载模块不用选”，当然选了也没有关系，如下图所示。<br><img src="/2023/01/09/Linux%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97/8.jpeg" alt="img not found"><br>如果有项目被选择“M”，则编译时除了make bzImage以外，也要make modules。</li>
+<li>将我们编译的内核模块.ko文件放置在目标文件系统的相关目录中。</li>
+<li>产品的文件系统中应该包含了支持新内核的insmod、lsmod、rmmod等工具，由于嵌入式产品中一般不需要建立模块间依赖关系，所以modprobe可以不要，一般也不需要卸载模块，所以rmmod也可以不要。</li>
+<li>在使用中用户可使用insmod命令手动记载模块，如insmod xxx.ko。</li>
+<li>但是一般而言，产品在启动过程中应该加载模块，在嵌入式Linux的启动过程中，加载企业自己的模块的最简单的方法是修改启动过程中的rc脚本，增加inmod &#x2F;…&#x2F;xxx.ko这样的命令。如某设备正在使用的Linux系统中包含如下rc脚本：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">mount /proc</span><br><span class="line">mount /var</span><br><span class="line">mount /dev/pts</span><br><span class="line">mkdir /var/<span class="built_in">log</span></span><br><span class="line">mkdir /var/run</span><br><span class="line">mkdir /var/ftp</span><br><span class="line">mkdir -p /var/spool/cron</span><br><span class="line">mkdir /var/config</span><br><span class="line">...</span><br><span class="line">insmod /usr/lib/company_driver.ko <span class="number">2</span>&gt; /dev/null</span><br><span class="line">/usr/bin/userprocess</span><br><span class="line">/var/config/rc</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h1 id="4-11-总结"><a href="#4-11-总结" class="headerlink" title="4.11 总结"></a>4.11 总结</h1><p>本章主要讲解了Linux内核模块的概念和基本的编程方法。内核模块由加载&#x2F;卸载函数、功能函数以及一些列声明组成，它可以被传入参数，也可以导出符号供其他模块使用。<br>由于Linux设备驱动以内核模块的形式而存在，因此，掌握这一章的内容是编写任何设备驱动所必须的。在具体的设备驱动开发中，将驱动编译为模块也有很强的工程意义，因为如果将正在开发中的驱动直接编译入内核，而开发过程中会不断修改驱动的代码，则需要不断地编译内核并重启Linux，但是如果编译为模块，则只需要rmmod并insmod即可，开发效率大为提高。</p>
+]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>LINUX设备驱动开发详解</category>
+        <category>第4章 Linux内核模块</category>
+      </categories>
+      <tags>
+        <tag>Linux Kernel</tag>
+        <tag>Linux 设备驱动</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Linux文件系统和设备文件系统</title>
+    <url>/2023/01/10/Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%92%8C%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>由于字符设备和块设备都很好地体现了“一切都是文件”的设计思想，掌握Linux文件系统、设备文件系统的知识非常重要。<br>首先，设备驱动最终通过操作系统的文件系统调用或C库函数（本质也基于系统调用）被访问。<br>其次，驱动工程师在设备驱动中不可避免地会与设备文件系统打交道，如Linux2.4内核的devfs文件系统和Linux2.6内核的基于sysfs的udev文件系统。<br>5.1节讲解了通过Linux API和C库函数在用户空间进行Linux文件操作的编程方法。<br>5.2节分析了Linux文件系统的目录结构，简单介绍了Linux内核中文件系统的实现，并给出了文件系统与设备驱动的关系。<br>5.3节和5.4节分别讲解Linux2.4内核的devfs和Linux2.6内核所采用的udev设备文件系统，并分析了两者的区别。</p>
+<span id="more"></span>
+
+<h1 id="5-1-Linux文件操作"><a href="#5-1-Linux文件操作" class="headerlink" title="5.1 Linux文件操作"></a>5.1 Linux文件操作</h1><h2 id="5-1-1-文件操作的相关系统调用"><a href="#5-1-1-文件操作的相关系统调用" class="headerlink" title="5.1.1 文件操作的相关系统调用"></a>5.1.1 文件操作的相关系统调用</h2><p>Linux的文件操作系统调用涉及创建、打开、读写和关闭文件。</p>
+<h3 id="1-创建"><a href="#1-创建" class="headerlink" title="1. 创建"></a>1. 创建</h3><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">create</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *filename,<span class="type">mode_t</span> mode)</span>;</span><br></pre></td></tr></table></figure>
+<p>参数mode指定新建文件的存取权限，它同umask一起决定文件的最终权限（mode&amp;umask），其中umask代表了文件在创建时需要去掉的一些存取权限。umask可以通过系统调用umask()来改变，如下所示:</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">umask</span><span class="params">(<span class="type">int</span> newmask)</span>;</span><br></pre></td></tr></table></figure>
+<p>该调用将umask设置为newmask，然后返回旧的umask，它只影响读、写和执行权限。</p>
+<h3 id="2-打开"><a href="#2-打开" class="headerlink" title="2. 打开"></a>2. 打开</h3><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">open</span><span class="params">(<span class="type">const</span> cahr *pathname,<span class="type">int</span> flags)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">open</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *pathname,<span class="type">int</span> flags,<span class="type">mode_t</span> mode)</span>;</span><br></pre></td></tr></table></figure>
+<p>open()函数有两个形式，其中pathname是我们要打开的文件名（包含路径名称，默认时认为在当前路径下面），flags可以是如下表所示的一个值或者几个值的组合。<br><strong>文件打开标志</strong></p>
+<table>
+<thead>
+<tr>
+<th>标志</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>O_RDONLY</td>
+<td>以只读的方式打开文件</td>
+</tr>
+<tr>
+<td>O_WRONLY</td>
+<td>以只写的方式打开文件</td>
+</tr>
+<tr>
+<td>O_RDWR</td>
+<td>以读写的方式打开文件</td>
+</tr>
+<tr>
+<td>O_APPEND</td>
+<td>以追加的方式打开文件</td>
+</tr>
+<tr>
+<td>O_CREAT</td>
+<td>创建一个文件</td>
+</tr>
+<tr>
+<td>O_EXEC</td>
+<td>如果使用了O_CREAT而且文件已经存在，就会发生一个错误</td>
+</tr>
+<tr>
+<td>O_NOBLOCK</td>
+<td>以非阻塞的方式打开一个文件</td>
+</tr>
+<tr>
+<td>O_TRUNC</td>
+<td>如果文件已经存在，则删除文件的内容</td>
+</tr>
+</tbody></table>
+<p>O_RDONLY、O_WRONLY、O_RDWR这3个标志只能使用任意的一个。<br>如果使用了O_CREAT标志，则使用的函数是<code>int open(const char *pathname,int flags,mode_t mode);</code>这个时候我们还要指定mode标志，用来表示文件的访问权限。mode可以是如下表所示值的组合。<br><strong>文件访问权限</strong></p>
+<table>
+<thead>
+<tr>
+<th>标志</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>S_IRUSR</td>
+<td>用户可以读</td>
+</tr>
+<tr>
+<td>S_IWUSR</td>
+<td>用户可以写</td>
+</tr>
+<tr>
+<td>S_IXUSR</td>
+<td>用户可以执行</td>
+</tr>
+<tr>
+<td>S_IRWXU</td>
+<td>用户可以读、写、执行</td>
+</tr>
+<tr>
+<td>S_IRGRP</td>
+<td>组可以读</td>
+</tr>
+<tr>
+<td>S_IWGRP</td>
+<td>组可以写</td>
+</tr>
+<tr>
+<td>S_IXGRP</td>
+<td>组可以执行</td>
+</tr>
+<tr>
+<td>S_IRWXG</td>
+<td>组可以读、写、执行</td>
+</tr>
+<tr>
+<td>S_IROTH</td>
+<td>其他人可以读</td>
+</tr>
+<tr>
+<td>S_IWOTH</td>
+<td>其他人可以写</td>
+</tr>
+<tr>
+<td>S_IXOTH</td>
+<td>其他人可以执行</td>
+</tr>
+<tr>
+<td>S_IRWXO</td>
+<td>其他人可以读、写、执行</td>
+</tr>
+<tr>
+<td>S_ISUID</td>
+<td>设置用户的执行ID</td>
+</tr>
+<tr>
+<td>S_ISGIS</td>
+<td>设置组的执行ID</td>
+</tr>
+</tbody></table>
+<p>除了可以通过上述宏进行“或”逻辑产生标志之外，我们也可以自己用数字表示，Linux总共用5个数字来表示文件的各种权限：第一位表示设置用户ID；第二位表示设置组ID；第三位表示用户自己的权限位；第四位表示组的权限；第五位表示其他人的权限。每个数字可以取1（执行权限）、2（写权限）、4（读权限）、0（无）或者是这些值的和。<br>例如，如果要创建一个用户可读、可写、可执行，但是组没有权限，其他人可以读、可以执行的文件，并设置用户ID位。那么，应该使用的模式是1（设置用户ID）、0（不设置组ID）、7（1+2+4，读、写、执行）、0（没有权限）、5（1+4，读、执行）即10705，如下所示：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">open(<span class="string">&quot;test&quot;</span>,O_CREAT,<span class="number">10705</span>);</span><br></pre></td></tr></table></figure>
+<p>上述语句等价于：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">open(<span class="string">&quot;test&quot;</span>,O_CREAT,S_IRWXU | S_IROTH | S_IXOTH | S_ISUID);</span><br></pre></td></tr></table></figure>
+<p>如果文件打开成功，open函数会返回一个文件描述符，以后对该文件的所有操作就可以通过对这个文件描述符进行操作来实现。</p>
+<h3 id="3-读写"><a href="#3-读写" class="headerlink" title="3. 读写"></a>3. 读写</h3><p>在文件打开之后，我们才可以对文件进行读写，Linux系统中提供文件读写的系统调用是read、write函数，如下所示：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">read</span><span class="params">(<span class="type">int</span> fd,<span class="type">const</span> <span class="type">void</span> *buf,<span class="type">size_t</span> length)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">write</span><span class="params">(<span class="type">int</span> fd,<span class="type">const</span> <span class="type">void</span> *buf,<span class="type">size_t</span> length)</span>;</span><br></pre></td></tr></table></figure>
+<p>其中参数buf为指向缓冲区的指针，length为缓冲区的大小（以字节为单位）。函数read()实现从文件描述符fd所指定的文件中读取length个字节到buf所指向的缓冲区中，返回值为实际读取的字节数。函数write实现将把length个字节从buf所指向的缓冲区写到文件描述符fd所指向的文件中，返回值为实际写入的字节数。<br>以O_CREAT为标志的open函数实际上实现了文件创建的功能，因此，下面的函数等同creat()函数：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">open</span><span class="params">(pathname,O_CREAT | O_WRONLY | O_TRUNC,mode)</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-定位"><a href="#4-定位" class="headerlink" title="4. 定位"></a>4. 定位</h3><p>对于随机文件，我们可以随机地指定位置读写，使用如下函数进行定位：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">lseek</span><span class="params">(<span class="type">int</span> fd,<span class="type">offset_t</span> offset,<span class="type">int</span> where)</span>;</span><br></pre></td></tr></table></figure>
+<p>lseek()将文件读写指针相对where移动offset个字节。操作成功时，返回文件指针相对于文件头的位置。参数where可以使用如下值。<br>SEEK_SET：相对文件开头。<br>SEEK_CUR：相对文件读写指针的当前位置。<br>SEEK_END：相对文件末尾。<br>offset可取负值，例如下述调用可将文件指针相对当前位置向前移动5个字节。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">lseek(fd,<span class="number">-5</span>,SEEK_CUR);</span><br></pre></td></tr></table></figure>
+<p>由于lseek()函数的返回值为文件指针相对于文件头的位置，因此下列调用的返回值就是文件的长度：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">lseek(fd,<span class="number">0</span>,SEEK_END);</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-关闭"><a href="#5-关闭" class="headerlink" title="5. 关闭"></a>5. 关闭</h3><p>当操作完成之后，就要关闭文件了，只要调用close函数就可以了，其中fd是要关闭的文件描述符。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">close</span><span class="params">(<span class="type">int</span> fd)</span>;</span><br></pre></td></tr></table></figure>
+<p>例程：编写一个程序，在当前目录中创建用户可读写文件“hello.txt”，在其中写入“Hello，software weekly”，关闭该文件。再次打开该文件，读取其中的内容并输出在屏幕上，代码如下所示：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/stat.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;fcntl.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> LENGTH 100</span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> fd,len;</span><br><span class="line">    <span class="type">char</span> str[LENGTH];</span><br><span class="line"></span><br><span class="line">    fd = open(<span class="string">&quot;hello.txt&quot;</span>,O_CREAT | O_RDWR,S_IRUSR | S_IWUSR);</span><br><span class="line">    <span class="keyword">if</span>(fd)</span><br><span class="line">    &#123;</span><br><span class="line">        write(fd,<span class="string">&quot;Hello World&quot;</span>,<span class="built_in">strlen</span>(<span class="string">&quot;Hello World&quot;</span>));</span><br><span class="line">        close(fd);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fd = open(<span class="string">&quot;hello.txt&quot;</span>,O_RDWR);</span><br><span class="line">    len = read(fd,str,LENGTH);</span><br><span class="line">    str[len] = <span class="string">&#x27;\0&#x27;</span>;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%s\n&quot;</span>,str);</span><br><span class="line">    close(fd);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译并运行，执行结果为输出“Hello World”。</p>
+<h2 id="5-1-2-C库函数的文件操作"><a href="#5-1-2-C库函数的文件操作" class="headerlink" title="5.1.2 C库函数的文件操作"></a>5.1.2 C库函数的文件操作</h2><p>C库函数的文件操作实际上是独立于具体的操作系统平台的，不管是在DOS、Windows、Linux还是Vxworks中都是这些函数。</p>
+<h3 id="1-创建和打开"><a href="#1-创建和打开" class="headerlink" title="1. 创建和打开"></a>1. 创建和打开</h3><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">FILE *<span class="title function_">fopen</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *path,<span class="type">const</span> <span class="type">char</span> *mode)</span>;</span><br></pre></td></tr></table></figure>
+<p>fopen()实现打开指定文件filename，其中的mode为打开模式，C库函数中支持的打开模式如下表所示。<br><strong>C库函数文件打开标志</strong></p>
+<table>
+<thead>
+<tr>
+<th>标志</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>r、rb</td>
+<td>以只读方式打开</td>
+</tr>
+<tr>
+<td>w、wb</td>
+<td>以只写方式打开。如果文件不存在，则创建该文件，否则文件被截断</td>
+</tr>
+<tr>
+<td>a、ab</td>
+<td>以追加方式打开。如果文件不存在，则创建该文件</td>
+</tr>
+<tr>
+<td>r+、r+b、rb+</td>
+<td>以读写方式打开</td>
+</tr>
+<tr>
+<td>w+、W+b、wb+</td>
+<td>以读写方式打开。如果文件不存在，则创建新文件，否则文件被截断</td>
+</tr>
+<tr>
+<td>a+、a+b、ab+</td>
+<td>以读和追加方式打开。如果文件不存在，则创建新文件</td>
+</tr>
+</tbody></table>
+<p><code>其中b用于区分二进制文件和文本文件，这一点在DOS、Windows系统中是有区分的，但是Linux系统不区分二进制和文本文件。</code></p>
+<h3 id="2-读写"><a href="#2-读写" class="headerlink" title="2. 读写"></a>2. 读写</h3><p>C库函数支持以字符、字符串等为单位，支持按照某种格式进行文件的读写，这一组函数为：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">fgetc</span><span class="params">(FILE *stream)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">fputc</span><span class="params">(<span class="type">int</span> c,FILE *stream)</span>;</span><br><span class="line"><span class="type">char</span> *<span class="title function_">fgets</span><span class="params">(<span class="type">char</span> *s,<span class="type">int</span> n,FILE *stream)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">fputs</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *s,FILE *stream)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">fprintf</span><span class="params">(FILE *stream,<span class="type">const</span> <span class="type">char</span> *format,...)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">fscanf</span><span class="params">(FILE *stream,<span class="type">const</span> <span class="type">char</span> *format,...)</span>;</span><br><span class="line"><span class="type">size_t</span> <span class="title function_">fread</span><span class="params">(<span class="type">void</span> *ptr,<span class="type">size_t</span> size,<span class="type">size_t</span> n,FILE *stream)</span>;</span><br><span class="line"><span class="type">size_t</span> <span class="title function_">fwrite</span><span class="params">(<span class="type">const</span> <span class="type">void</span> *ptr,<span class="type">size_t</span> size,<span class="type">size_t</span> size,FILE *stream)</span>;</span><br></pre></td></tr></table></figure>
+<p>fread()实现从stream中读取n个字段，每个字段为size个字节，并将读取的字段放入ptr所指的字符数组中，返回实际已读取的字段数。在读取的字段数小于num时，可能是在函数调用时出现错误，也可能是读到文件的结尾。所以要通过调用feof()和ferror()来判断。<br>write()实现从缓冲区ptr所指的数组中把n个字段写到stream中，每个字段长为size个字节，返回实际写入的字段数。<br>另外，C库函数还提供了读写过程中的定位能力，这些函数包括：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">fgetpos</span><span class="params">(FILE *stream,<span class="type">fpos_t</span> *pos)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">fsetpos</span><span class="params">(FILE *stream,<span class="type">const</span> <span class="type">fpos_t</span> *pos)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">fseek</span><span class="params">(FILE *stream,<span class="type">long</span> offset,<span class="type">int</span> where)</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-关闭"><a href="#3-关闭" class="headerlink" title="3. 关闭"></a>3. 关闭</h3><p>利用C库函数关闭文件依然是很简单的操作，如下所示：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">fclose</span><span class="params">(FILE *stream)</span>;</span><br></pre></td></tr></table></figure>
+<p>例程：将第5.1.1节中的例程用C库函数来实现，如下所示：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> LENGTH 100</span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    FILE *fd;</span><br><span class="line">    <span class="type">char</span> str[LENGTH];</span><br><span class="line"></span><br><span class="line">    fd = fopen(<span class="string">&quot;hello.txt&quot;</span>,<span class="string">&quot;w+&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span>(fd)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">fputs</span>(<span class="string">&quot;Hello World&quot;</span>,fd);</span><br><span class="line">        fclose(fd);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fd = fopen(<span class="string">&quot;hello.txt&quot;</span>,<span class="string">&quot;r&quot;</span>);</span><br><span class="line">    fgets(str,LENGTH,fd);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%s\n&quot;</span>,str);</span><br><span class="line">    fclose(fd);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="5-2-Linux文件系统"><a href="#5-2-Linux文件系统" class="headerlink" title="5.2 Linux文件系统"></a>5.2 Linux文件系统</h1><h2 id="5-2-1-Linux文件系统目录结构"><a href="#5-2-1-Linux文件系统目录结构" class="headerlink" title="5.2.1 Linux文件系统目录结构"></a>5.2.1 Linux文件系统目录结构</h2><p>进入Linux根目录，运行“ls -l”命令，可以看到Linux系统包含以下目录。</p>
+<h3 id="1-x2F-bin"><a href="#1-x2F-bin" class="headerlink" title="1. &#x2F;bin"></a>1. &#x2F;bin</h3><p>包含基本命令，如ls、cp、mkdir等，这个目录中的文件都是可执行的。</p>
+<h3 id="2-x2F-boot"><a href="#2-x2F-boot" class="headerlink" title="2. &#x2F;boot"></a>2. &#x2F;boot</h3><p>Linux系统的内核及引导系统程序所需要的文件，如vmlinux、initrd.img文件都位于这个目录中。</p>
+<h3 id="3-x2F-dev"><a href="#3-x2F-dev" class="headerlink" title="3. &#x2F;dev"></a>3. &#x2F;dev</h3><p>设备文件存储目录，应用程序通过对这些文件的读写和控制就可以访问实际的设备。</p>
+<h3 id="4-x2F-etc"><a href="#4-x2F-etc" class="headerlink" title="4. &#x2F;etc"></a>4. &#x2F;etc</h3><p>系统配置文件的所在地，一些服务器的配置文件也在这里，如用户账号及密码配置文件。</p>
+<h3 id="5-x2F-home"><a href="#5-x2F-home" class="headerlink" title="5. &#x2F;home"></a>5. &#x2F;home</h3><p>普通用户的家目录</p>
+<h3 id="6-x2F-lib"><a href="#6-x2F-lib" class="headerlink" title="6. &#x2F;lib"></a>6. &#x2F;lib</h3><p>库文件存放目录</p>
+<h3 id="7-x2F-lost-found"><a href="#7-x2F-lost-found" class="headerlink" title="7. &#x2F;lost+found"></a>7. &#x2F;lost+found</h3><p>在Ext2或Ext3文件系统中，当系统意外崩溃或机器意外关机时会产生一些文件碎片放在这里。</p>
+<h3 id="8-x2F-mnt"><a href="#8-x2F-mnt" class="headerlink" title="8. &#x2F;mnt"></a>8. &#x2F;mnt</h3><p>&#x2F;mnt这个目录一般是用于存放挂载存储设备的挂载目录的，比如有cdrom等目录，可以参看&#x2F;etc&#x2F;fstab的定义。有时我们可以把让系统开机自动挂载文件系统，把挂载点放在这里也是可以的。</p>
+<h3 id="9-x2F-opt"><a href="#9-x2F-opt" class="headerlink" title="9. &#x2F;opt"></a>9. &#x2F;opt</h3><p>opt是“可选”的意思，有些软件包会被安装在这里，用户自己编译的软件包也可以安装在这个目录中.</p>
+<h3 id="10-x2F-proc"><a href="#10-x2F-proc" class="headerlink" title="10. &#x2F;proc"></a>10. &#x2F;proc</h3><p>操作系统运行时，进程及内核信息（CPU、硬盘分区、内存信息等）存放在这里。&#x2F;proc目录为伪文件系统proc的挂载目录，proc并不是真正的文件系统，它存在于内存之中。</p>
+<h3 id="11-x2F-root"><a href="#11-x2F-root" class="headerlink" title="11. &#x2F;root"></a>11. &#x2F;root</h3><p>Linux超级权限用户root的家目录。</p>
+<h3 id="12-x2F-sbin"><a href="#12-x2F-sbin" class="headerlink" title="12. &#x2F;sbin"></a>12. &#x2F;sbin</h3><p>存放可执行文件，大多是涉及系统管理的命令，是超级权限用户root的可执行命令存放地，普通用户无权限执行这个目录下的命令，这个目录和&#x2F;usr&#x2F;sbin；&#x2F;usr&#x2F;local&#x2F;sbin目录是相似的。</p>
+<h3 id="13-x2F-tmp"><a href="#13-x2F-tmp" class="headerlink" title="13. &#x2F;tmp"></a>13. &#x2F;tmp</h3><p>有时用户运行程序的时候会产生临时文件，&#x2F;tmp用来存放临时文件。</p>
+<h3 id="14-x2F-usr"><a href="#14-x2F-usr" class="headerlink" title="14. &#x2F;usr"></a>14. &#x2F;usr</h3><p>这个是系统存放程序的目录，比如命令、帮助文件等，它包含很多文件和目录，Linux发行版提供的软件包大多被安装在这里。</p>
+<h3 id="15-x2F-var"><a href="#15-x2F-var" class="headerlink" title="15. &#x2F;var"></a>15. &#x2F;var</h3><p>var表示的是变化的意思，这个目录的内容经常变动，如&#x2F;var的&#x2F;var&#x2F;log目录被用来存放系统日志。</p>
+<h3 id="16-x2F-sys"><a href="#16-x2F-sys" class="headerlink" title="16. &#x2F;sys"></a>16. &#x2F;sys</h3><p>Linux2.6内核所支持的sysfs文件系统被映射在此目录。Linux设备驱动模型中的总线、驱动和设备都可以在sysfs文件系统中找到对应的节点。当内核检测到系统中出现新设备后，内核会在sysfs文件系统中为该设备生成一项新的记录。</p>
+<h3 id="17-x2F-initrd"><a href="#17-x2F-initrd" class="headerlink" title="17. &#x2F;initrd"></a>17. &#x2F;initrd</h3><p>若在启动过程中使用了initrd映像作为临时根文件系统，则在执行完其上的&#x2F;linuxrc挂接真正的根文件系统后，原来的初始RAM文件系统被映射到&#x2F;initrd目录。</p>
+<h2 id="5-2-2-Linux文件系统与设备驱动"><a href="#5-2-2-Linux文件系统与设备驱动" class="headerlink" title="5.2.2 Linux文件系统与设备驱动"></a>5.2.2 Linux文件系统与设备驱动</h2><p>下图所示为Linux系统中虚拟文件系统、磁盘文件（存放于RamDisk、Flash、ROM、SD卡、U盘等文件系统中的文件也属于磁盘文件）及一般的设备文件与设备驱动程序之间的关系。<br><img src="/2023/01/10/Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%92%8C%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/1.jpeg" alt="img not found"><br><code>应用程序和VFS之间的接口是系统调用，而VFS与磁盘文件系统以及普通设备之间的接口是file_operations结构体成员函数，这个结构体包含对文件进行打开、关闭、读写、控制的一系列成员函数。</code><br><code>由于字符设备的上层没有磁盘文件系统，所以字符设备的file_operations成员函数就直接有设备驱动提供了，file_operations正是字符设备驱动的核心。</code><br>而对于块存储设备而言，ext2、fat、jffs2等文件系统中会实现针对VFS的file_operations成员函数，设备驱动层将看不到file_operations的存在。磁盘文件系统和设备驱动会将对磁盘上文件的访问最终转换成对磁盘上柱面和扇区的访问。<br>在设备驱动程序的设计中，一般而言，会关心结构体file和inode这两个结构体。</p>
+<h3 id="1-file结构体"><a href="#1-file结构体" class="headerlink" title="1. file结构体"></a>1. file结构体</h3><p>文件结构代表一个打开的文件（设备对应于设备文件），系统中每个打开的文件在内核空间都有一个关联的struct file。它由内核在打开文件时创建m并传递给在文件上进行操作的任何函数。在文件的所有实例都关闭后，内核释放这个数据结构。在内核和驱动源代码中，struct file的指针通常被命名为file或filp（file pointer）。代码如下所示。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">file</span> &#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">union</span> &#123;</span></span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>				<span class="title">fu_list</span>;</span><span class="comment">//文件对象链表</span></span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">rcu_head</span> 				<span class="title">fu_rcuhead</span>;</span><span class="comment">//释放之后的RCU链表</span></span><br><span class="line">	&#125; f_u;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">path</span>							<span class="title">f_path</span>;</span><span class="comment">//包含目录项</span></span><br><span class="line">	<span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span>		*<span class="title">f_op</span>;</span><span class="comment">//文件操作表</span></span><br><span class="line">	<span class="type">spinlock_t</span>							f_lock;<span class="comment">//单个文件结构锁</span></span><br><span class="line">	<span class="type">atomic_t</span>							f_count;<span class="comment">//文件对象的使用计数</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span>						f_flags;<span class="comment">//当文件打开时所指定的标志</span></span><br><span class="line">	<span class="type">mode_t</span>								f_mode;<span class="comment">//文件的访问模式</span></span><br><span class="line">	<span class="type">loff_t</span>								f_pos;<span class="comment">//文件当前的位移量（文件指针）</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">fown_struct</span>					<span class="title">f_owner</span>;</span><span class="comment">//拥有者通过信号进行异步I/O数据的传送</span></span><br><span class="line">	<span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">cred</span>					*<span class="title">f_cred</span>;</span><span class="comment">//文件的信任状态</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">file_ra_state</span>				<span class="title">f_ra</span>;</span><span class="comment">//预读状态</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>						f_version;<span class="comment">//版本号</span></span><br><span class="line">	<span class="type">void</span>								*f_security;<span class="comment">//安全模块</span></span><br><span class="line">	<span class="type">void</span>								*private_data;<span class="comment">//tty设备驱动的钩子</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>					<span class="title">f_ep_links</span>;</span><span class="comment">//事件池链表</span></span><br><span class="line">	<span class="type">spinlock_t</span>							f_ep_lock;<span class="comment">//事件池锁</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">address_space</span>				*<span class="title">f_mapping</span>;</span><span class="comment">//页缓存映射</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>						f_mnt_write_state;<span class="comment">//调试状态</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>文件读&#x2F;写模式mode、标志f_flags都是设备驱动关心的内容，而私有数据指针private_data在设备驱动中被广泛应用，大多被指向设备驱动自定义用于描述设备的结构体。<br>驱动程序中经常会使用如下类似的代码来检测用户打开文件的读写方式。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span>(file-&gt;f_mode &amp; FMODE_WRITE)<span class="comment">//用户要求可写</span></span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span>(file-&gt;f_mode &amp; FMODE_READ)<span class="comment">//用户要求可读</span></span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>下面的代码可用于判断以阻塞还是非阻塞方式打开设备文件。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span>(file-&gt;f_flags &amp; O_NONBLOCK)<span class="comment">//非阻塞</span></span><br><span class="line">    pr_debug(<span class="string">&quot;open: non-blocking\n&quot;</span>);</span><br><span class="line"><span class="keyword">else</span><span class="comment">//阻塞</span></span><br><span class="line">    pr_debug(<span class="string">&quot;open: blocking\n&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-inode结构体"><a href="#2-inode结构体" class="headerlink" title="2. inode结构体"></a>2. inode结构体</h3><p>VFS inode包含文件访问权限、属主、组、大小、生成时间、访问时间、最后修改时间等信息。它是Linux管理文件系统的最基本单位，也是文件系统连接任何子目录、文件的桥梁，inode结构体的定义如下所示。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">inode</span> &#123;</span></span><br><span class="line">    ...</span><br><span class="line">    <span class="type">imode_t</span>             i_mode;<span class="comment">//inode的权限</span></span><br><span class="line">	<span class="type">uid_t</span>			    i_uid;<span class="comment">//inode拥有者的id</span></span><br><span class="line">	<span class="type">gid_t</span>			    i_gid;<span class="comment">//inode所属的群组id</span></span><br><span class="line">	<span class="type">dev_t</span>			    i_rdev;<span class="comment">//若是设备文件，此字段将记录设备的设备号</span></span><br><span class="line">	<span class="type">loff_t</span>			    i_size;<span class="comment">//inode所代表的文件大小</span></span><br><span class="line"></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">timespec</span>		<span class="title">i_atime</span>;</span><span class="comment">//inode最近一次的存取时间</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">timespec</span>		<span class="title">i_mtime</span>;</span><span class="comment">//inode最近一次的修改时间</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">timespec</span>		<span class="title">i_ctime</span>;</span><span class="comment">//inode的产生时间</span></span><br><span class="line"></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>       i_blksize;<span class="comment">//inode在做I/O时的区块大小</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>       i_blocks;<span class="comment">//inode所使用的block数，一个block为512byte</span></span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">block_device</span>	*<span class="title">i_bdev</span>;</span><span class="comment">//若是块设备，为其对应的block_device结构体指针</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">cdev</span>		    *<span class="title">i_cdev</span>;</span><span class="comment">//若是字符设备，为其对应的cdev结构体指针</span></span><br><span class="line">    ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>对于表示设备文件的inode结构，i_rdev字段包含设备编号。Linux2.6设备编号分为主设备编号和次设备编号，前者为dev_t的高12位，后者为dev_t的低20位。下列操作用于从一个inode中获得主设备号和次设备号。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">int</span> <span class="title function_">iminor</span><span class="params">(<span class="keyword">struct</span> inode *inode)</span>;</span><br><span class="line"><span class="type">unsigned</span> <span class="type">int</span> <span class="title function_">imajor</span><span class="params">(<span class="keyword">struct</span> inode *inode)</span>;</span><br></pre></td></tr></table></figure>
+<p>查看&#x2F;proc&#x2F;devices文件可以获知系统中注册的设备，第一列为主设备号，第二列为设备名，如下图所示。<br><img src="/2023/01/10/Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%92%8C%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/2.jpeg" alt="img not found"><br>查看&#x2F;dev目录可以获知系统中包含的设备文件，日期的前两列给出了对应设备的主设备号和次设备号，如下所示：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">crw-rw----  <span class="number">1</span>   root    uucp    <span class="number">4</span>,  <span class="number">64</span>  Jan <span class="number">30</span>  <span class="number">2003</span>    /dev/ttyS0</span><br><span class="line">brw-rw----  <span class="number">1</span>   root    disk    <span class="number">8</span>,   <span class="number">0</span>  Jan <span class="number">30</span>  <span class="number">2003</span>    /dev/sda</span><br></pre></td></tr></table></figure>
+<p>主设备号是与驱动对应的概念，同一类设备一般使用相同的主设备号，不同类的设备一般使用不同的主设备号。因为同一驱动可支持多个同类设备，因此用次设备号来描述使用该驱动的设备的序号，序号一般从0开始。<br>内核Documents目录下的devices.txt文件描述了Linux设备号的分配情况，需要注意的是，设备号标志并不是硬性规定，在具体的设备驱动程序中，尽管一般会遵循，但是也可以有例外。</p>
+<h1 id="5-3-devfs设备文件系统"><a href="#5-3-devfs设备文件系统" class="headerlink" title="5.3 devfs设备文件系统"></a>5.3 devfs设备文件系统</h1><p>devfs（设备文件系统）是由Linux2.4内核引入的，引入时被许多工程师给予了高度评价，它的出现使得设备驱动程序能自主地管理它自己的设备文件。具体来说，devfs具有如下优点。</p>
+<ol>
+<li><code>可以通过程序在设备初始化时在/dev目录下创建设备文件，卸载设备时将它删除。</code></li>
+<li><code>设备驱动程序可以指定设备名、所有者和权限位，用户空间程序仍可以修改所有者和权限位。</code></li>
+<li><code>不再需要为设备驱动程序分配主设备号以及处理次设备号，在程序中可以直接给register_chrdev()传递0主设备号以动态获得可用的主设备号，并在devfs_register()中指定次设备号。</code></li>
+</ol>
+<p>驱动程序应调用下面这些函数来进行设备文件的创建和删除工作。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//创建设备目录</span></span><br><span class="line"><span class="type">devfs_handle_t</span> <span class="title function_">devfs_mk_dir</span><span class="params">(<span class="type">devfs_handle_t</span> dir,<span class="type">const</span> <span class="type">char</span> *name,<span class="type">void</span> *info)</span>;</span><br><span class="line"><span class="comment">//创建设备文件</span></span><br><span class="line"><span class="type">devfs_handle_t</span> <span class="title function_">devfs_register</span><span class="params">(<span class="type">devfs_handle_t</span> dir,<span class="type">const</span> <span class="type">char</span> *name,<span class="type">unsigned</span> <span class="type">int</span> flags,</span></span><br><span class="line"><span class="params">                                <span class="type">unsigned</span> <span class="type">int</span> major,<span class="type">unsigned</span> <span class="type">int</span> minor,<span class="type">umode_t</span> mode,<span class="type">void</span> *ops,<span class="type">void</span> *info)</span>;</span><br><span class="line"><span class="comment">//撤销设备文件</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">devfs_unregister</span><span class="params">(<span class="type">devfs_handle_t</span> de)</span>;</span><br></pre></td></tr></table></figure>
+<p>在Linux2.4的设备驱动编程中，分别在模块加载和卸载函数中创建和撤销设备文件是被普遍采用并值得大力推荐的好方法。下列代码给出了一个使用devfs的例子。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">devfs_handle_t</span> devfs_handle;</span><br><span class="line"><span class="type">static</span> <span class="type">int</span> __init <span class="title function_">xxx_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> ret;</span><br><span class="line">    <span class="type">int</span> i;</span><br><span class="line">    <span class="comment">//在内核中注册设备</span></span><br><span class="line">    ret = register_chrdev(XXX_MAJOR,DEVICE_NAME,&amp;xxx_fops);</span><br><span class="line">    <span class="keyword">if</span>(ret &lt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        printk(DEVICE_NAME<span class="string">&quot;can&#x27;t register major number\n&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> ret;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//创建设备文件</span></span><br><span class="line">    devfs_handle = devfs_register(<span class="literal">NULL</span>,DEVICE_NAME,DEVFS_FL_DEFAULT,</span><br><span class="line">                                  XXX_MAJOR,<span class="number">0</span>,S_IFCHR | S_IRUSR | S_IWUSR,&amp;xxx_fops,<span class="literal">NULL</span>);</span><br><span class="line">    ...</span><br><span class="line">    printk(DEVICE_NAME<span class="string">&quot;initialized\n&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __exit <span class="title function_">xxx_exit</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    devfs_unregister(devfs_handle);<span class="comment">//撤销设备文件</span></span><br><span class="line">    unregister_chrdev(XXX_MAJOR,DEVICE_NAME);<span class="comment">//注销设备</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">module_init(xxx_init);</span><br><span class="line">module_exit(xxx_exit);</span><br></pre></td></tr></table></figure>
+<p>代码中第7行和第25行分别用于注册和注销字符设备，使用的register_chrdev()和unregister_chrdev()在Linux2.6内核中虽然仍然被支持，但是是过时的做法。第15行和第24行分别用于创建和删除devfs文件节点。</p>
+<h1 id="5-4-udev设备文件系统"><a href="#5-4-udev设备文件系统" class="headerlink" title="5.4 udev设备文件系统"></a>5.4 udev设备文件系统</h1><h2 id="5-4-1-udev与devfs的区别"><a href="#5-4-1-udev与devfs的区别" class="headerlink" title="5.4.1 udev与devfs的区别"></a>5.4.1 udev与devfs的区别</h2>]]></content>
+      <categories>
+        <category>学习</category>
+        <category>书籍</category>
+        <category>LINUX设备驱动开发详解</category>
+        <category>第5章 Linux文件系统和设备文件系统</category>
+      </categories>
+      <tags>
+        <tag>Linux Kernel</tag>
+        <tag>Linux 设备驱动</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>嵌入式编程基础知识</title>
     <url>/2022/08/05/%E5%B5%8C%E5%85%A5%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《嵌入式Linux应用完全开发手册》第1篇第3章总结归纳</p>
