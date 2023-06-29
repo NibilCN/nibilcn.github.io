@@ -505,6 +505,51 @@
       </tags>
   </entry>
   <entry>
+    <title>LVGL快速开发工具GuiGuiderV1.5使用</title>
+    <url>/2023/06/29/LVGL%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7GuiGuiderV1-5%E4%BD%BF%E7%94%A8/</url>
+    <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>GUI Guider是恩智浦提供的用户友好型图形用户界面开发工具，可通过开源LVGL图形库快速开发高品质的显示。GUI Guider的拖放编辑器可以轻松利用LVGL的众多特性，如小部件、动画和样式来创建GUI，而只需少量代码或根本无需任何代码。</p>
+<span id="more"></span>
+
+<h1 id="下载安装"><a href="#下载安装" class="headerlink" title="下载安装"></a>下载安装</h1><h2 id="安装包准备"><a href="#安装包准备" class="headerlink" title="安装包准备"></a>安装包准备</h2><ol>
+<li><a href="https://www.nxp.com.cn/webapp/sps/download/license.jsp?colCode=GUI-GUIDER-SETUP-1.5.1-GA-WIN&appType=file1&DOWNLOAD_ID=null">GuiGuiderV1.5.1安装包官方链接</a></li>
+<li><a href="https://jdk.java.net/archive/">JAVA JDK20</a>，因为Windows10版本的的GUIGuider依赖于JAVA。所以没装JAVA环境的需要安装JAVA环境，才能正常使用GUIGuider。没安装会导致GUIGuider无法正常生成代码和模拟器无法正常显示UI。</li>
+</ol>
+<h2 id="安装过程"><a href="#安装过程" class="headerlink" title="安装过程"></a>安装过程</h2><p>GuiGuiderV1.5.1的下载安装过程不赘述，JAVA的环境变量配置请自行百度。具体步骤如下所示<a href="https://blog.csdn.net/NakajimaFN/article/details/117805803">Windows10下JAVA配置环境变量教程</a>。</p>
+<h1 id="开发流程"><a href="#开发流程" class="headerlink" title="开发流程"></a>开发流程</h1><h2 id="新建工程"><a href="#新建工程" class="headerlink" title="新建工程"></a>新建工程</h2><ol>
+<li>左上角文件–&gt;新建，选择对应的LVGL版本，点击下一步：<br><img src="/2023/06/29/LVGL%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7GuiGuiderV1-5%E4%BD%BF%E7%94%A8/1.jpeg" alt="img not found"></li>
+<li>选择设备模板为PC端仿真器：<br><img src="/2023/06/29/LVGL%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7GuiGuiderV1-5%E4%BD%BF%E7%94%A8/2.jpeg" alt="img not found"></li>
+<li>选择一个应用模板，我这边选择了第一个“按键计数器”：<br><img src="/2023/06/29/LVGL%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7GuiGuiderV1-5%E4%BD%BF%E7%94%A8/3.jpeg" alt="img not found"></li>
+<li>填写工程信息：<br><img src="/2023/06/29/LVGL%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7GuiGuiderV1-5%E4%BD%BF%E7%94%A8/4.jpeg" alt="img not found"></li>
+<li>创建成功：<br><img src="/2023/06/29/LVGL%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7GuiGuiderV1-5%E4%BD%BF%E7%94%A8/5.jpeg" alt="img not found"></li>
+<li>界面的基本操作以及控件的创建等这边不介绍了，全中文而且选项也不多，自己点一点看一下就知道了。</li>
+<li>点击运行调用模拟器并生成界面文件：<br><img src="/2023/06/29/LVGL%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7GuiGuiderV1-5%E4%BD%BF%E7%94%A8/6.jpeg" alt="img not found"><br><img src="/2023/06/29/LVGL%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7GuiGuiderV1-5%E4%BD%BF%E7%94%A8/7.jpeg" alt="img not found"></li>
+</ol>
+<h2 id="代码移植"><a href="#代码移植" class="headerlink" title="代码移植"></a>代码移植</h2><h3 id="代码结构介绍"><a href="#代码结构介绍" class="headerlink" title="代码结构介绍"></a>代码结构介绍</h3><p>GUI Guider经过编译运行之后，生成的代码如下：</p>
+<ol>
+<li>custom.c为用户自定义API，这个文件的内容事先由用户写进去，不随着工程的编译修改而变化；</li>
+<li>event_init.c为事件触发API；</li>
+<li>gui_guider.c为界面引导API；</li>
+<li>setup_scr_screen.c&#x2F;setup_scr_screen_1.c&#x2F;setup_scr_screen_2.c为界面的初始化API；</li>
+<li>界面上用到的字体、图片等资源均在generated文件夹中；<br><img src="/2023/06/29/LVGL%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7GuiGuiderV1-5%E4%BD%BF%E7%94%A8/8.jpeg" alt="img not found"></li>
+</ol>
+<h3 id="代码移植注意事项"><a href="#代码移植注意事项" class="headerlink" title="代码移植注意事项"></a>代码移植注意事项</h3><ol>
+<li>将custom、generated这两个文件夹整体复制到自己的工程目录下，根据自己的项目情况适当修改编译脚本：<br><img src="/2023/06/29/LVGL%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7GuiGuiderV1-5%E4%BD%BF%E7%94%A8/9.jpeg" alt="img not found"></li>
+<li>后续替换UI<br><img src="/2023/06/29/LVGL%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7GuiGuiderV1-5%E4%BD%BF%E7%94%A8/10.jpeg" alt="img not found"></li>
+</ol>
+]]></content>
+      <categories>
+        <category>工具</category>
+        <category>嵌入式GUI</category>
+        <category>GuiGuider</category>
+      </categories>
+      <tags>
+        <tag>Linux 应用</tag>
+        <tag>嵌入式GUI</tag>
+        <tag>LVGL代码生成工具</tag>
+        <tag>NXP-GuiGuider</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>设备与模块</title>
     <url>/2022/08/02/%E8%AE%BE%E5%A4%87%E4%B8%8E%E6%A8%A1%E5%9D%97/</url>
     <content><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><script class="meting-secondary-script-marker" src="\assets\js\Meting.min.js"></script><p>《Linux内核设计与实现》第17章总结归纳</p>
